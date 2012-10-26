@@ -25,7 +25,9 @@ package org.healthonnet.lucene.queryparser;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +43,7 @@ import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.solr.analysis.StopFilterFactory;
+import org.apache.solr.analysis.SynonymFilterFactory;
 import org.apache.solr.analysis.TokenFilterFactory;
 import org.apache.solr.analysis.TokenizerChain;
 import org.apache.solr.common.SolrException;
@@ -52,7 +55,6 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.schema.FieldType;
 import org.apache.solr.search.FunctionQParserPlugin;
 import org.apache.solr.search.QParser;
-import org.apache.solr.search.QParserPlugin;
 import org.apache.solr.search.QueryParsing;
 import org.apache.solr.search.QueryUtils;
 import org.apache.solr.search.SolrQueryParser;
@@ -249,10 +251,18 @@ class ExtendedDismaxQParser extends QParser {
             boolean doMinMatched = (numOR + numNOT + numPluses + numMinuses) == 0;
 
             try {
+                
                 up.setRemoveStopFilter(!stopwords);
+                up.setRemoveSynonymFilter(true);
                 up.exceptions = true;
                 parsedUserQuery = up.parse(mainUserQuery);
-
+                up.setRemoveSynonymFilter(false);
+                
+                // add some optional synonym phrases
+                up.setRemoveSynonymFilter(true);
+                parsedUserQuery = up.parse("(" + parsedUserQuery.toString() +") OR (" + up.parse(mainUserQuery) + ")");
+                up.setRemoveSynonymFilter(false);
+                
                 if (stopwords && isEmpty(parsedUserQuery)) {
                     // if the query was all stop words, remove none of them
                     up.setRemoveStopFilter(true);
@@ -270,7 +280,7 @@ class ExtendedDismaxQParser extends QParser {
                     U.setMinShouldMatch((BooleanQuery) parsedUserQuery, minShouldMatch);
                 }
             }
-
+            
             if (parsedUserQuery == null) {
                 StringBuilder sb = new StringBuilder();
                 for (Clause clause : clauses) {
@@ -311,7 +321,7 @@ class ExtendedDismaxQParser extends QParser {
                     parsedUserQuery = t;
                 }
             }
-
+            
             query.add(parsedUserQuery, BooleanClause.Occur.MUST);
 
             // sloppy phrase queries for proximity
@@ -337,7 +347,7 @@ class ExtendedDismaxQParser extends QParser {
                 // shingles...
                 addShingledPhraseQueries(query, normalClauses, phraseFields2, 2, tiebreaker, pslop);
                 addShingledPhraseQueries(query, normalClauses, phraseFields3, 3, tiebreaker, pslop);
-
+                
             }
         }
 
@@ -843,6 +853,10 @@ class ExtendedDismaxQParser extends QParser {
         public void setRemoveStopFilter(boolean remove) {
             analyzer.removeStopFilter = remove;
         }
+        
+        public void setRemoveSynonymFilter(boolean remove) {
+            analyzer.removeSynonymFilter = remove;
+        }
 
         @Override
         protected Query getBooleanQuery(List clauses, boolean disableCoord) throws ParseException {
@@ -1092,6 +1106,7 @@ final class ExtendedAnalyzer extends Analyzer {
     final QParser parser;
     final Analyzer queryAnalyzer;
     public boolean removeStopFilter = false;
+    public boolean removeSynonymFilter = false;
 
     public static TokenizerChain getQueryTokenizerChain(QParser parser, String fieldName) {
         FieldType ft = parser.getReq().getSchema().getFieldType(fieldName);
@@ -1121,7 +1136,7 @@ final class ExtendedAnalyzer extends Analyzer {
 
     @Override
     public TokenStream tokenStream(String fieldName, Reader reader) {
-        if (!removeStopFilter) {
+        if (!removeSynonymFilter && !removeStopFilter) {
             return queryAnalyzer.tokenStream(fieldName, reader);
         }
 
@@ -1143,7 +1158,29 @@ final class ExtendedAnalyzer extends Analyzer {
             return qa.tokenStream(fieldName, reader);
         }
         TokenizerChain tci = (TokenizerChain) ia;
-
+        
+        if (removeSynonymFilter) {
+            TokenFilterFactory[] facs = tcq.getTokenFilterFactories();
+            for (int i = 0, j = 0; i < facs.length; i++) {
+                if (facs[i] instanceof SynonymFilterFactory) {
+                    List<TokenFilterFactory> newtf = new LinkedList<TokenFilterFactory>();
+                    newtf.addAll(Arrays.asList(facs));
+                    newtf.remove(i);
+                    TokenizerChain newa = new TokenizerChain(tcq.getTokenizerFactory(), 
+                            newtf.toArray(new TokenFilterFactory[newtf.size()]));
+                    newa.setPositionIncrementGap(tcq.getPositionIncrementGap(fieldName));
+                    
+                    map.put(fieldName, newa);
+                    qa = newa;
+                    break;
+                }
+            }
+        }
+        
+        if (!removeStopFilter) {
+            return qa.tokenStream(fieldName, reader);
+        }
+    
         // make sure that there isn't a stop filter in the indexer
         for (TokenFilterFactory tf : tci.getTokenFilterFactories()) {
             if (tf instanceof StopFilterFactory) {
@@ -1165,7 +1202,7 @@ final class ExtendedAnalyzer extends Analyzer {
         }
 
         if (stopIdx == -1) {
-            // no stop filter exists
+            // no stop filter or synonym filter exists
             map.put(fieldName, qa);
             return qa.tokenStream(fieldName, reader);
         }
@@ -1182,6 +1219,7 @@ final class ExtendedAnalyzer extends Analyzer {
 
         map.put(fieldName, newa);
         return newa.tokenStream(fieldName, reader);
+        
     }
 
     @Override
@@ -1191,8 +1229,8 @@ final class ExtendedAnalyzer extends Analyzer {
 
     @Override
     public TokenStream reusableTokenStream(String fieldName, Reader reader) throws IOException {
-
-        if (!removeStopFilter) {
+        
+        if (!removeSynonymFilter && !removeStopFilter) {
             return queryAnalyzer.reusableTokenStream(fieldName, reader);
         }
         // TODO: done to fix stop word removal bug - could be done while still
