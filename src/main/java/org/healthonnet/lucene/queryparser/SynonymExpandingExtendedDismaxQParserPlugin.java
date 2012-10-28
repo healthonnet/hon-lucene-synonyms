@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -41,6 +43,7 @@ import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.solr.analysis.StopFilterFactory;
+import org.apache.solr.analysis.SynonymFilterFactory;
 import org.apache.solr.analysis.TokenFilterFactory;
 import org.apache.solr.analysis.TokenizerChain;
 import org.apache.solr.common.SolrException;
@@ -164,6 +167,8 @@ class ExtendedDismaxQParser extends QParser {
             // userQuery =
             // partialEscape(U.stripUnbalancedQuotes(userQuery)).toString();
 
+            Query synonymQuery = null;
+            
             boolean lowercaseOperators = solrParams.getBool("lowercaseOperators", true);
             String mainUserQuery = userQuery;
 
@@ -250,6 +255,7 @@ class ExtendedDismaxQParser extends QParser {
 
             try {
                 up.setRemoveStopFilter(!stopwords);
+                up.setRemoveSynonymFilter(true); //remove synonyms for the main query
                 up.exceptions = true;
                 parsedUserQuery = up.parse(mainUserQuery);
 
@@ -263,7 +269,24 @@ class ExtendedDismaxQParser extends QParser {
                 // chars
                 up.exceptions = false;
             }
-
+            
+            if (parsedUserQuery != null) {
+                // add synonym query as a separate SHOULD query
+                up.setRemoveSynonymFilter(false);
+                Query thisSynonymQuery = up.parse(mainUserQuery);
+                if (!thisSynonymQuery.toString().equalsIgnoreCase(parsedUserQuery.toString())) {
+                    synonymQuery = thisSynonymQuery;
+                    // not the same query, i.e. there are synonyms, so use it
+                    if (doMinMatched) {
+                        // apply minShouldMatch to the synonyms as well
+                        String minShouldMatch = solrParams.get(DMP.MM, "100%");
+                        if (synonymQuery instanceof BooleanQuery) {
+                            U.setMinShouldMatch((BooleanQuery) synonymQuery, minShouldMatch);
+                        }
+                    }                    
+                }
+            }
+            
             if (parsedUserQuery != null && doMinMatched) {
                 String minShouldMatch = solrParams.get(DMP.MM, "100%");
                 if (parsedUserQuery instanceof BooleanQuery) {
@@ -312,6 +335,16 @@ class ExtendedDismaxQParser extends QParser {
                 }
             }
 
+            // synonym query...
+            if (synonymQuery != null) {
+                BooleanQuery combinedQuery = new BooleanQuery();
+                synonymQuery.setBoost(getFloatParamOrDefault(solrParams, "synonymBoost", 1.0F));
+                parsedUserQuery.setBoost(getFloatParamOrDefault(solrParams, "nonSynonymBoost", 1.0F));
+                combinedQuery.add(parsedUserQuery, Occur.SHOULD);
+                combinedQuery.add(synonymQuery, Occur.SHOULD);
+                parsedUserQuery = combinedQuery;
+            }
+            
             query.add(parsedUserQuery, BooleanClause.Occur.MUST);
 
             // sloppy phrase queries for proximity
@@ -337,7 +370,7 @@ class ExtendedDismaxQParser extends QParser {
                 // shingles...
                 addShingledPhraseQueries(query, normalClauses, phraseFields2, 2, tiebreaker, pslop);
                 addShingledPhraseQueries(query, normalClauses, phraseFields3, 3, tiebreaker, pslop);
-
+                
             }
         }
 
@@ -843,6 +876,10 @@ class ExtendedDismaxQParser extends QParser {
         public void setRemoveStopFilter(boolean remove) {
             analyzer.removeStopFilter = remove;
         }
+        
+        public void setRemoveSynonymFilter(boolean remove) {
+            analyzer.removeSynonymFilter = remove;
+        }
 
         @Override
         protected Query getBooleanQuery(List clauses, boolean disableCoord) throws ParseException {
@@ -1085,13 +1122,25 @@ class ExtendedDismaxQParser extends QParser {
             return true;
         return false;
     }
+    
+    static float getFloatParamOrDefault(SolrParams solrParams, String name, float defaultValue) {
+        String[] params = solrParams.getParams(name);
+        if (params != null && params.length != 0 && params[0] != null) {
+            try {
+                return Float.parseFloat(params[0]);
+            } catch (NumberFormatException ignore) {
+                
+            }
+        }
+        return defaultValue;
+    }
 }
 
 final class ExtendedAnalyzer extends Analyzer {
     final Map<String, Analyzer> map = new HashMap<String, Analyzer>();
     final QParser parser;
     final Analyzer queryAnalyzer;
-    public boolean removeStopFilter = false;
+    public boolean removeStopFilter, removeSynonymFilter = false;
 
     public static TokenizerChain getQueryTokenizerChain(QParser parser, String fieldName) {
         FieldType ft = parser.getReq().getSchema().getFieldType(fieldName);
@@ -1121,7 +1170,7 @@ final class ExtendedAnalyzer extends Analyzer {
 
     @Override
     public TokenStream tokenStream(String fieldName, Reader reader) {
-        if (!removeStopFilter) {
+        if (!removeStopFilter && !removeSynonymFilter) {
             return queryAnalyzer.tokenStream(fieldName, reader);
         }
 
@@ -1136,6 +1185,7 @@ final class ExtendedAnalyzer extends Analyzer {
             map.put(fieldName, qa);
             return qa.tokenStream(fieldName, reader);
         }
+        qa = removeSynonymFilter(fieldName, qa);
         TokenizerChain tcq = (TokenizerChain) qa;
         Analyzer ia = ft.getAnalyzer();
         if (ia == qa || !(ia instanceof TokenizerChain)) {
@@ -1180,8 +1230,42 @@ final class ExtendedAnalyzer extends Analyzer {
         TokenizerChain newa = new TokenizerChain(tcq.getTokenizerFactory(), newtf);
         newa.setPositionIncrementGap(tcq.getPositionIncrementGap(fieldName));
 
+        newa = (TokenizerChain)removeSynonymFilter(fieldName, newa);
+        
         map.put(fieldName, newa);
         return newa.tokenStream(fieldName, reader);
+    }
+
+    private Analyzer removeSynonymFilter(String fieldName, Analyzer qa) {
+        // remove the synonym filter if necessary
+        if (!removeSynonymFilter || !(qa instanceof TokenizerChain)) {
+            return qa;
+        }
+        TokenizerChain tokenizerChain = (TokenizerChain)qa;
+        
+        TokenFilterFactory[] filterFactories = tokenizerChain.getTokenFilterFactories();
+        List<TokenFilterFactory> newTokenFilterFactories = new LinkedList<TokenFilterFactory>();
+        
+        boolean foundSynonymFilterFactory = false;
+        for (int i = 0; i < filterFactories.length; i++) {
+            TokenFilterFactory tf = tokenizerChain.getTokenFilterFactories()[i];
+            if (!(tf instanceof SynonymFilterFactory)) {
+                newTokenFilterFactories.add(tf);
+            } else {
+                foundSynonymFilterFactory = true;
+            }
+        }
+        
+        if (!foundSynonymFilterFactory) {
+            return qa;
+        }
+        
+        TokenizerChain newa = new TokenizerChain(tokenizerChain.getCharFilterFactories(),
+                tokenizerChain.getTokenizerFactory(), 
+                newTokenFilterFactories.toArray(new TokenFilterFactory[newTokenFilterFactories.size()]));
+        newa.setPositionIncrementGap(tokenizerChain.getPositionIncrementGap(fieldName));
+
+        return newa;
     }
 
     @Override
@@ -1192,7 +1276,7 @@ final class ExtendedAnalyzer extends Analyzer {
     @Override
     public TokenStream reusableTokenStream(String fieldName, Reader reader) throws IOException {
 
-        if (!removeStopFilter) {
+        if (!removeStopFilter && !removeSynonymFilter) {
             return queryAnalyzer.reusableTokenStream(fieldName, reader);
         }
         // TODO: done to fix stop word removal bug - could be done while still
