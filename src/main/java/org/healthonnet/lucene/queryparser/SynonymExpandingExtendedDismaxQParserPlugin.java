@@ -272,6 +272,7 @@ class ExtendedDismaxQParser extends QParser {
                 for (int i = 1;;i++) {
                     up.setSynonymToKeep(i);
                     Query synonymQuery = up.parse(mainUserQuery);
+                    //System.err.println("synonymQuery is " + synonymQuery);
                     if (synonymQuery.toString().length() == 0) {
                         break;
                     }
