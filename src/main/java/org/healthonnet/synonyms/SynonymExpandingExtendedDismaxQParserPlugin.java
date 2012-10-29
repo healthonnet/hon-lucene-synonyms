@@ -20,7 +20,7 @@
  * All changes are Copyright 2008, Lucid Imagination, Inc.
  */
 
-package org.healthonnet.lucene.queryparser;
+package org.healthonnet.synonyms;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -55,7 +55,6 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.schema.FieldType;
 import org.apache.solr.search.FunctionQParserPlugin;
 import org.apache.solr.search.QParser;
-import org.apache.solr.search.QParserPlugin;
 import org.apache.solr.search.QueryParsing;
 import org.apache.solr.search.QueryUtils;
 import org.apache.solr.search.SolrQueryParser;
@@ -270,22 +269,7 @@ class ExtendedDismaxQParser extends QParser {
                 up.exceptions = false;
             }
             
-            if (parsedUserQuery != null) {
-                // add synonym query as a separate SHOULD query
-                up.setRemoveSynonymFilter(false);
-                Query thisSynonymQuery = up.parse(mainUserQuery);
-                if (!thisSynonymQuery.toString().equalsIgnoreCase(parsedUserQuery.toString())) {
-                    synonymQuery = thisSynonymQuery;
-                    // not the same query, i.e. there are synonyms, so use it
-                    if (doMinMatched) {
-                        // apply minShouldMatch to the synonyms as well
-                        String minShouldMatch = solrParams.get(DMP.MM, "100%");
-                        if (synonymQuery instanceof BooleanQuery) {
-                            U.setMinShouldMatch((BooleanQuery) synonymQuery, minShouldMatch);
-                        }
-                    }                    
-                }
-            }
+            synonymQuery = attemptToAddSeparateSynonymQuery(up, mainUserQuery, doMinMatched, solrParams);
             
             if (parsedUserQuery != null && doMinMatched) {
                 String minShouldMatch = solrParams.get(DMP.MM, "100%");
@@ -442,6 +426,32 @@ class ExtendedDismaxQParser extends QParser {
         }
 
         return topQuery;
+    }
+
+    private Query attemptToAddSeparateSynonymQuery(ExtendedSolrQueryParser up, String mainUserQuery,
+            boolean doMinMatched, SolrParams solrParams) throws ParseException {
+        if (parsedUserQuery == null) {
+            return null;
+        }
+            
+        // add synonym query as a separate SHOULD query
+        up.setRemoveSynonymFilter(false);
+        Query synonymQuery = up.parse(mainUserQuery);
+        
+        // same query, i.e. no synonyms, so ignore
+        if (synonymQuery.toString().equalsIgnoreCase(parsedUserQuery.toString())) {
+            return null;
+        }
+        
+        // apply minShouldMatch to the synonyms as well        
+        if (doMinMatched) {
+            String minShouldMatch = solrParams.get(DMP.MM, "100%");
+            if (synonymQuery instanceof BooleanQuery) {
+                U.setMinShouldMatch((BooleanQuery) synonymQuery, minShouldMatch);
+            }
+        }     
+        
+        return synonymQuery;
     }
 
     /**
