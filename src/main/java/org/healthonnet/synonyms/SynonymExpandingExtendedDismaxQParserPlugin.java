@@ -42,6 +42,10 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
+import org.apache.solr.analysis.CharFilterFactory;
+import org.apache.solr.analysis.ShingleFilterFactory;
+import org.apache.solr.analysis.StandardFilterFactory;
+import org.apache.solr.analysis.StandardTokenizerFactory;
 import org.apache.solr.analysis.StopFilterFactory;
 import org.apache.solr.analysis.SynonymFilterFactory;
 import org.apache.solr.analysis.TokenFilterFactory;
@@ -433,25 +437,31 @@ class ExtendedDismaxQParser extends QParser {
         if (parsedUserQuery == null) {
             return null;
         }
-            
-        // add synonym query as a separate SHOULD query
-        up.setRemoveSynonymFilter(false);
-        Query synonymQuery = up.parse(mainUserQuery);
         
-        // same query, i.e. no synonyms, so ignore
-        if (synonymQuery.toString().equalsIgnoreCase(parsedUserQuery.toString())) {
-            return null;
+        BooleanQuery combinedQuery = new BooleanQuery();
+        for (int i = 0;;i++) {
+            // add synonym query as a separate SHOULD query
+            up.setRemoveSynonymFilter(false);
+            up.setShouldKeepSynonym(i);
+            Query synonymQuery = up.parse(mainUserQuery);
+            
+            // empty query as last one, i.e. no synonyms, so ignore
+            if (synonymQuery.toString().equals("")) {
+                break;
+            }
+            
+            // apply minShouldMatch to the synonyms as well        
+            if (doMinMatched) {
+                String minShouldMatch = solrParams.get(DMP.MM, "100%");
+                if (synonymQuery instanceof BooleanQuery) {
+                    U.setMinShouldMatch((BooleanQuery) synonymQuery, minShouldMatch);
+                }
+            }    
+            
+            combinedQuery.add(synonymQuery, Occur.SHOULD);
         }
         
-        // apply minShouldMatch to the synonyms as well        
-        if (doMinMatched) {
-            String minShouldMatch = solrParams.get(DMP.MM, "100%");
-            if (synonymQuery instanceof BooleanQuery) {
-                U.setMinShouldMatch((BooleanQuery) synonymQuery, minShouldMatch);
-            }
-        }     
-        
-        return synonymQuery;
+        return combinedQuery;
     }
 
     /**
@@ -890,7 +900,11 @@ class ExtendedDismaxQParser extends QParser {
         public void setRemoveSynonymFilter(boolean remove) {
             analyzer.removeSynonymFilter = remove;
         }
-
+        
+        public void setShouldKeepSynonym(int indexToKeep) {
+            analyzer.shouldKeepSynonym = indexToKeep;
+        }
+        
         @Override
         protected Query getBooleanQuery(List clauses, boolean disableCoord) throws ParseException {
             Query q = super.getBooleanQuery(clauses, disableCoord);
@@ -1120,6 +1134,7 @@ class ExtendedDismaxQParser extends QParser {
                 // an exception here is due to the field query not being
                 // compatible with the input text
                 // for example, passing a string to a numeric field.
+                e.printStackTrace();
                 return null;
             }
         }
@@ -1147,10 +1162,10 @@ class ExtendedDismaxQParser extends QParser {
 }
 
 final class ExtendedAnalyzer extends Analyzer {
-    final Map<String, Analyzer> map = new HashMap<String, Analyzer>();
     final QParser parser;
     final Analyzer queryAnalyzer;
     public boolean removeStopFilter, removeSynonymFilter = false;
+    public int shouldKeepSynonym = -1;
 
     public static TokenizerChain getQueryTokenizerChain(QParser parser, String fieldName) {
         FieldType ft = parser.getReq().getSchema().getFieldType(fieldName);
@@ -1180,26 +1195,17 @@ final class ExtendedAnalyzer extends Analyzer {
 
     @Override
     public TokenStream tokenStream(String fieldName, Reader reader) {
-        if (!removeStopFilter && !removeSynonymFilter) {
-            return queryAnalyzer.tokenStream(fieldName, reader);
-        }
 
-        Analyzer a = map.get(fieldName);
-        if (a != null) {
-            return a.tokenStream(fieldName, reader);
-        }
 
         FieldType ft = parser.getReq().getSchema().getFieldType(fieldName);
         Analyzer qa = ft.getQueryAnalyzer();
         if (!(qa instanceof TokenizerChain)) {
-            map.put(fieldName, qa);
             return qa.tokenStream(fieldName, reader);
         }
         qa = removeSynonymFilter(fieldName, qa);
         TokenizerChain tcq = (TokenizerChain) qa;
         Analyzer ia = ft.getAnalyzer();
         if (ia == qa || !(ia instanceof TokenizerChain)) {
-            map.put(fieldName, qa);
             return qa.tokenStream(fieldName, reader);
         }
         TokenizerChain tci = (TokenizerChain) ia;
@@ -1207,7 +1213,6 @@ final class ExtendedAnalyzer extends Analyzer {
         // make sure that there isn't a stop filter in the indexer
         for (TokenFilterFactory tf : tci.getTokenFilterFactories()) {
             if (tf instanceof StopFilterFactory) {
-                map.put(fieldName, qa);
                 return qa.tokenStream(fieldName, reader);
             }
         }
@@ -1226,7 +1231,6 @@ final class ExtendedAnalyzer extends Analyzer {
 
         if (stopIdx == -1) {
             // no stop filter exists
-            map.put(fieldName, qa);
             return qa.tokenStream(fieldName, reader);
         }
 
@@ -1242,13 +1246,12 @@ final class ExtendedAnalyzer extends Analyzer {
 
         newa = (TokenizerChain)removeSynonymFilter(fieldName, newa);
         
-        map.put(fieldName, newa);
         return newa.tokenStream(fieldName, reader);
     }
 
     private Analyzer removeSynonymFilter(String fieldName, Analyzer qa) {
         // remove the synonym filter if necessary
-        if (!removeSynonymFilter || !(qa instanceof TokenizerChain)) {
+        if (!(qa instanceof TokenizerChain)) {
             return qa;
         }
         TokenizerChain tokenizerChain = (TokenizerChain)qa;
@@ -1256,18 +1259,20 @@ final class ExtendedAnalyzer extends Analyzer {
         TokenFilterFactory[] filterFactories = tokenizerChain.getTokenFilterFactories();
         List<TokenFilterFactory> newTokenFilterFactories = new LinkedList<TokenFilterFactory>();
         
-        boolean foundSynonymFilterFactory = false;
         for (int i = 0; i < filterFactories.length; i++) {
             TokenFilterFactory tf = tokenizerChain.getTokenFilterFactories()[i];
-            if (!(tf instanceof SynonymFilterFactory)) {
-                newTokenFilterFactories.add(tf);
+            if (tf instanceof TuneableSynonymFilterFactory) {
+                ((TuneableSynonymFilterFactory)tf).setIndexToKeep(shouldKeepSynonym);
+                if (!removeSynonymFilter) {
+                    newTokenFilterFactories.add(tf);
+                }
+            } else if (tf instanceof ShingleFilterFactory) {
+                if (!removeSynonymFilter) {
+                    newTokenFilterFactories.add(tf);
+                }
             } else {
-                foundSynonymFilterFactory = true;
+                newTokenFilterFactories.add(tf);
             }
-        }
-        
-        if (!foundSynonymFilterFactory) {
-            return qa;
         }
         
         TokenizerChain newa = new TokenizerChain(tokenizerChain.getCharFilterFactories(),
@@ -1286,10 +1291,6 @@ final class ExtendedAnalyzer extends Analyzer {
     @Override
     public TokenStream reusableTokenStream(String fieldName, Reader reader) throws IOException {
 
-        if (!removeStopFilter && !removeSynonymFilter) {
-            return queryAnalyzer.reusableTokenStream(fieldName, reader);
-        }
-        // TODO: done to fix stop word removal bug - could be done while still
         // using resusable?
         return tokenStream(fieldName, reader);
     }
