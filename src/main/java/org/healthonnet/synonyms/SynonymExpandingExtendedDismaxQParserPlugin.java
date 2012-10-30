@@ -20,7 +20,7 @@
  * All changes are Copyright 2008, Lucid Imagination, Inc.
  */
 
-package org.healthonnet.lucene.queryparser;
+package org.healthonnet.synonyms;
 
 import java.io.IOException;
 import java.io.Reader;
