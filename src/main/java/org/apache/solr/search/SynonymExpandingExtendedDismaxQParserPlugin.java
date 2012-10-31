@@ -228,7 +228,12 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         // check to make sure the analyzer exists
         String analyzerName = solrParams.get(Params.SYNONYMS_ANALYZER, null);
         if (analyzerName == null) { // no synonym analyzer specified
-            return query;
+            if (synonymAnalyzers.size() == 1) {
+                // only one analyzer defined; just use that one
+                analyzerName = synonymAnalyzers.keySet().iterator().next();
+            } else {
+                return query;
+            }
         }
         
         Analyzer synonymAnalyzer = synonymAnalyzers.get(analyzerName);
