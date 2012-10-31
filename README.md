@@ -1,4 +1,4 @@
-HON Lucene Synonyms
+Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
 Developer
