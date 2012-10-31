@@ -40,7 +40,7 @@ Be sure to add ```defType=synonym_edismax``` to enable the parser.
 <td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms</font></strong></td>
 <td style="padding:0 1em;"><font size="-1">boolean</font></td>
 <td style="padding:0 1em;"><font size="-1">false</font></td>
-<td style="padding:0 1em;"><font size="-1">Enable or disable synonym expansion entirely. True if synonyms should be enabled.</font></td>
+<td style="padding:0 1em;"><font size="-1">Enable or disable synonym expansion entirely. True if enabled.</font></td>
 </tr>
 <tr style="background:#DDDDDD;">
 <td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.analyzer</font></strong></td>
