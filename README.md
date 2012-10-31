@@ -16,9 +16,9 @@ License
 Summary
 -----------
 
-Extension of the [ExtendedDisMaxQueryParserPlugin][3] that splits queries into a "normal" query and a "synonym" query.
+Extension of the [ExtendedDisMaxQueryParserPlugin][3] that splits queries into a "normal" query and a "synonym" query. This enables proper query-time synonym expansion, with no reindexing required.
 
-This fixes lots of bugs with how Solr typically handles synonyms, using the [SynonymFilterFactory][4].
+This also fixes lots of bugs with how Solr typically handles synonyms using the [SynonymFilterFactory][4].
 
 For usage instructions and full details, read [my blog post on the subject][2].
 
