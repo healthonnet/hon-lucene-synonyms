@@ -27,6 +27,8 @@ For usage instructions and full details, read [my blog post on the subject][2].
 Query parameters
 ------------
 
+Be sure to add ```defType=synonym_edismax``` to enable the parser.
+
 <table border="0" style="border-width:1px;border-color:#999999;border-collapse:collapse;border-style:solid;">
 <tr style="background:gray;color:white;">
 <td style="padding:0 1em;" align="center"><strong>Param</strong></td>
