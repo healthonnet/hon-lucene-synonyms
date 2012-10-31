@@ -204,13 +204,22 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
       /* :NOOP */
     }
     
-    Map<String, Analyzer> synonymAnalyzers;
+    private Map<String, Analyzer> synonymAnalyzers;
+    private Query queryToHighlight;
     
     public SynonymExpandingExtendedDismaxQParser(String qstr, SolrParams localParams, SolrParams params,
             SolrQueryRequest req, Map<String, Analyzer> synonymAnalyzers) {
         super(qstr, localParams, params, req);
         this.synonymAnalyzers = synonymAnalyzers;
     }
+    
+    
+
+    @Override
+    public Query getHighlightQuery() throws ParseException {
+        return queryToHighlight != null ? queryToHighlight : super.getHighlightQuery();
+    }
+    
 
     @Override
     public Query parse() throws ParseException {
@@ -320,6 +329,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                     combinedQuery.add(mainUserQuery, Occur.SHOULD);
                     combinedQuery.add(allSynonymQueries, Occur.SHOULD);
                     booleanClause.setQuery(combinedQuery);
+                    queryToHighlight = combinedQuery;
                 }
             }
         }
