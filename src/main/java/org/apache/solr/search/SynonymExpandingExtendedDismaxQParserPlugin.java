@@ -255,7 +255,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         boolean hasComplexQueryOperators = Const.COMPLEX_QUERY_OPERATORS_PATTERN.matcher(getString()).find();
         
         if (hasComplexQueryOperators // TODO: support complex operators
-                || synonymQueries.size() < 2) { // found more than one synonym, i.e. not just the original phrase
+                || synonymQueries.isEmpty()) { // didn't find more than 0 synonyms, i.e. it's just the original phrase
             return;
         }
         
@@ -270,10 +270,21 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         applySynonymQueries(query, synonymQueries, originalBoost, synonymBoost, doMinShouldMatch, minShouldMatch);
     }
 
+    /**
+     * Find the main query and its surrounding clause, make it SHOULD instead of MUST and append a bunch
+     * of other SHOULDs to it, then wrap it in a MUST
+     * 
+     * E.g. +(text:dog) becomes
+     * +((text:dog)^1.5 ((text:hound) (text:pooch))^1.2)
+     * @param query
+     * @param synonymQueries
+     * @param originalBoost
+     * @param synonymBoost
+     * @param doMinShouldMatch
+     * @param minShouldMatch
+     */
     private void applySynonymQueries(Query query, List<Query> synonymQueries, float originalBoost, float synonymBoost,
             boolean doMinShouldMatch, String minShouldMatch) {
-        // find the main query and its surrounding clause, make it SHOULD instead of MUST and append a bunch
-        // of other SHOULDs to it, then wrap it in a MUST
 
         if (query instanceof BoostedQuery) {
             applySynonymQueries(((BoostedQuery) query).getQuery(), synonymQueries, originalBoost, synonymBoost, 
@@ -308,25 +319,18 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             }
         }
     }
-    
-    private BooleanQuery convertToBooleanQuery(Query query) {
-        // wrap the query in a boolean query, if necessary
-        if (query instanceof BooleanQuery) {
-            return (BooleanQuery)query;
-        }
-        BooleanQuery result = new BooleanQuery();
-        result.add(query, Occur.SHOULD);
-        return result;
-    }
 
+    /**
+     * Given the synonymAnalyzer, returns a list of all alternate queries expanded from the original user query.
+     * @param synonymAnalyzer
+     * @param solrParams
+     * @return
+     */
     private List<Query> generateSynonymQueries(Analyzer synonymAnalyzer, SolrParams solrParams) {
 
+        // TODO: make the token stream reusable?
         TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME, 
                 new StringReader(getString()));
-
-        // build up a list of alternate queries based on possible synonyms
-        // for instance, if dog -> [hound, pooch], then "dog treats" would expand to
-        // "hound treats" and "pooch treats"
         
         SortedMap<Integer, SortedSet<TextInQuery>> startPosToTextsInQuery = new TreeMap<Integer, SortedSet<TextInQuery>>();
         
@@ -336,11 +340,15 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                 OffsetAttribute offsetAttribute = tokenStream.getAttribute(OffsetAttribute.class);
                 TypeAttribute typeAttribute = tokenStream.getAttribute(TypeAttribute.class);
                 
-                if (!typeAttribute.type().equals("shingle")) { // ignore shingles
+                if (!typeAttribute.type().equals("shingle")) {
+                    // ignore shingles; we only care about synonyms and the original text
+                    // TODO: filter other types as well
+                    
                     TextInQuery textInQuery = new TextInQuery(term.toString(), 
                             offsetAttribute.startOffset(), 
                             offsetAttribute.endOffset());
                     
+                    // brain-dead multimap logic... man, I wish we had Google Guava here
                     SortedSet<TextInQuery> existingList = startPosToTextsInQuery.get(offsetAttribute.startOffset());
                     if (existingList == null) {
                         existingList = new TreeSet<TextInQuery>();
@@ -366,6 +374,23 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         return createSynonymQueries(solrParams, alternateQueries);
     }
 
+    /**
+     * From a list of texts in the original query that were deemed to be interested (i.e. synonyms or the original text
+     * itself), build up all possible alternate queries as strings.
+     * 
+     * For instance, if the query is "dog bite" and the synonyms are dog -> [dog,hound,pooch] and bite -> [bite,nibble],
+     * then the result will be:
+     * 
+     * dog bite
+     * hound bite
+     * pooch bite
+     * dog nibble
+     * hound nibble
+     * pooch nibble
+     * 
+     * @param textsInQueryLists
+     * @return
+     */
     private List<String> buildUpAlternateQueries(List<List<TextInQuery>> textsInQueryLists) {
         
         String originalUserQuery = getString();
@@ -428,7 +453,15 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         return result;
     }
 
-    private List<Query> createSynonymQueries(SolrParams solrParams, List<String> terms) {
+    /**
+     * From a list of alternate queries in text format, parse them using the default
+     * ExtendedSolrQueryParser and return the queries.
+     * 
+     * @param solrParams
+     * @param alternateQueryTexts
+     * @return
+     */
+    private List<Query> createSynonymQueries(SolrParams solrParams, List<String> alternateQueryTexts) {
         
         //
         // begin copied code from ExtendedDismaxQParser
@@ -445,9 +478,12 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         //
         
         List<Query> result = new ArrayList<Query>();
-        for (String term : terms) {
+        for (String alternateQueryText : alternateQueryTexts) {
+            if (alternateQueryText.equals(getString())) { // alternate query is the same as what the user entered
+                continue;
+            }
             try {
-                result.add(up.parse(term));
+                result.add(up.parse(alternateQueryText));
             } catch (ParseException e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
                 e.printStackTrace(System.err);
@@ -455,6 +491,116 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         }
         
         return result;
+    }
+    
+    /**
+     * Simple POJO for representing a piece of text found in the original query or expanded using shingles/synonyms.
+     * @author nolan
+     *
+     */
+    private static class TextInQuery implements Comparable<TextInQuery> {
+
+        private String text;
+        private int endPosition;
+        private int startPosition;
+        
+        public TextInQuery(String text, int startPosition, int endPosition) {
+            this.text = text;
+            this.startPosition = startPosition;
+            this.endPosition = endPosition;
+        }
+        
+        public String getText() {
+            return text;
+        }
+        public int getEndPosition() {
+            return endPosition;
+        }
+        public int getStartPosition() {
+            return startPosition;
+        }
+        
+        @Override
+        public String toString() {
+            return "TextInQuery [text=" + text + ", endPosition=" + endPosition + ", startPosition=" + startPosition + "]";
+        }
+
+        public int compareTo(TextInQuery other) {
+            if (this.startPosition != other.startPosition) {
+                return this.startPosition - other.startPosition;
+            } else if (this.endPosition != other.endPosition) {
+                return this.endPosition - other.endPosition;
+            }
+            return this.text.compareTo(other.text);
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + endPosition;
+            result = prime * result + startPosition;
+            result = prime * result + ((text == null) ? 0 : text.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            TextInQuery other = (TextInQuery) obj;
+            if (endPosition != other.endPosition)
+                return false;
+            if (startPosition != other.startPosition)
+                return false;
+            if (text == null) {
+                if (other.text != null)
+                    return false;
+            } else if (!text.equals(other.text))
+                return false;
+            return true;
+        }
+    }
+    
+    /**
+     * Simple POJO for containing an alternate query that we're building up
+     * @author nolan
+     *
+     */
+    private static class AlternateQuery implements Cloneable {
+
+        private StringBuilder stringBuilder;
+        private int endPosition;
+        
+        public AlternateQuery(StringBuilder stringBuilder, int endPosition) {
+            this.stringBuilder = stringBuilder;
+            this.endPosition = endPosition;
+        }
+
+        public StringBuilder getStringBuilder() {
+            return stringBuilder;
+        }
+
+        public int getEndPosition() {
+            return endPosition;
+        }
+        
+        public void setEndPosition(int endPosition) {
+            this.endPosition = endPosition;
+        }
+
+        public Object clone() {
+            return new AlternateQuery(new StringBuilder(stringBuilder), endPosition);
+        }
+
+        @Override
+        public String toString() {
+            return "AlternateQuery [stringBuilder=" + stringBuilder + ", endPosition=" + endPosition + "]";
+        }
     }
 
 }
