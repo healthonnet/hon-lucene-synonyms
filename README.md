@@ -18,7 +18,7 @@ Extension of the [ExtendedDisMaxQueryParserPlugin][3] that splits queries into a
 
 This fixes lots of bugs with how Solr typically handles synonyms, using the [SynonymFilterFactory][4].
 
-For usage instructions and full details, read [my blog post on the subject[2].
+For usage instructions and full details, read [my blog post on the subject][2].
 
 [Link to the latest JAR file][5].
 
