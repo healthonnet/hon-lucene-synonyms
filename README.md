@@ -4,7 +4,9 @@ HON Lucene Synonyms
 Developer
 -----------
 
-Nolan Lawson, Health on the Net Foundation
+[Nolan Lawson][7]
+
+[Health On the Net Foundation][6]
 
 License
 -----------
@@ -80,3 +82,5 @@ mvn install
 [3]: http://wiki.apache.org/solr/ExtendedDisMax
 [4]: http://wiki.apache.org/solr/AnalyzersTokenizersTokenFilters#solr.SynonymFilterFactory
 [5]: https://github.com/downloads/HON-Khresmoi/hon-lucene-synonyms/hon-lucene-synonyms-1.0.jar
+[6]: http://www.hon.ch
+[7]: http://nolanlawson.com
