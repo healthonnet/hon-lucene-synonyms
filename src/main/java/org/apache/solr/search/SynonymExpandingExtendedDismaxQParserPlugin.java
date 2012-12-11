@@ -67,7 +67,7 @@ import org.apache.solr.util.plugin.ResourceLoaderAware;
  * 
  * @lucene.experimental
  */
-public class SynonymExpandingExtendedDismaxQParserPlugin extends ExtendedDismaxQParserPlugin implements
+public class SynonymExpandingExtendedDismaxQParserPlugin extends org.apache.solr.search.QParserPlugin implements
         ResourceLoaderAware {
     public static final String NAME = "synonym_edismax";
 
@@ -485,6 +485,12 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         int qslop = solrParams.getInt(DisMaxParams.QS, 0);
         ExtendedSolrQueryParser up = new ExtendedSolrQueryParser(this,
                 Const.IMPOSSIBLE_FIELD_NAME);
+        
+        // have to build up the queryFields again because in Solr 3.6.1 they made it private.
+        Map<String,Float> queryFields = SolrPluginUtils.parseFieldBoosts(solrParams.getParams(DisMaxParams.QF));
+        if (0 == queryFields.size()) {
+          queryFields.put(req.getSchema().getDefaultSearchFieldName(), 1.0f);
+        }
         up.addAlias(Const.IMPOSSIBLE_FIELD_NAME, tiebreaker, queryFields);
         up.setPhraseSlop(qslop); // slop for explicit user phrase queries
         up.setAllowLeadingWildcard(true);
