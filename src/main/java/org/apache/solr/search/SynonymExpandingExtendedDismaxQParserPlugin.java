@@ -477,10 +477,17 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
      * @return
      */
     private List<Query> createSynonymQueries(SolrParams solrParams, List<String> alternateQueryTexts) {
-        
+
         //
         // begin copied code from ExtendedDismaxQParser
-        //
+        //        
+        
+        // have to build up the queryFields again because in Solr 3.6.1 they made it private.
+        Map<String,Float> queryFields = SolrPluginUtils.parseFieldBoosts(solrParams.getParams(DisMaxParams.QF));
+        if (0 == queryFields.size()) {
+            queryFields.put(req.getSchema().getDefaultSearchFieldName(), 1.0f);
+        }
+
         float tiebreaker = solrParams.getFloat(DisMaxParams.TIE, 0.0f);
         int qslop = solrParams.getInt(DisMaxParams.QS, 0);
         ExtendedSolrQueryParser up = new ExtendedSolrQueryParser(this,
