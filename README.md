@@ -22,10 +22,107 @@ This also fixes lots of bugs with how Solr typically handles synonyms using the 
 
 For more details, read [my blog post on the subject][2].
 
+Getting Started
+----------------
+
+The following tutorial will set up a working synonym-enabled Solr app using the ```example/``` directory from Solr itself, 
+running in Jetty.
+
+**Step 1**: Download the appropriate ```hon-lucene-synonyms``` JAR file, depending on the Solr version you want:
+
+* [hon-lucene-synonyms-1.1-solr-3.5.0.jar][10]
+* [hon-lucene-synonyms-1.1-solr-3.6.0.jar][11] 
+* [hon-lucene-synonyms-1.1-solr-3.6.1.jar][12]
+* [hon-lucene-synonyms-1.1-solr-3.6.2.jar][13]
+* [hon-lucene-synonyms-1.1-solr-4.0.0.jar][14]
+
+**Step 2**: Download Solr from [the Solr home page][8].  For this tutorial, we'll use [Solr 3.6.2][9].  You do not need
+the sources; the ```tgz``` or ```zip``` files will work fine.
+
+**Step 3**: Extract the compressed file and cd to the ```example/``` directory.
+
+**Step 4**: Now, you need to bundle the ```hon-lucene-synonyms``` JAR file into ```webapps/solr.war```.
+On UNIX systems, the following will work quite nicely:
+
+```
+mkdir myjar
+cd myjar
+jar -xf ../webapps/solr.war 
+cp /path/to/my/hon-lucene-synonyms-1.1-solr-3.6.2.jar WEB-INF/lib/
+jar -cf ../webapps/solr.war *
+cd ..
+```
+
+Note the ```/path/to/my/hon-lucene-synonyms...``` part above that you must edit yourself to point to wherever you downloaded
+the JAR file.
+
+**Step 5**: Download the [example_synonym_file.txt][5] file and copy it to the ```solr/conf``` directory.
+
+**Step 6**: Edit the ```solr/conf/solrconfig.xml``` and add these lines near the bottom (before ```</config>```):
+
+```xml
+<queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
+  <str name="luceneMatchVersion">LUCENE_36</str>
+  <lst name="synonymAnalyzers">
+    <lst name="syn_en">
+      <lst name="tokenizer">
+        <str name="class">solr.StandardTokenizerFactory</str>
+      </lst>
+      <lst name="filter">
+        <str name="class">solr.ShingleFilterFactory</str>
+        <str name="outputUnigramsIfNoShingles">true</str>
+        <str name="outputUnigrams">true</str>
+        <str name="minShingleSize">2</str>
+        <str name="maxShingleSize">4</str>
+      </lst>
+      <lst name="filter">
+        <str name="class">solr.SynonymFilterFactory</str>
+        <str name="tokenizerFactory">solr.KeywordTokenizerFactory</str>
+        <str name="synonyms">example_synonym_file.txt</str>
+        <str name="expand">true</str>
+        <str name="ignoreCase">true</str>
+      </lst>
+    </lst>
+  </lst>
+</queryParser>
+```
+
+Note that you must modify the ```luceneMatchVersion``` above to match the 
+```<luceneMatchVersion>...</luceneMatchVersion>``` tag at the beginning of the ```solr/conf/solrconfig.xml``` file.
+
+**Step 7**: Start up the app by running ```java -jar start.jar```.  Jetty may print a ```ClassNotFoundException```, but
+it shouldn't matter.
+
+**Step 8**: In your browser, navigate to 
+
+[```http://localhost:8983/solr/select/?q=dog&debugQuery=on&qf=text&defType=synonym_edismax&synonyms=true```](http://localhost:8983/solr/select/?q=dog&debugQuery=on&qf=text&defType=synonym_edismax&synonyms=true)
+
+You should see a response like this:
+
+```xml
+<response>
+  ...
+  <result name="response" numFound="0" start="0"/>
+  <lst name="debug">
+    <str name="rawquerystring">dog</str>
+    <str name="querystring">dog</str>
+    <str name="parsedquery">+(DisjunctionMaxQuery((text:dog)) (((DisjunctionMaxQuery((text:canis)) DisjunctionMaxQuery((text:familiaris)))~2) DisjunctionMaxQuery((text:hound)) DisjunctionMaxQuery((text:pooch))))</str>
+    <str name="parsedquery_toString">+((text:dog) ((((text:canis) (text:familiaris))~2) (text:hound) (text:pooch)))</str>
+    <lst name="explain"/>
+    <str name="QParser">SynonymExpandingExtendedDismaxQParser</str>
+    ...
+  </lst>
+</response>
+```
+
+Note that the input query ```dog``` has been expanded into ```dog```, ```canis familiaris```, ```hound```, and ```pooch```.
+
 Query parameters
 ------------
 
-Be sure to add ```defType=synonym_edismax``` to enable the parser.
+The following are parameters that you can use to tweak the synonym expansion.
+
+Be sure to add ```defType=synonym_edismax``` and ```synonyms=true``` to enable the parser in the first place!
 
 <table border="0" style="border-width:1px;border-color:#999999;border-collapse:collapse;border-style:solid;">
 <tr style="background:gray;color:white;">
@@ -81,8 +178,11 @@ mvn install
 [2]: http://nolanlawson.com/2012/10/31/better-synonym-handling-in-solr
 [3]: http://wiki.apache.org/solr/ExtendedDisMax
 [4]: http://wiki.apache.org/solr/AnalyzersTokenizersTokenFilters#solr.SynonymFilterFactory
+[5]: http://raw.github.com/healthonnet/hon-lucene-synonyms/master/examples/example_synonym_file.txt
 [6]: http://www.hon.ch
 [7]: http://nolanlawson.com
+[8]: http://lucene.apache.org/solr/
+[9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
 [10]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.5.0/hon-lucene-synonyms-1.1-solr-3.5.0.jar
 [11]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.6.0/hon-lucene-synonyms-1.1-solr-3.6.0.jar
 [12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.6.1/hon-lucene-synonyms-1.1-solr-3.6.1.jar
