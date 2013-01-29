@@ -20,9 +20,7 @@ Extension of the [ExtendedDisMaxQueryParserPlugin][3] that splits queries into a
 
 This also fixes lots of bugs with how Solr typically handles synonyms using the [SynonymFilterFactory][4].
 
-For usage instructions and full details, read [my blog post on the subject][2].
-
-[Link to the latest JAR file][5].
+For more details, read [my blog post on the subject][2].
 
 Query parameters
 ------------
@@ -83,6 +81,11 @@ mvn install
 [2]: http://nolanlawson.com/2012/10/31/better-synonym-handling-in-solr
 [3]: http://wiki.apache.org/solr/ExtendedDisMax
 [4]: http://wiki.apache.org/solr/AnalyzersTokenizersTokenFilters#solr.SynonymFilterFactory
-[5]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.0/hon-lucene-synonyms-1.0.jar
 [6]: http://www.hon.ch
 [7]: http://nolanlawson.com
+[10]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.5.0/hon-lucene-synonyms-1.1-solr-3.5.0.jar
+[11]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.6.0/hon-lucene-synonyms-1.1-solr-3.6.0.jar
+[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.6.1/hon-lucene-synonyms-1.1-solr-3.6.1.jar
+[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.6.2/hon-lucene-synonyms-1.1-solr-3.6.2.jar
+[14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-4.0.0/hon-lucene-synonyms-1.1-solr-4.0.0.jar
+
