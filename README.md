@@ -117,12 +117,19 @@ You should see a response like this:
 
 Note that the input query ```dog``` has been expanded into ```dog```, ```canis familiaris```, ```hound```, and ```pooch```.
 
+Gotchas
+---------
+
+Keep in mind that you must add ```defType=synonym_edismax``` and ```synonyms=true``` to enable 
+the parser in the first place.
+
+Also, you must either define ```qf``` in the query parameters or ```defaultSearchField``` in ```solr/conf/schema.xml```,
+so that the parser knows which fields to use during synonym expansion. 
+
 Query parameters
 ------------
 
 The following are parameters that you can use to tweak the synonym expansion.
-
-Be sure to add ```defType=synonym_edismax``` and ```synonyms=true``` to enable the parser in the first place!
 
 <table border="0" style="border-width:1px;border-color:#999999;border-collapse:collapse;border-style:solid;">
 <tr style="background:gray;color:white;">
