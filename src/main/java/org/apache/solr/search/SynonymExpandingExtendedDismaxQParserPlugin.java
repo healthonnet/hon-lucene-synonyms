@@ -487,6 +487,12 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         if (0 == queryFields.size()) {
             queryFields.put(req.getSchema().getDefaultSearchFieldName(), 1.0f);
         }
+        
+        if (queryFields.keySet().iterator().next() == null) {
+            throw new RuntimeException("'qf' is null and there's no 'defaultSearchField' in schema.xml. " +
+            		"Synonyms cannot be generated in these conditions! " +
+            		"Please either add 'qf', or add 'defaultSearchField'");
+        }
 
         float tiebreaker = solrParams.getFloat(DisMaxParams.TIE, 0.0f);
         int qslop = solrParams.getInt(DisMaxParams.QS, 0);
