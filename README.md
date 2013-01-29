@@ -36,7 +36,8 @@ the sources; the ```tgz``` or ```zip``` file will work fine.
 **Step 3**: Extract the compressed file and cd to the ```example/``` directory.
 
 **Step 4**: Now, you need to bundle the ```hon-lucene-synonyms``` JAR file into ```webapps/solr.war```.
-On UNIX systems, the following will work quite nicely:
+Below is a script that will work quite nicely on UNIX systems. **Be sure to change the 
+```/path/to/my/hon-lucene-synonyms-1.1.jar``` part before running this script**.
 
 ```
 mkdir myjar
@@ -46,9 +47,6 @@ cp /path/to/my/hon-lucene-synonyms-1.1.jar WEB-INF/lib/
 jar -cf ../webapps/solr.war *
 cd ..
 ```
-
-Note the ```/path/to/my/hon-lucene-synonyms-1.1.jar``` part above that you must edit yourself to point to wherever you downloaded
-the JAR file.
 
 **Step 5**: Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` directory.
 
