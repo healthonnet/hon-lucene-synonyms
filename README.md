@@ -161,7 +161,7 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.disablePhraseQueries</font></strong></td>
 <td style="padding:0 1em;"><font size="-1">boolean</font></td>
 <td style="padding:0 1em;"><font size="-1">false</font></td>
-<td style="padding:0 1em;"><font size="-1">Enable or disable synonym expansion when the user input contains a phrase query (i.e. a quoted query).</font></td>
+<td style="padding:0 1em;"><font size="-1">True if synonym expansion should be disabled when the user input contains a phrase query (i.e. a quoted query). This option is offered because expansion of phrase queries may be considered non-intuitive to users.</font></td>
 </tr>
 </table>
 
