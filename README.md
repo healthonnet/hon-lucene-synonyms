@@ -48,7 +48,7 @@ jar -cf ../webapps/solr.war *
 cd ..
 ```
 
-Note that this plugin will not work in any other location than the ```WEB-INF/lib/``` folder of the ```solr.war``` 
+Note that this plugin will not work in any location other than the ```WEB-INF/lib/``` directory of the ```solr.war``` 
 itself, because of [issues with the ClassLoader][11].
 
 **Step 5**: Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` directory.
