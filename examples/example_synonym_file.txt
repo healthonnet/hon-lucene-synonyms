@@ -1,0 +1,1 @@
+dog,hound,pooch,canis familiaris
