@@ -37,7 +37,7 @@ running in Jetty.
 * [hon-lucene-synonyms-1.1-solr-4.0.0.jar][14]
 
 **Step 2**: Download Solr from [the Solr home page][8].  For this tutorial, we'll use [Solr 3.6.2][9].  You do not need
-the sources; the ```tgz``` or ```zip``` files will work fine.
+the sources; the ```tgz``` or ```zip``` file will work fine.
 
 **Step 3**: Extract the compressed file and cd to the ```example/``` directory.
 
@@ -56,15 +56,15 @@ cd ..
 Note the ```/path/to/my/hon-lucene-synonyms...``` part above that you must edit yourself to point to wherever you downloaded
 the JAR file.
 
-**Step 5**: Download the [example_synonym_file.txt][5] file and copy it to the ```solr/conf``` directory.
+**Step 5**: Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` directory.
 
-**Step 6**: Edit the ```solr/conf/solrconfig.xml``` and add these lines near the bottom (before ```</config>```):
+**Step 6**: Edit ```solr/conf/solrconfig.xml``` and add these lines near the bottom (before ```</config>```):
 
 ```xml
 <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
   <str name="luceneMatchVersion">LUCENE_36</str>
   <lst name="synonymAnalyzers">
-    <lst name="syn_en">
+    <lst name="myCoolAnalyzer">
       <lst name="tokenizer">
         <str name="class">solr.StandardTokenizerFactory</str>
       </lst>
