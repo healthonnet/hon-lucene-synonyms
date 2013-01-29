@@ -35,6 +35,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -180,6 +181,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         public static final String SYNONYMS_ORIGINAL_BOOST = "synonyms.originalBoost";
         public static final String SYNONYMS_SYNONYM_BOOST = "synonyms.synonymBoost";
         public static final String SYNONYMS_DISABLE_PHRASE_QUERIES = "synonyms.disablePhraseQueries";
+        public static final String SYNONYMS_DEBUG = "synonyms.debug";
         
     }
 
@@ -204,6 +206,18 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
       /* :NOOP */
     }
     
+    private static Logger log;
+    
+    private static void logDebug(SolrParams solrParams, String text) {
+        if (solrParams.getBool(Params.SYNONYMS_DEBUG, false)) { // debugging enabled
+            if (log == null) {
+                log = Logger.getLogger(SynonymExpandingExtendedDismaxQParser.class.getSimpleName());
+            }
+            log.info(text);
+        }
+    }
+    
+    
     private Map<String, Analyzer> synonymAnalyzers;
     private Query queryToHighlight;
     
@@ -212,7 +226,6 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         super(qstr, localParams, params, req);
         this.synonymAnalyzers = synonymAnalyzers;
     }
-    
     
 
     @Override
@@ -229,8 +242,12 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         SolrParams params = getParams();
         SolrParams solrParams = localParams == null ? params : new DefaultSolrParams(localParams, params);
 
+        
+        logDebug(solrParams, "synonyms debugging enabled");
+        
         // disable/enable synonym handling altogether
         if (!solrParams.getBool(Params.SYNONYMS, false)) {
+            logDebug(solrParams, "synonyms disabled due to parameter synonyms=false, returning query as-is");
             return query;
         }
         
@@ -240,7 +257,9 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             if (synonymAnalyzers.size() == 1) {
                 // only one analyzer defined; just use that one
                 analyzerName = synonymAnalyzers.keySet().iterator().next();
+                logDebug(solrParams, "only one analyzer defined");
             } else {
+                logDebug(solrParams, "more than one analyzer defined, no 'synonyms.analyzer' parameter provided, returning query as-is");
                 return query;
             }
         }
@@ -248,14 +267,18 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         Analyzer synonymAnalyzer = synonymAnalyzers.get(analyzerName);
         
         if (synonymAnalyzer == null) { // couldn't find analyzer
+            logDebug(solrParams, "couldn't find analyzer "+ analyzerName + ", returning query as-is");
             return query;
         }
         
         if (solrParams.getBool(Params.SYNONYMS_DISABLE_PHRASE_QUERIES, false)
                 && getString().indexOf('"') != -1) {
             // disable if a phrase query is detected, i.e. there's a '"'
+            logDebug(solrParams, "phrase query disabled and there's a quote in this query, returning query as-is");
             return query;
         }
+        
+        logDebug(solrParams, "attempting to apply synonym expansion...");
         
         attemptToApplySynonymsToQuery(query, solrParams, synonymAnalyzer);
 
@@ -270,6 +293,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         
         if (hasComplexQueryOperators // TODO: support complex operators
                 || synonymQueries.isEmpty()) { // didn't find more than 0 synonyms, i.e. it's just the original phrase
+            logDebug(solrParams, "didn't find more than 0 synonyms, returning query as-is");
             return;
         }
         
@@ -386,6 +410,8 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         // have to use the start positions and end positions to figure out all possible combinations
         List<String> alternateQueries = buildUpAlternateQueries(sortedTextsInQuery);
 
+        logDebug(solrParams, "found alternate versions of query: " + alternateQueries);
+        
         return createSynonymQueries(solrParams, alternateQueries);
     }
 
@@ -511,6 +537,8 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                 e.printStackTrace(System.err);
             }
         }
+        
+        logDebug(solrParams, "created synonyms query: " + result);
         
         return result;
     }
