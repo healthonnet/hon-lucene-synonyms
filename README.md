@@ -168,11 +168,15 @@ Be sure to add ```defType=synonym_edismax``` and ```synonyms=true``` to enable t
 Compile it yourself
 ----------
 
-Download the code and do:
+There are separate Git branches for the separate Solr versions that are supported.  To build them all, you can check out 
+all the Git branches and then run:
 
 ```
-mvn install
+./build_all_versions.sh
 ```
+
+This will ```git checkout``` each branch, ```mvn install``` it, and copy the resulting JAR file to ```target/s3```.
+
 
 [1]: http://www.apache.org/licenses/LICENSE-2.0.html
 [2]: http://nolanlawson.com/2012/10/31/better-synonym-handling-in-solr
