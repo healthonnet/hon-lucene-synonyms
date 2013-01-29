@@ -35,7 +35,7 @@ the sources; the ```tgz``` or ```zip``` file will work fine.
 
 **Step 3**: Extract the compressed file and cd to the ```example/``` directory.
 
-**Step 4**: Now, you need to bundle the ```hon-lucene-synonyms``` JAR file into ```webapps/solr.war```.
+**Step 4**: Now, you need to bundle the ```hon-lucene-synonyms-1.1.jar``` file into ```webapps/solr.war```.
 Below is a script that will work quite nicely on UNIX systems. **Be sure to change the 
 ```/path/to/my/hon-lucene-synonyms-1.1.jar``` part before running this script**.
 
@@ -47,6 +47,9 @@ cp /path/to/my/hon-lucene-synonyms-1.1.jar WEB-INF/lib/
 jar -cf ../webapps/solr.war *
 cd ..
 ```
+
+Note that this plugin will not work in any other location than the ```WEB-INF/lib/``` folder of the ```solr.war``` 
+itself, because of [issues with the ClassLoader][11].
 
 **Step 5**: Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` directory.
 
@@ -184,3 +187,4 @@ mvn install
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
 [10]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1/hon-lucene-synonyms-1.1.jar
+[11]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
