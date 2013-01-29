@@ -28,13 +28,7 @@ Getting Started
 The following tutorial will set up a working synonym-enabled Solr app using the ```example/``` directory from Solr itself, 
 running in Jetty.
 
-**Step 1**: Download the appropriate ```hon-lucene-synonyms``` JAR file, depending on the Solr version you want:
-
-* [hon-lucene-synonyms-1.1-solr-3.5.0.jar][10]
-* [hon-lucene-synonyms-1.1-solr-3.6.0.jar][11] 
-* [hon-lucene-synonyms-1.1-solr-3.6.1.jar][12]
-* [hon-lucene-synonyms-1.1-solr-3.6.2.jar][13]
-* [hon-lucene-synonyms-1.1-solr-4.0.0.jar][14]
+**Step 1**: Download the latest JAR file: [hon-lucene-synonyms-1.1.jar][10].
 
 **Step 2**: Download Solr from [the Solr home page][8].  For this tutorial, we'll use [Solr 3.6.2][9].  You do not need
 the sources; the ```tgz``` or ```zip``` file will work fine.
@@ -48,12 +42,12 @@ On UNIX systems, the following will work quite nicely:
 mkdir myjar
 cd myjar
 jar -xf ../webapps/solr.war 
-cp /path/to/my/hon-lucene-synonyms-1.1-solr-3.6.2.jar WEB-INF/lib/
+cp /path/to/my/hon-lucene-synonyms-1.1.jar WEB-INF/lib/
 jar -cf ../webapps/solr.war *
 cd ..
 ```
 
-Note the ```/path/to/my/hon-lucene-synonyms...``` part above that you must edit yourself to point to wherever you downloaded
+Note the ```/path/to/my/hon-lucene-synonyms-1.1.jar``` part above that you must edit yourself to point to wherever you downloaded
 the JAR file.
 
 **Step 5**: Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` directory.
@@ -175,14 +169,11 @@ The following are parameters that you can use to tweak the synonym expansion.
 Compile it yourself
 ----------
 
-There are separate Git branches for the separate Solr versions that are supported.  To build them all, you can check out 
-all the Git branches and then run:
+Download the code and run:
 
 ```
-./build_all_versions.sh
+mvn install
 ```
-
-This will ```git checkout``` each branch, ```mvn install``` it, and copy the resulting JAR file to ```target/s3```.
 
 
 [1]: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -194,9 +185,4 @@ This will ```git checkout``` each branch, ```mvn install``` it, and copy the res
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
-[10]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.5.0/hon-lucene-synonyms-1.1-solr-3.5.0.jar
-[11]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.6.0/hon-lucene-synonyms-1.1-solr-3.6.0.jar
-[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.6.1/hon-lucene-synonyms-1.1-solr-3.6.1.jar
-[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-3.6.2/hon-lucene-synonyms-1.1-solr-3.6.2.jar
-[14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1-solr-4.0.0/hon-lucene-synonyms-1.1-solr-4.0.0.jar
-
+[10]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1/hon-lucene-synonyms-1.1.jar
