@@ -350,6 +350,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         SortedMap<Integer, SortedSet<TextInQuery>> startPosToTextsInQuery = new TreeMap<Integer, SortedSet<TextInQuery>>();
         
         try {
+            tokenStream.reset();
             while (tokenStream.incrementToken()) {
                 CharTermAttribute term = tokenStream.getAttribute(CharTermAttribute.class);
                 OffsetAttribute offsetAttribute = tokenStream.getAttribute(OffsetAttribute.class);
@@ -372,9 +373,11 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                     existingList.add(textInQuery);
                 }
             }
-
+            tokenStream.end();
         } catch (IOException e) {
             throw new RuntimeException("uncaught exception in synonym processing", e);
+        } finally {
+            tokenStream.close();
         }
         
         List<List<TextInQuery>> sortedTextsInQuery = new ArrayList<List<TextInQuery>>(
