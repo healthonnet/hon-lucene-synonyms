@@ -42,26 +42,24 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
-import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.analysis.util.ResourceLoader;
+import org.apache.lucene.analysis.util.ResourceLoaderAware;
+import org.apache.lucene.analysis.util.TokenFilterFactory;
+import org.apache.lucene.analysis.util.TokenizerFactory;
+import org.apache.lucene.queries.function.BoostedQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.analysis.util.TokenFilterFactory;
-import org.apache.solr.analysis.TokenizerChain;
-import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.lucene.util.Version;
-import org.apache.lucene.analysis.util.ResourceLoader;
+import org.apache.solr.analysis.TokenizerChain;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
-import org.apache.solr.common.params.DefaultSolrParams;
 import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
-import org.apache.lucene.queries.function.BoostedQuery;
 import org.apache.solr.util.SolrPluginUtils;
-import org.apache.lucene.analysis.util.ResourceLoaderAware;
 
 /**
  * An advanced multi-field query parser.
@@ -498,20 +496,14 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         
         if (queryFields.keySet().iterator().next() == null) {
             throw new RuntimeException("'qf' is null and there's no 'defaultSearchField' in schema.xml. " +
-            		"Synonyms cannot be generated in these conditions! " +
-            		"Please either add 'qf', or add 'defaultSearchField'");
+                        "Synonyms cannot be generated in these conditions! " +
+                        "Please either add 'qf', or add 'defaultSearchField'");
         }
 
         float tiebreaker = solrParams.getFloat(DisMaxParams.TIE, 0.0f);
         int qslop = solrParams.getInt(DisMaxParams.QS, 0);
         ExtendedSolrQueryParser up = new ExtendedSolrQueryParser(this,
                 Const.IMPOSSIBLE_FIELD_NAME);
-        
-        // have to build up the queryFields again because in Solr 3.6.1 they made it private.
-        Map<String,Float> queryFields = SolrPluginUtils.parseFieldBoosts(solrParams.getParams(DisMaxParams.QF));
-        if (0 == queryFields.size()) {
-          queryFields.put(req.getSchema().getDefaultSearchFieldName(), 1.0f);
-        }
         up.addAlias(Const.IMPOSSIBLE_FIELD_NAME, tiebreaker, queryFields);
         up.setPhraseSlop(qslop); // slop for explicit user phrase queries
         up.setAllowLeadingWildcard(true);
