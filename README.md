@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
-Current version : 1.2.1
+Current version : 1.2.1 ([changelog][15])
 
 Developer
 -----------
@@ -63,7 +63,7 @@ cd ..
 ```
 
 Note that this plugin will not work in any location other than the ```WEB-INF/lib/``` directory of the ```solr.war``` 
-itself, because of [issues with the ClassLoader][11].
+itself, because of [issues with the ClassLoader][102].
 
 ### Step 5
 
@@ -207,6 +207,18 @@ each branch, build it, and put it in the ```target/s3``` direcdtory:
 ./build_all_versions.sh
 ```
 
+Changelog
+------------
+
+* v1.2.1
+ * Added support for Solr 4.1.0 ([#4][104])
+* v1.2
+ * Added support for Solr 4.0.0 ([#3][103])
+* v1.1
+ * Added support for Solr 3.6.1 and 3.6.2 ([#1][101])
+ * Added "Getting Started" instructions to clarify plugin usage ([#2][102])
+* v1.0
+ * Initial release
 
 [1]: http://www.apache.org/licenses/LICENSE-2.0.html
 [2]: http://nolanlawson.com/2012/10/31/better-synonym-handling-in-solr
@@ -217,7 +229,11 @@ each branch, build it, and put it in the ```target/s3``` direcdtory:
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
-[11]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
 [12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.1-solr-3.x/hon-lucene-synonyms-1.2.1-solr-3.x.jar
 [13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.1-solr-4.0.0/hon-lucene-synonyms-1.2.1-solr-4.0.0.jar
 [14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.1-solr-4.1.0/hon-lucene-synonyms-1.2.1-solr-4.1.0.jar
+[15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
+[101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
+[102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
+[103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3
+[104]: http://github.com/healthonnet/hon-lucene-synonyms/issues/4
