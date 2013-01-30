@@ -28,14 +28,22 @@ Getting Started
 The following tutorial will set up a working synonym-enabled Solr app using the ```example/``` directory from Solr itself, 
 running in Jetty.
 
-**Step 1**: Download the latest JAR file: [hon-lucene-synonyms-1.1.jar][10].
+### Step 1
 
-**Step 2**: Download Solr from [the Solr home page][8].  For this tutorial, we'll use [Solr 3.6.2][9].  You do not need
+Download the latest JAR file: [hon-lucene-synonyms-1.1.jar][10].
+
+### Step 2
+
+Download Solr from [the Solr home page][8].  For this tutorial, we'll use [Solr 3.6.2][9].  You do not need
 the sources; the ```tgz``` or ```zip``` file will work fine.
 
-**Step 3**: Extract the compressed file and cd to the ```example/``` directory.
+### Step 3
 
-**Step 4**: Now, you need to bundle the ```hon-lucene-synonyms-1.1.jar``` file into ```webapps/solr.war```.
+Extract the compressed file and cd to the ```example/``` directory.
+
+### Step 4
+
+Now, you need to bundle the ```hon-lucene-synonyms-1.1.jar``` file into ```webapps/solr.war```.
 Below is a script that will work quite nicely on UNIX systems. **Be sure to change the 
 ```/path/to/my/hon-lucene-synonyms-1.1.jar``` part before running this script**.
 
@@ -51,9 +59,13 @@ cd ..
 Note that this plugin will not work in any location other than the ```WEB-INF/lib/``` directory of the ```solr.war``` 
 itself, because of [issues with the ClassLoader][11].
 
-**Step 5**: Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` directory.
+### Step 5
 
-**Step 6**: Edit ```solr/conf/solrconfig.xml``` and add these lines near the bottom (before ```</config>```):
+Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` directory.
+
+### Step 6
+
+Edit ```solr/conf/solrconfig.xml``` and add these lines near the bottom (before ```</config>```):
 
 ```xml
 <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
@@ -85,10 +97,14 @@ itself, because of [issues with the ClassLoader][11].
 Note that you must modify the ```luceneMatchVersion``` above to match the 
 ```<luceneMatchVersion>...</luceneMatchVersion>``` tag at the beginning of the ```solr/conf/solrconfig.xml``` file.
 
-**Step 7**: Start up the app by running ```java -jar start.jar```.  Jetty may print a ```ClassNotFoundException```, but
+### Step 7
+
+Start up the app by running ```java -jar start.jar```.  Jetty may print a ```ClassNotFoundException```, but
 it shouldn't matter.
 
-**Step 8**: In your browser, navigate to 
+### Step 8
+
+In your browser, navigate to 
 
 [```http://localhost:8983/solr/select/?q=dog&debugQuery=on&qf=text&defType=synonym_edismax&synonyms=true```](http://localhost:8983/solr/select/?q=dog&debugQuery=on&qf=text&defType=synonym_edismax&synonyms=true)
 
