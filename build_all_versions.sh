@@ -5,8 +5,8 @@
 #
 # writes to directory target/s3
 
-SOLR_VERSIONS='3.5.0 3.6.0 3.6.1 3.6.2 4.0.0';
-PLUGIN_VERSION='1.1';
+SOLR_VERSIONS='3.x 4.0.0 4.1.0';
+PLUGIN_VERSION='1.2.1';
 
 rm -fr target/s3;
 mkdir target/s3;
