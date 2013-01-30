@@ -1,6 +1,8 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
+Current version : 1.2
+
 Developer
 -----------
 
@@ -30,7 +32,12 @@ running in Jetty.
 
 ### Step 1
 
-Download the latest JAR file: [hon-lucene-synonyms-1.1.jar][10].
+Download the latest JAR file depending on your Solr version:
+
+* [hon-lucene-synonyms-1.2-solr-3.x.jar][12] for Solr 3.5.0, 3.6.0, 3.6.1, and 3.6.2
+* [hon-lucene-synonyms-1.2-solr-4.0.0.jar][13] for Solr 4.0.0
+
+Solr 4.1.0 is not supported yet.  [I'm working on it!][10]
 
 ### Step 2
 
@@ -43,15 +50,15 @@ Extract the compressed file and cd to the ```example/``` directory.
 
 ### Step 4
 
-Now, you need to bundle the ```hon-lucene-synonyms-1.1.jar``` file into ```webapps/solr.war```.
+Now, you need to bundle the ```hon-lucene-synonyms-xxx.jar``` file into ```webapps/solr.war```.
 Below is a script that will work quite nicely on UNIX systems. **Be sure to change the 
-```/path/to/my/hon-lucene-synonyms-1.1.jar``` part before running this script**.
+```/path/to/my/hon-lucene-synonyms-xxx.jar``` part before running this script**.
 
 ```
 mkdir myjar
 cd myjar
 jar -xf ../webapps/solr.war 
-cp /path/to/my/hon-lucene-synonyms-1.1.jar WEB-INF/lib/
+cp /path/to/my/hon-lucene-synonyms-xxx.jar WEB-INF/lib/
 jar -cf ../webapps/solr.war *
 cd ..
 ```
@@ -61,11 +68,13 @@ itself, because of [issues with the ClassLoader][11].
 
 ### Step 5
 
-Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` directory.
+Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` directory 
+(or ```solr/collection1/conf/``` in Solr 4.x).
 
 ### Step 6
 
-Edit ```solr/conf/solrconfig.xml``` and add these lines near the bottom (before ```</config>```):
+Edit ```solr/conf/solrconfig.xml``` (```solr/collection1/conf/solrconfig.xml``` in 4.x) and add these lines near the 
+bottom (before ```</config>```):
 
 ```xml
 <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
@@ -202,5 +211,7 @@ mvn install
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
-[10]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.1/hon-lucene-synonyms-1.1.jar
+[10]: http://github.com/healthonnet/hon-lucene-synonyms/issues/4
 [11]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
+[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2-solr-3.x/hon-lucene-synonyms-1.2-solr-3.x.jar
+[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2-solr-4.0.0/hon-lucene-synonyms-1.2-solr-4.0.0.jar
