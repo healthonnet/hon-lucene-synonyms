@@ -42,15 +42,16 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
-import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.apache.solr.analysis.TokenFilterFactory;
+import org.apache.lucene.analysis.util.TokenFilterFactory;
 import org.apache.solr.analysis.TokenizerChain;
-import org.apache.solr.analysis.TokenizerFactory;
-import org.apache.solr.common.ResourceLoader;
+import org.apache.lucene.analysis.util.TokenizerFactory;
+import org.apache.lucene.util.Version;
+import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.params.DefaultSolrParams;
@@ -58,16 +59,16 @@ import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
-import org.apache.solr.search.function.BoostedQuery;
+import org.apache.lucene.queries.function.BoostedQuery;
 import org.apache.solr.util.SolrPluginUtils;
-import org.apache.solr.util.plugin.ResourceLoaderAware;
+import org.apache.lucene.analysis.util.ResourceLoaderAware;
 
 /**
  * An advanced multi-field query parser.
  * 
  * @lucene.experimental
  */
-public class SynonymExpandingExtendedDismaxQParserPlugin extends ExtendedDismaxQParserPlugin implements
+public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin implements
         ResourceLoaderAware {
     public static final String NAME = "synonym_edismax";
 
@@ -96,15 +97,18 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends ExtendedDismaxQ
         return result;
     }
 
-    public void inform(ResourceLoader loader) {
+    public void inform(ResourceLoader loader) throws IOException {
         // TODO it would be nice if the user didn't have to encode tokenizers/filters
         // as a NamedList.  But for now this is the hack I'm using
         synonymAnalyzers = new HashMap<String, Analyzer>();
-        
-        Object luceneMatchVersion = args.get("luceneMatchVersion");
-        if (luceneMatchVersion == null || !(luceneMatchVersion instanceof String)) {
-            throw new SolrException(ErrorCode.SERVER_ERROR, 
+
+        Object testMatchVersion = args.get("luceneMatchVersion");
+        Version luceneMatchVersion = null;
+        if (testMatchVersion == null || !(testMatchVersion instanceof String)) {
+            throw new SolrException(ErrorCode.SERVER_ERROR,
                     "luceneMatchVersion must be defined for the synonym_edismax parser");
+        } else {
+            luceneMatchVersion = Version.valueOf(args.get("luceneMatchVersion").toString());
         }
         
         Object xmlSynonymAnalyzers = args.get("synonymAnalyzers");
@@ -128,22 +132,21 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends ExtendedDismaxQ
                     }
                     Map<String, String> params = convertNamedListToMap((NamedList<?>)analyzerEntry.getValue());
                     
-                    // add the lucene match version because it's usually required
-                    params.put("luceneMatchVersion", (String)luceneMatchVersion);
-                    
                     if (!params.containsKey("class")) {
                         continue;
                     }
 
                     String className = params.get("class");
                     if (key.equals("tokenizer")) {
-                        tokenizerFactory = (TokenizerFactory) loader.newInstance(className);
+                        tokenizerFactory = (TokenizerFactory) loader.newInstance(className, TokenizerFactory.class);
+                        tokenizerFactory.setLuceneMatchVersion(luceneMatchVersion);
                         tokenizerFactory.init(params);
                         if (tokenizerFactory instanceof ResourceLoaderAware) {
                             ((ResourceLoaderAware)tokenizerFactory).inform(loader);
                         }
                     } else if (key.equals("filter")) {
-                        TokenFilterFactory filterFactory = (TokenFilterFactory) loader.newInstance(className);
+                        TokenFilterFactory filterFactory = (TokenFilterFactory) loader.newInstance(className, TokenFilterFactory.class);
+                        filterFactory.setLuceneMatchVersion(luceneMatchVersion);
                         filterFactory.init(params);
                         if (filterFactory instanceof ResourceLoaderAware) {
                             ((ResourceLoaderAware)filterFactory).inform(loader);
@@ -216,18 +219,18 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
     
 
     @Override
-    public Query getHighlightQuery() throws ParseException {
+    public Query getHighlightQuery() throws SyntaxError {
         return queryToHighlight != null ? queryToHighlight : super.getHighlightQuery();
     }
     
 
     @Override
-    public Query parse() throws ParseException {
+    public Query parse() throws SyntaxError {
         Query query = super.parse();
         
         SolrParams localParams = getLocalParams();
         SolrParams params = getParams();
-        SolrParams solrParams = localParams == null ? params : new DefaultSolrParams(localParams, params);
+        SolrParams solrParams = localParams == null ? params : SolrParams.wrapDefaults(localParams, params);
 
         // disable/enable synonym handling altogether
         if (!solrParams.getBool(Params.SYNONYMS, false)) {
@@ -256,13 +259,18 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             // disable if a phrase query is detected, i.e. there's a '"'
             return query;
         }
-        
-        attemptToApplySynonymsToQuery(query, solrParams, synonymAnalyzer);
+
+        try {
+            attemptToApplySynonymsToQuery(query, solrParams, synonymAnalyzer);
+        } catch (IOException e) {
+            // TODO: better error handling - for now just bail out
+            e.printStackTrace(System.err);
+        }
 
         return query;
     }
 
-    private void attemptToApplySynonymsToQuery(Query query, SolrParams solrParams, Analyzer synonymAnalyzer) {
+    private void attemptToApplySynonymsToQuery(Query query, SolrParams solrParams, Analyzer synonymAnalyzer) throws IOException {
         
         List<Query> synonymQueries = generateSynonymQueries(synonymAnalyzer, solrParams);
         
@@ -341,7 +349,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
      * @param solrParams
      * @return
      */
-    private List<Query> generateSynonymQueries(Analyzer synonymAnalyzer, SolrParams solrParams) {
+    private List<Query> generateSynonymQueries(Analyzer synonymAnalyzer, SolrParams solrParams) throws IOException {
 
         // TODO: make the token stream reusable?
         TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME, 
@@ -498,6 +506,12 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         int qslop = solrParams.getInt(DisMaxParams.QS, 0);
         ExtendedSolrQueryParser up = new ExtendedSolrQueryParser(this,
                 Const.IMPOSSIBLE_FIELD_NAME);
+        
+        // have to build up the queryFields again because in Solr 3.6.1 they made it private.
+        Map<String,Float> queryFields = SolrPluginUtils.parseFieldBoosts(solrParams.getParams(DisMaxParams.QF));
+        if (0 == queryFields.size()) {
+          queryFields.put(req.getSchema().getDefaultSearchFieldName(), 1.0f);
+        }
         up.addAlias(Const.IMPOSSIBLE_FIELD_NAME, tiebreaker, queryFields);
         up.setPhraseSlop(qslop); // slop for explicit user phrase queries
         up.setAllowLeadingWildcard(true);
@@ -512,7 +526,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             }
             try {
                 result.add(up.parse(alternateQueryText));
-            } catch (ParseException e) {
+            } catch (SyntaxError e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
                 e.printStackTrace(System.err);
             }
