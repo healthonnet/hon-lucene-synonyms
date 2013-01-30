@@ -47,6 +47,7 @@ import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.lucene.queries.function.BoostedQuery;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -213,17 +214,17 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         super(qstr, localParams, params, req);
         this.synonymAnalyzers = synonymAnalyzers;
     }
-    
-    
+
+
 
     @Override
-    public Query getHighlightQuery() throws SyntaxError {
+    public Query getHighlightQuery() throws ParseException {
         return queryToHighlight != null ? queryToHighlight : super.getHighlightQuery();
     }
     
 
     @Override
-    public Query parse() throws SyntaxError {
+    public Query parse() throws ParseException {
         Query query = super.parse();
         
         SolrParams localParams = getLocalParams();
@@ -518,7 +519,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             }
             try {
                 result.add(up.parse(alternateQueryText));
-            } catch (SyntaxError e) {
+            } catch (ParseException e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
                 e.printStackTrace(System.err);
             }
