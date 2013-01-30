@@ -200,6 +200,13 @@ Download the code and run:
 mvn install
 ```
 
+Since there are several branches depending on the Solr version, there's also a build script that will ```git checkout```
+each branch, build it, and put it in the ```target/s3``` direcdtory:
+
+```
+./build_all_versions.sh
+```
+
 
 [1]: http://www.apache.org/licenses/LICENSE-2.0.html
 [2]: http://nolanlawson.com/2012/10/31/better-synonym-handling-in-solr
