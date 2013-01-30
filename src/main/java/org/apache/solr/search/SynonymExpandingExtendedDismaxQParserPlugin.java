@@ -377,7 +377,11 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         } catch (IOException e) {
             throw new RuntimeException("uncaught exception in synonym processing", e);
         } finally {
-            tokenStream.close();
+            try {
+                tokenStream.close();
+            } catch (IOException e) {
+                throw new RuntimeException("uncaught exception in synonym processing", e);
+            }
         }
         
         List<List<TextInQuery>> sortedTextsInQuery = new ArrayList<List<TextInQuery>>(
