@@ -225,7 +225,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
     @Override
     public Query parse() throws SyntaxError {
         Query query = super.parse();
-        
+
         SolrParams localParams = getLocalParams();
         SolrParams params = getParams();
         SolrParams solrParams = localParams == null ? params : SolrParams.wrapDefaults(localParams, params);
@@ -253,7 +253,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         }
         
         if (solrParams.getBool(Params.SYNONYMS_DISABLE_PHRASE_QUERIES, false)
-                && getString().indexOf('"') != -1) {
+                && getQueryStringFromParser().indexOf('"') != -1) {
             // disable if a phrase query is detected, i.e. there's a '"'
             return query;
         }
@@ -272,7 +272,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         
         List<Query> synonymQueries = generateSynonymQueries(synonymAnalyzer, solrParams);
         
-        boolean hasComplexQueryOperators = Const.COMPLEX_QUERY_OPERATORS_PATTERN.matcher(getString()).find();
+        boolean hasComplexQueryOperators = Const.COMPLEX_QUERY_OPERATORS_PATTERN.matcher(getQueryStringFromParser()).find();
         
         if (hasComplexQueryOperators // TODO: support complex operators
                 || synonymQueries.isEmpty()) { // didn't find more than 0 synonyms, i.e. it's just the original phrase
@@ -350,8 +350,8 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
     private List<Query> generateSynonymQueries(Analyzer synonymAnalyzer, SolrParams solrParams) throws IOException {
 
         // TODO: make the token stream reusable?
-        TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME, 
-                new StringReader(getString()));
+        TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME,
+                new StringReader(getQueryStringFromParser()));
         
         SortedMap<Integer, SortedSet<TextInQuery>> startPosToTextsInQuery = new TreeMap<Integer, SortedSet<TextInQuery>>();
         
@@ -421,7 +421,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
      */
     private List<String> buildUpAlternateQueries(List<List<TextInQuery>> textsInQueryLists) {
         
-        String originalUserQuery = getString();
+        String originalUserQuery = getQueryStringFromParser();
         
         if (textsInQueryLists.isEmpty()) {
             return Collections.emptyList();
@@ -520,7 +520,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         
         List<Query> result = new ArrayList<Query>();
         for (String alternateQueryText : alternateQueryTexts) {
-            if (alternateQueryText.equals(getString())) { // alternate query is the same as what the user entered
+            if (alternateQueryText.equals(getQueryStringFromParser())) { // alternate query is the same as what the user entered
                 continue;
             }
             try {
@@ -532,6 +532,14 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         }
         
         return result;
+    }
+
+    /**
+     * Ensures that we return a valid string, even if null
+     * @return the entered query string fetched from QParser.getString()
+     */
+    private String getQueryStringFromParser() {
+      return (getString() == null) ? "" : getString();
     }
     
     /**
