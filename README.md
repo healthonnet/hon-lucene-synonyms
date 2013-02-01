@@ -126,10 +126,14 @@ You should see a response like this:
     <str name="rawquerystring">dog</str>
     <str name="querystring">dog</str>
     <str name="parsedquery">
-+(DisjunctionMaxQuery((text:dog)) (((DisjunctionMaxQuery((text:canis)) DisjunctionMaxQuery((text:familiaris)))~2) DisjunctionMaxQuery((text:hound)) ((DisjunctionMaxQuery((text:man's)) DisjunctionMaxQuery((text:best)) DisjunctionMaxQuery((text:friend)))~3) DisjunctionMaxQuery((text:pooch))))
+        +(DisjunctionMaxQuery((text:dog)) (((DisjunctionMaxQuery((text:canis)) 
+        DisjunctionMaxQuery((text:familiaris)))~2) DisjunctionMaxQuery((text:hound)) 
+        ((DisjunctionMaxQuery((text:man's)) DisjunctionMaxQuery((text:best)) 
+        DisjunctionMaxQuery((text:friend)))~3) DisjunctionMaxQuery((text:pooch))))
     </str>
     <str name="parsedquery_toString">
-+((text:dog) ((((text:canis) (text:familiaris))~2) (text:hound) (((text:man's) (text:best) (text:friend))~3) (text:pooch)))
+        +((text:dog) ((((text:canis) (text:familiaris))~2) (text:hound) 
+        (((text:man's) (text:best) (text:friend))~3) (text:pooch)))
     </str>
     <lst name="explain"/>
     <str name="QParser">SynonymExpandingExtendedDismaxQParser</str>
@@ -145,15 +149,17 @@ Tweaking the results
 
 Boost the non-synonym part to 1.2 and the synonym part to 1.1 by adding ```synonyms.originalBoost=1.1&synonyms.synonymBoost=1.2```:
 
-<pre style="white-space:normal;">
-+((text:dog)^1.1 (((((text:canis) (text:familiaris))~2) (text:hound) (((text:man's) (text:best) (text:friend))~3) (text:pooch))^1.2))
-</pre>
+```
++((text:dog)^1.1 (((((text:canis) (text:familiaris))~2) (text:hound) 
+(((text:man's) (text:best) (text:friend))~3) (text:pooch))^1.2))
+```
 
 Apply a [minimum "should" match][16] of 75% by adding ```mm=75%25```:
 
-<pre style="white-space:normal;">
-+((text:dog) ((((text:canis) (text:familiaris))~1) (text:hound) (((text:man's) (text:best) (text:friend))~2) (text:pooch)))
-</pre>
+```
++((text:dog) ((((text:canis) (text:familiaris))~1) (text:hound) 
+(((text:man's) (text:best) (text:friend))~2) (text:pooch)))
+```
 
 Observe how phrase queries are properly handled by using ```q="dog"``` instead of ```q=dog```:
 
