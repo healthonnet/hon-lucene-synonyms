@@ -125,8 +125,12 @@ You should see a response like this:
   <lst name="debug">
     <str name="rawquerystring">dog</str>
     <str name="querystring">dog</str>
-    <str name="parsedquery">+(DisjunctionMaxQuery((text:dog)) (((DisjunctionMaxQuery((text:canis)) DisjunctionMaxQuery((text:familiaris)))~2) DisjunctionMaxQuery((text:hound)) DisjunctionMaxQuery((text:pooch))))</str>
-    <str name="parsedquery_toString">+((text:dog) ((((text:canis) (text:familiaris))~2) (text:hound) (text:pooch)))</str>
+    <str name="parsedquery">
++(DisjunctionMaxQuery((text:dog)) (((DisjunctionMaxQuery((text:canis)) DisjunctionMaxQuery((text:familiaris)))~2) DisjunctionMaxQuery((text:hound)) ((DisjunctionMaxQuery((text:man's)) DisjunctionMaxQuery((text:best)) DisjunctionMaxQuery((text:friend)))~3) DisjunctionMaxQuery((text:pooch))))
+    </str>
+    <str name="parsedquery_toString">
++((text:dog) ((((text:canis) (text:familiaris))~2) (text:hound) (((text:man's) (text:best) (text:friend))~3) (text:pooch)))
+    </str>
     <lst name="explain"/>
     <str name="QParser">SynonymExpandingExtendedDismaxQParser</str>
     ...
@@ -134,7 +138,29 @@ You should see a response like this:
 </response>
 ```
 
-Note that the input query ```dog``` has been expanded into ```dog```, ```canis familiaris```, ```hound```, and ```pooch```.
+Note that the input query ```dog``` has been expanded into ```dog```, ```hound```, ```pooch```, ```canis familiaris```, and ```man's best friend```.
+
+Tweaking the results
+---------------------
+
+Boost the non-synonym part to 1.2 and the synonym part to 1.1 by adding ```synonyms.originalBoost=1.1&synonyms.synonymBoost=1.2```:
+
+<pre style="white-space:normal;">
++((text:dog)^1.1 (((((text:canis) (text:familiaris))~2) (text:hound) (((text:man's) (text:best) (text:friend))~3) (text:pooch))^1.2))
+</pre>
+
+Apply a [minimum "should" match][16] of 75% by adding ```mm=75%25```:
+
+<pre style="white-space:normal;">
++((text:dog) ((((text:canis) (text:familiaris))~1) (text:hound) (((text:man's) (text:best) (text:friend))~2) (text:pooch)))
+</pre>
+
+Observe how phrase queries are properly handled by using ```q="dog"``` instead of ```q=dog```:
+
+<pre style="white-space:normal;">
++((text:dog) ((text:"canis familiaris") (text:hound) (text:"man's best friend") (text:pooch)))
+</pre>
+
 
 Gotchas
 ---------
@@ -233,6 +259,7 @@ Changelog
 [13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.1-solr-4.0.0/hon-lucene-synonyms-1.2.1-solr-4.0.0.jar
 [14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.1-solr-4.1.0/hon-lucene-synonyms-1.2.1-solr-4.1.0.jar
 [15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
+[16]: http://wiki.apache.org/solr/DisMaxQParserPlugin#mm_.28Minimum_.27Should.27_Match.29
 [101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
 [102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
 [103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3

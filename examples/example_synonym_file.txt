@@ -1,1 +1,1 @@
-dog,hound,pooch,canis familiaris
+dog,hound,pooch,canis familiaris,man's best friend
