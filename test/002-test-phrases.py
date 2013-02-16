@@ -56,6 +56,8 @@ class TestBasic(unittest.TestCase):
                         
     @unittest.skip("skipping until issue #5 is fixed")
     def test_phrase_slop(self):
+        # proper parsed query for ps=2&pf=name
+        # +(((name:man's) (name:best) (name:friend))~3) (name:"man's best friend"~2)
         pass
         
     @unittest.skip("skipping until issue #5 is fixed")    
