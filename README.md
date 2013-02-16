@@ -239,6 +239,16 @@ each branch, build it, and put it in the ```target/s3``` direcdtory:
 ./build_all_versions.sh
 ```
 
+Testing
+---------
+
+Python-based unit tests are in the ```test/``` directory.  You can run them by following the "Getting Started" directions
+and then running:
+
+```
+nosetests test/
+```
+
 Changelog
 ------------
 

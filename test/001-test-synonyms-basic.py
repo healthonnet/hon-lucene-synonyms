@@ -27,23 +27,23 @@ class TestBasic(unittest.TestCase):
     
     def test_without_synonyms(self):
             
-        self.query_test(False, 'dog', 1)
-        self.query_test(False, 'pooch', 1)
-        self.query_test(False, 'hound', 1)
-        self.query_test(False, 'canis familiaris', 1)
-        self.query_test(False, 'cat', 0)
-        self.query_test(False, 'canis', 2)
+        self.tst_query(False, 'dog', 1)
+        self.tst_query(False, 'pooch', 1)
+        self.tst_query(False, 'hound', 1)
+        self.tst_query(False, 'canis familiaris', 1)
+        self.tst_query(False, 'cat', 0)
+        self.tst_query(False, 'canis', 2)
     
     def test_with_synonyms(self):
         
-        self.query_test(True, 'dog', 4)
-        self.query_test(True, 'pooch', 4)
-        self.query_test(True, 'hound', 4)
-        self.query_test(True, 'canis familiaris', 4)
-        self.query_test(True, 'cat', 0)
-        self.query_test(True, 'canis', 2)
+        self.tst_query(True, 'dog', 4)
+        self.tst_query(True, 'pooch', 4)
+        self.tst_query(True, 'hound', 4)
+        self.tst_query(True, 'canis familiaris', 4)
+        self.tst_query(True, 'cat', 0)
+        self.tst_query(True, 'canis', 2)
     
-    def query_test(self, enable_synonyms, query, expected_num_docs):
+    def tst_query(self, enable_synonyms, query, expected_num_docs):
         
         params = {'qf' : 'name', 'mm' : '100%', 'defType' : 'edismax'}
         if (enable_synonyms):
