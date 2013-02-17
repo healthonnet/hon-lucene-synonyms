@@ -490,46 +490,26 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
      * @return
      */
     private List<Query> createSynonymQueries(SolrParams solrParams, List<String> alternateQueryTexts) {
-
-        //
-        // begin copied code from ExtendedDismaxQParser
-        //        
         
-        // have to build up the queryFields again because in Solr 3.6.1 they made it private.
-        Map<String,Float> queryFields = SolrPluginUtils.parseFieldBoosts(solrParams.getParams(DisMaxParams.QF));
-        if (0 == queryFields.size()) {
-            queryFields.put(req.getSchema().getDefaultSearchFieldName(), 1.0f);
-        }
-        
-        if (queryFields.keySet().iterator().next() == null) {
-            throw new RuntimeException("'qf' is null and there's no 'defaultSearchField' in schema.xml. " +
-                        "Synonyms cannot be generated in these conditions! " +
-                        "Please either add 'qf', or add 'defaultSearchField'");
-        }
-
-        float tiebreaker = solrParams.getFloat(DisMaxParams.TIE, 0.0f);
-        int qslop = solrParams.getInt(DisMaxParams.QS, 0);
-        ExtendedSolrQueryParser up = new ExtendedSolrQueryParser(this,
-                Const.IMPOSSIBLE_FIELD_NAME);
-        up.addAlias(Const.IMPOSSIBLE_FIELD_NAME, tiebreaker, queryFields);
-        up.setPhraseSlop(qslop); // slop for explicit user phrase queries
-        up.setAllowLeadingWildcard(true);
-        //
-        // end copied code
-        //
+        String originalString = getString();
+        String nullsafeOriginalString = getQueryStringFromParser();
         
         List<Query> result = new ArrayList<Query>();
         for (String alternateQueryText : alternateQueryTexts) {
-            if (alternateQueryText.equals(getQueryStringFromParser())) { // alternate query is the same as what the user entered
+            if (alternateQueryText.equalsIgnoreCase(nullsafeOriginalString)) { 
+                // alternate query is the same as what the user entered
                 continue;
             }
+            super.setString(alternateQueryText);
             try {
-                result.add(up.parse(alternateQueryText));
+                result.add(super.parse());
             } catch (SyntaxError e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
                 e.printStackTrace(System.err);
             }
         }
+        
+        super.setString(originalString); // cover our tracks
         
         return result;
     }
