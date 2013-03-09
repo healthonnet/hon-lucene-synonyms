@@ -255,6 +255,8 @@ and then running:
 nosetests test/
 ```
 
+Currently I test against Solr 4.1.
+
 Changelog
 ------------
 
