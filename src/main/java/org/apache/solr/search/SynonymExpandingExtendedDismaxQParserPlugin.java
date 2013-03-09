@@ -55,11 +55,9 @@ import org.apache.lucene.util.Version;
 import org.apache.solr.analysis.TokenizerChain;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
-import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
-import org.apache.solr.util.SolrPluginUtils;
 
 /**
  * An advanced multi-field query parser.
@@ -181,6 +179,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         public static final String SYNONYMS_ORIGINAL_BOOST = "synonyms.originalBoost";
         public static final String SYNONYMS_SYNONYM_BOOST = "synonyms.synonymBoost";
         public static final String SYNONYMS_DISABLE_PHRASE_QUERIES = "synonyms.disablePhraseQueries";
+        public static final String SYNONYMS_CONSTRUCT_PHRASES = "synonyms.constructPhrases";
         
     }
 
@@ -200,11 +199,6 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         static final Pattern COMPLEX_QUERY_OPERATORS_PATTERN = Pattern.compile("(?:\\*|\\b(?:OR|AND|-|\\+)\\b)"); 
     }
 
-    /** shorten the class references for utilities */
-    private static class U extends SolrPluginUtils {
-      /* :NOOP */
-    }
-    
     private Map<String, Analyzer> synonymAnalyzers;
     private Query queryToHighlight;
     
@@ -279,15 +273,10 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             return;
         }
         
-        // TODO: EDisMax does not do minShouldMatch if complex query operators exist, and neither do we.
-        // But in the future we might, so keep doMinShouldMatch separate for now
-        boolean doMinShouldMatch = true;
-        String minShouldMatch = solrParams.get(DisMaxParams.MM, "100%");
-        
         float originalBoost = solrParams.getFloat(Params.SYNONYMS_ORIGINAL_BOOST, 1.0F);
         float synonymBoost = solrParams.getFloat(Params.SYNONYMS_SYNONYM_BOOST, 1.0F);
         
-        applySynonymQueries(query, synonymQueries, originalBoost, synonymBoost, doMinShouldMatch, minShouldMatch);
+        applySynonymQueries(query, synonymQueries, originalBoost, synonymBoost);
     }
 
     /**
@@ -300,15 +289,11 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
      * @param synonymQueries
      * @param originalBoost
      * @param synonymBoost
-     * @param doMinShouldMatch
-     * @param minShouldMatch
      */
-    private void applySynonymQueries(Query query, List<Query> synonymQueries, float originalBoost, float synonymBoost,
-            boolean doMinShouldMatch, String minShouldMatch) {
+    private void applySynonymQueries(Query query, List<Query> synonymQueries, float originalBoost, float synonymBoost) {
 
         if (query instanceof BoostedQuery) {
-            applySynonymQueries(((BoostedQuery) query).getQuery(), synonymQueries, originalBoost, synonymBoost, 
-                    doMinShouldMatch, minShouldMatch);
+            applySynonymQueries(((BoostedQuery) query).getQuery(), synonymQueries, originalBoost, synonymBoost);
         } else if (query instanceof BooleanQuery) {
             BooleanQuery booleanQuery =(BooleanQuery) query;
             
@@ -322,9 +307,6 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                     // combine all synonym queries together with the same boost
                     BooleanQuery allSynonymQueries = new BooleanQuery();
                     for (Query synonymQuery : synonymQueries) {
-                        if (doMinShouldMatch && synonymQuery instanceof BooleanQuery) {
-                            U.setMinShouldMatch((BooleanQuery)synonymQuery, minShouldMatch);
-                        }
                         allSynonymQueries.add(synonymQuery, Occur.SHOULD);
                     }
                     
