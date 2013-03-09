@@ -476,12 +476,18 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         String originalString = getString();
         String nullsafeOriginalString = getQueryStringFromParser();
         
+        boolean constructPhraseQueries = solrParams.getBool(Params.SYNONYMS_CONSTRUCT_PHRASES, false);
+        
         List<Query> result = new ArrayList<Query>();
         for (String alternateQueryText : alternateQueryTexts) {
             if (alternateQueryText.equalsIgnoreCase(nullsafeOriginalString)) { 
                 // alternate query is the same as what the user entered
                 continue;
+            } else if (constructPhraseQueries) {
+                // TODO: this is a dumb way to build up phrase queries and I should be ashamed of myself
+                alternateQueryText = new StringBuilder(alternateQueryText).insert(0, '"').append('"').toString();
             }
+            
             super.setString(alternateQueryText);
             try {
                 result.add(super.parse());

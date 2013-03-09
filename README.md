@@ -219,6 +219,12 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><font size="-1">false</font></td>
 <td style="padding:0 1em;"><font size="-1">True if synonym expansion should be disabled when the user input contains a phrase query (i.e. a quoted query). This option is offered because expansion of phrase queries may be considered non-intuitive to users.</font></td>
 </tr>
+<tr>
+<td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.constructPhrases</font></strong></td>
+<td style="padding:0 1em;"><font size="-1">boolean</font></td>
+<td style="padding:0 1em;"><font size="-1">false</font></td>
+<td style="padding:0 1em;"><font size="-1">True if expanded synonyms should always be treated like phrases (i.e. wrapped in quotes).  This option is offered in case your synonyms contain lots of phrases composed of common words (e.g. "man's best friend" for "dog").  Only affects the expanded synonyms; not the original query. See [Issue #5][105] for more discussion.</font></td>
+</tr>
 </table>
 
 
@@ -252,6 +258,9 @@ nosetests test/
 Changelog
 ------------
 
+* v1.2.2
+ * Added ```synonyms.constructPhrases``` option to fix [issue #5][105]
+ * Added proper handling for phrase slop settings
 * v1.2.1
  * Added support for Solr 4.1.0 ([#4][104])
 * v1.2
@@ -280,3 +289,4 @@ Changelog
 [102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
 [103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3
 [104]: http://github.com/healthonnet/hon-lucene-synonyms/issues/4
+[105]: http://github.com/healthonnet/hon-lucene-synonyms/issues/5
