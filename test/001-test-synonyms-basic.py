@@ -24,7 +24,10 @@ class TestBasic(unittest.TestCase):
         self.solr_connection.delete_query('*:*')
         self.solr_connection.add_many(self.test_data)
         self.solr_connection.commit()
-    
+    def tearDown(self):
+        self.solr_connection.delete_query('*:*')
+        self.solr_connection.commit()
+
     def test_without_synonyms(self):
             
         self.tst_query(False, 'dog', 1)

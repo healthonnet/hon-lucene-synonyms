@@ -30,8 +30,11 @@ class TestBasic(unittest.TestCase):
         self.solr_connection.delete_query('*:*')
         self.solr_connection.add_many(self.test_data)
         self.solr_connection.commit()
-    
-    
+
+    def tearDown(self):
+        self.solr_connection.delete_query('*:*')
+        self.solr_connection.commit()
+ 
     # min should match ('mm') should work the same regardless of how many tokens
     # there are in the input synonym
     def test_min_should_match(self):
@@ -54,16 +57,6 @@ class TestBasic(unittest.TestCase):
         self.tst_query({'mm' : '50%'}, 'hound', 10)
                 
                         
-    @unittest.skip("skipping until issue #5 is fixed")
-    def test_phrase_slop(self):
-        # proper parsed query for ps=2&pf=name
-        # +(((name:man's) (name:best) (name:friend))~3) (name:"man's best friend"~2)
-        pass
-        
-    @unittest.skip("skipping until issue #5 is fixed")    
-    def test_auto_phrasing(self):
-        pass
-    
     def tst_query(self, extra_params, query, expected_num_docs):
         
         params = {'q': query, 'qf' : 'name', 'mm' : '100%', 'defType' : 'synonym_edismax', 'synonyms' : 'true'}
