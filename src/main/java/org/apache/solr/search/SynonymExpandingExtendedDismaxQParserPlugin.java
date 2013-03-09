@@ -437,29 +437,44 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             int alternateQueriesLength = alternateQueries.size();
             
             for (int j = 0; j < alternateQueriesLength; j++) {
-                AlternateQuery alternateQuery = alternateQueries.get(j);
-                AlternateQuery originalAlternateQuery = (AlternateQuery)alternateQuery.clone();
+                
+                // When we're working with a lattice, assuming there's only one path to take in the next column,
+                // we can (and MUST) use all the original objects in the current column.
+                // It's only when we have >1 paths in the next column that we need to start taking copies.
+                // So if a lot of this logic seems tortured, it's only because I'm trying to minimize object
+                // creation.
+                AlternateQuery currentAlternateQuery = alternateQueries.get(j);
+                AlternateQuery originalAlternateQuery = currentAlternateQuery;
                 
                 boolean usedFirst = false;
                 
                 for (int k = 0;k < textsInQuery.size(); k++) {
+                    
                     TextInQuery textInQuery =  textsInQuery.get(k);
-                    if (originalAlternateQuery.getEndPosition() > textInQuery.getStartPosition()) { // cannot be appended
+                    if (originalAlternateQuery.getEndPosition() > textInQuery.getStartPosition()) {
+                        // cannot be appended, e.g. "canis" token in "canis familiaris"
                         continue;
                     }
                     if (!usedFirst) {
                         // re-use the existing object
                         usedFirst = true;
+                        if (textsInQuery.size() > 1) {
+                            // make a defensive clone for future usage
+                            originalAlternateQuery = (AlternateQuery) currentAlternateQuery.clone();
+                        }
+                    } else if (k == textsInQuery.size() - 1) {
+                        // we're sure we're the last one to use it, so we can just use the original clone
+                        currentAlternateQuery = originalAlternateQuery;
                     } else {
                         // need to clone to a new object
-                        alternateQuery = (AlternateQuery) originalAlternateQuery.clone();
-                        alternateQueries.add(alternateQuery);
+                        currentAlternateQuery = (AlternateQuery) originalAlternateQuery.clone();
+                        alternateQueries.add(currentAlternateQuery);
                     }
-                    // text in the original query between the two tokens, usually a space
+                    // text in the original query between the two tokens, usually a space, comma, etc.
                     CharSequence betweenTokens = originalUserQuery.subSequence(
-                            alternateQuery.getEndPosition(), textInQuery.getStartPosition());
-                    alternateQuery.getStringBuilder().append(betweenTokens).append(textInQuery.getText());
-                    alternateQuery.setEndPosition(textInQuery.getEndPosition());
+                            currentAlternateQuery.getEndPosition(), textInQuery.getStartPosition());
+                    currentAlternateQuery.getStringBuilder().append(betweenTokens).append(textInQuery.getText());
+                    currentAlternateQuery.setEndPosition(textInQuery.getEndPosition());
                 }
             }
         }
