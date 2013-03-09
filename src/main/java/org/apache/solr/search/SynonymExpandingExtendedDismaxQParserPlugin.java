@@ -437,32 +437,29 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             int alternateQueriesLength = alternateQueries.size();
             
             for (int j = 0; j < alternateQueriesLength; j++) {
-                
                 AlternateQuery alternateQuery = alternateQueries.get(j);
+                AlternateQuery originalAlternateQuery = (AlternateQuery)alternateQuery.clone();
                 
-                AlternateQuery originalAlternateQuery = textsInQuery.size() == 1 
-                        ? null //  no need to clone the original 
-                        : (AlternateQuery) alternateQuery.clone();
+                boolean usedFirst = false;
                 
                 for (int k = 0;k < textsInQuery.size(); k++) {
                     TextInQuery textInQuery =  textsInQuery.get(k);
-                    AlternateQuery currentAlternateQuery = alternateQuery;
-                    if (k > 0)  {
-                        // cannot re-use the previous alternate query
-                        if (k == textsInQuery.size() - 1) {
-                            // can just use the clone itself, since no one else will
-                        } else {
-                            // must clone the clone
-                            currentAlternateQuery = (AlternateQuery) originalAlternateQuery.clone();
-                            alternateQueries.add(currentAlternateQuery);
-                        }
+                    if (originalAlternateQuery.getEndPosition() > textInQuery.getStartPosition()) { // cannot be appended
+                        continue;
                     }
-
+                    if (!usedFirst) {
+                        // re-use the existing object
+                        usedFirst = true;
+                    } else {
+                        // need to clone to a new object
+                        alternateQuery = (AlternateQuery) originalAlternateQuery.clone();
+                        alternateQueries.add(alternateQuery);
+                    }
                     // text in the original query between the two tokens, usually a space
                     CharSequence betweenTokens = originalUserQuery.subSequence(
-                            currentAlternateQuery.getEndPosition(), textInQuery.getStartPosition());
-                    currentAlternateQuery.getStringBuilder().append(betweenTokens).append(textInQuery.getText());
-                    currentAlternateQuery.setEndPosition(textInQuery.getEndPosition());
+                            alternateQuery.getEndPosition(), textInQuery.getStartPosition());
+                    alternateQuery.getStringBuilder().append(betweenTokens).append(textInQuery.getText());
+                    alternateQuery.setEndPosition(textInQuery.getEndPosition());
                 }
             }
         }
