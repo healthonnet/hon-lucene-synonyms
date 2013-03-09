@@ -337,6 +337,9 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         
         SortedMap<Integer, SortedSet<TextInQuery>> startPosToTextsInQuery = new TreeMap<Integer, SortedSet<TextInQuery>>();
         
+        
+        boolean constructPhraseQueries = solrParams.getBool(Params.SYNONYMS_CONSTRUCT_PHRASES, false);
+        
         try {
             tokenStream.reset();
             while (tokenStream.incrementToken()) {
@@ -348,7 +351,14 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                     // ignore shingles; we only care about synonyms and the original text
                     // TODO: filter other types as well
                     
-                    TextInQuery textInQuery = new TextInQuery(term.toString(), 
+                    String termToAdd = term.toString();
+                    
+                    if (constructPhraseQueries && typeAttribute.type().equals("SYNONYM")) {
+                        // make a phrase out of the synonym
+                        termToAdd = new StringBuilder(termToAdd).insert(0,'"').append('"').toString();
+                    }
+                    
+                    TextInQuery textInQuery = new TextInQuery(termToAdd, 
                             offsetAttribute.startOffset(), 
                             offsetAttribute.endOffset());
                     
@@ -379,7 +389,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         }
         
         // have to use the start positions and end positions to figure out all possible combinations
-        List<String> alternateQueries = buildUpAlternateQueries(sortedTextsInQuery);
+        List<String> alternateQueries = buildUpAlternateQueries(solrParams, sortedTextsInQuery);
 
         return createSynonymQueries(solrParams, alternateQueries);
     }
@@ -398,10 +408,11 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
      * hound nibble
      * pooch nibble
      * 
+     * @param solrParams
      * @param textsInQueryLists
      * @return
      */
-    private List<String> buildUpAlternateQueries(List<List<TextInQuery>> textsInQueryLists) {
+    private List<String> buildUpAlternateQueries(SolrParams solrParams, List<List<TextInQuery>> textsInQueryLists) {
         
         String originalUserQuery = getQueryStringFromParser();
         
@@ -426,28 +437,32 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             int alternateQueriesLength = alternateQueries.size();
             
             for (int j = 0; j < alternateQueriesLength; j++) {
+                
                 AlternateQuery alternateQuery = alternateQueries.get(j);
                 
-                boolean usedFirst = false;
+                AlternateQuery originalAlternateQuery = textsInQuery.size() == 1 
+                        ? null //  no need to clone the original 
+                        : (AlternateQuery) alternateQuery.clone();
                 
                 for (int k = 0;k < textsInQuery.size(); k++) {
                     TextInQuery textInQuery =  textsInQuery.get(k);
-                    if (alternateQuery.getEndPosition() > textInQuery.getStartPosition()) { // cannot be appended
-                        break; // already in order, so we can safely break
+                    AlternateQuery currentAlternateQuery = alternateQuery;
+                    if (k > 0)  {
+                        // cannot re-use the previous alternate query
+                        if (k == textsInQuery.size() - 1) {
+                            // can just use the clone itself, since no one else will
+                        } else {
+                            // must clone the clone
+                            currentAlternateQuery = (AlternateQuery) originalAlternateQuery.clone();
+                            alternateQueries.add(currentAlternateQuery);
+                        }
                     }
-                    if (!usedFirst) {
-                        // re-use the existing object
-                        usedFirst = true;
-                    } else {
-                        // need to clone to a new object
-                        alternateQuery = (AlternateQuery) alternateQuery.clone();
-                        alternateQueries.add(alternateQuery);
-                    }
+
                     // text in the original query between the two tokens, usually a space
                     CharSequence betweenTokens = originalUserQuery.subSequence(
-                            alternateQuery.getEndPosition(), textInQuery.getStartPosition());
-                    alternateQuery.getStringBuilder().append(betweenTokens).append(textInQuery.getText());
-                    alternateQuery.setEndPosition(textInQuery.getEndPosition());
+                            currentAlternateQuery.getEndPosition(), textInQuery.getStartPosition());
+                    currentAlternateQuery.getStringBuilder().append(betweenTokens).append(textInQuery.getText());
+                    currentAlternateQuery.setEndPosition(textInQuery.getEndPosition());
                 }
             }
         }
@@ -455,10 +470,13 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         List<String> result = new ArrayList<String>();
         
         for (AlternateQuery alternateQuery : alternateQueries) {
+            
+            StringBuilder sb = alternateQuery.getStringBuilder();
+            
             // append whatever text followed the last token, e.g. '"'
-            alternateQuery.getStringBuilder().append(originalUserQuery.subSequence(
-                    alternateQuery.getEndPosition(), originalUserQuery.length()));
-            result.add(alternateQuery.getStringBuilder().toString());
+            sb.append(originalUserQuery.subSequence(alternateQuery.getEndPosition(), originalUserQuery.length()));
+            
+            result.add(sb.toString());
         }
         return result;
     }
@@ -476,16 +494,11 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         String originalString = getString();
         String nullsafeOriginalString = getQueryStringFromParser();
         
-        boolean constructPhraseQueries = solrParams.getBool(Params.SYNONYMS_CONSTRUCT_PHRASES, false);
-        
         List<Query> result = new ArrayList<Query>();
         for (String alternateQueryText : alternateQueryTexts) {
             if (alternateQueryText.equalsIgnoreCase(nullsafeOriginalString)) { 
                 // alternate query is the same as what the user entered
                 continue;
-            } else if (constructPhraseQueries) {
-                // TODO: this is a dumb way to build up phrase queries and I should be ashamed of myself
-                alternateQueryText = new StringBuilder(alternateQueryText).insert(0, '"').append('"').toString();
             }
             
             super.setString(alternateQueryText);
