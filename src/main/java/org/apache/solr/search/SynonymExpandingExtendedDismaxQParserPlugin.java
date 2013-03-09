@@ -42,23 +42,25 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
-import org.apache.lucene.analysis.util.ResourceLoader;
-import org.apache.lucene.analysis.util.ResourceLoaderAware;
-import org.apache.lucene.analysis.util.TokenFilterFactory;
-import org.apache.lucene.analysis.util.TokenizerFactory;
-import org.apache.lucene.queries.function.BoostedQuery;
+import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.Version;
+import org.apache.solr.analysis.TokenFilterFactory;
 import org.apache.solr.analysis.TokenizerChain;
+import org.apache.solr.analysis.TokenizerFactory;
+import org.apache.solr.common.ResourceLoader;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
+import org.apache.solr.common.params.DefaultSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.search.function.BoostedQuery;
+import org.apache.solr.util.plugin.ResourceLoaderAware;
 
 /**
  * An advanced multi-field query parser.
@@ -102,7 +104,7 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
         return result;
     }
 
-    public void inform(ResourceLoader loader) throws IOException {
+    public void inform(ResourceLoader loader) {
         // TODO: Can we assume that loader always is a sub type of SolrResourceLoader?
         this.loader = (SolrResourceLoader) loader;
     }
@@ -113,83 +115,64 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
      * config, loader and luceneMatchVersion needed for creating analyzer components
      */
     private void parseConfig() {
-        try {
-            synonymAnalyzers = new HashMap<String, Analyzer>();
+        synonymAnalyzers = new HashMap<String, Analyzer>();
 
-            Object xmlSynonymAnalyzers = args.get("synonymAnalyzers");
+        Object xmlSynonymAnalyzers = args.get("synonymAnalyzers");
 
-            if (xmlSynonymAnalyzers != null && xmlSynonymAnalyzers instanceof NamedList) {
-                NamedList<?> synonymAnalyzersList = (NamedList<?>) xmlSynonymAnalyzers;
-                for (Entry<String, ?> entry : synonymAnalyzersList) {
-                    String analyzerName = entry.getKey();
+        if (xmlSynonymAnalyzers != null && xmlSynonymAnalyzers instanceof NamedList) {
+            NamedList<?> synonymAnalyzersList = (NamedList<?>) xmlSynonymAnalyzers;
+            for (Entry<String, ?> entry : synonymAnalyzersList) {
+                String analyzerName = entry.getKey();
+                if (!(entry.getValue() instanceof NamedList)) {
+                    continue;
+                }
+                NamedList<?> analyzerAsNamedList = (NamedList<?>) entry.getValue();
+
+                TokenizerFactory tokenizerFactory = null;
+                List<TokenFilterFactory> filterFactories = new LinkedList<TokenFilterFactory>();
+
+                for (Entry<String, ?> analyzerEntry : analyzerAsNamedList) {
+                    String key = analyzerEntry.getKey();
                     if (!(entry.getValue() instanceof NamedList)) {
                         continue;
                     }
-                    NamedList<?> analyzerAsNamedList = (NamedList<?>) entry.getValue();
+                    Map<String, String> params = convertNamedListToMap((NamedList<?>)analyzerEntry.getValue());
 
-                    TokenizerFactory tokenizerFactory = null;
-                    TokenFilterFactory filterFactory = null;
-                    List<TokenFilterFactory> filterFactories = new LinkedList<TokenFilterFactory>();
-
-                    for (Entry<String, ?> analyzerEntry : analyzerAsNamedList) {
-                        String key = analyzerEntry.getKey();
-                        if (!(entry.getValue() instanceof NamedList)) {
-                            continue;
-                        }
-                        Map<String, String> params = convertNamedListToMap((NamedList<?>)analyzerEntry.getValue());
-
-                        String className = params.get("class");
-                        if (className == null) {
-                            continue;
-                        }
-
-                        params.put("luceneMatchVersion", luceneMatchVersion.toString());
-
-                        if (key.equals("tokenizer")) {
-                            try {
-                                tokenizerFactory = TokenizerFactory.forName(className, params);
-                            } catch (IllegalArgumentException iae) {
-                                if (!className.contains(".")) {
-                                    iae.printStackTrace();
-                                }
-                                // Now try by classname instead of SPI keyword
-                                tokenizerFactory = loader.newInstance(className, TokenizerFactory.class, new String[]{}, new Class[] { Map.class }, new Object[] { params });
-                            }
-                            if (tokenizerFactory instanceof ResourceLoaderAware) {
-                                ((ResourceLoaderAware)tokenizerFactory).inform(loader);
-                            }
-                        } else if (key.equals("filter")) {
-                            try {
-                                filterFactory = TokenFilterFactory.forName(className, params);
-                            } catch (IllegalArgumentException iae) {
-                                if (!className.contains(".")) {
-                                    iae.printStackTrace();
-                                }
-                                // Now try by classname instead of SPI keyword
-                                filterFactory = loader.newInstance(className, TokenFilterFactory.class, new String[]{}, new Class[] { Map.class }, new Object[] { params });
-                            }
-                            if (filterFactory instanceof ResourceLoaderAware) {
-                                ((ResourceLoaderAware)filterFactory).inform(loader);
-                            }
-                            filterFactories.add(filterFactory);
-                        }
-                    }
-                    if (tokenizerFactory == null) {
-                        throw new SolrException(ErrorCode.SERVER_ERROR,
-                                "tokenizer must not be null for synonym analyzer: " + analyzerName);
-                    } else if (filterFactories.isEmpty()) {
-                        throw new SolrException(ErrorCode.SERVER_ERROR,
-                                "filter factories must be defined for synonym analyzer: " + analyzerName);
+                    String className = params.get("class");
+                    if (className == null) {
+                        continue;
                     }
 
-                    TokenizerChain analyzer = new TokenizerChain(tokenizerFactory,
-                            filterFactories.toArray(new TokenFilterFactory[filterFactories.size()]));
+                    params.put("luceneMatchVersion", luceneMatchVersion.toString());
 
-                    synonymAnalyzers.put(analyzerName, analyzer);
+                    if (key.equals("tokenizer")) {
+                        tokenizerFactory = (TokenizerFactory) loader.newInstance(className);
+                        tokenizerFactory.init(params);
+                        if (tokenizerFactory instanceof ResourceLoaderAware) {
+                            ((ResourceLoaderAware)tokenizerFactory).inform(loader);
+                        }
+                    } else if (key.equals("filter")) {
+                        TokenFilterFactory filterFactory = (TokenFilterFactory) loader.newInstance(className);
+                        filterFactory.init(params);
+                        if (filterFactory instanceof ResourceLoaderAware) {
+                            ((ResourceLoaderAware)filterFactory).inform(loader);
+                        }
+                        filterFactories.add(filterFactory);
+                    }
                 }
+                if (tokenizerFactory == null) {
+                    throw new SolrException(ErrorCode.SERVER_ERROR,
+                            "tokenizer must not be null for synonym analyzer: " + analyzerName);
+                } else if (filterFactories.isEmpty()) {
+                    throw new SolrException(ErrorCode.SERVER_ERROR,
+                            "filter factories must be defined for synonym analyzer: " + analyzerName);
+                }
+
+                TokenizerChain analyzer = new TokenizerChain(tokenizerFactory,
+                        filterFactories.toArray(new TokenFilterFactory[filterFactories.size()]));
+
+                synonymAnalyzers.put(analyzerName, analyzer);
             }
-        } catch (IOException e) {
-            throw new SolrException(ErrorCode.SERVER_ERROR, "Failed to create parser. Check your config.", e);
         }
     }
 }
@@ -248,18 +231,18 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
     
 
     @Override
-    public Query getHighlightQuery() throws SyntaxError {
+    public Query getHighlightQuery() throws ParseException {
         return queryToHighlight != null ? queryToHighlight : super.getHighlightQuery();
     }
     
 
     @Override
-    public Query parse() throws SyntaxError {
+    public Query parse() throws ParseException {
         Query query = super.parse();
 
         SolrParams localParams = getLocalParams();
         SolrParams params = getParams();
-        SolrParams solrParams = localParams == null ? params : SolrParams.wrapDefaults(localParams, params);
+        SolrParams solrParams = localParams == null ? params : new DefaultSolrParams(localParams, params);
 
         // disable/enable synonym handling altogether
         if (!solrParams.getBool(Params.SYNONYMS, false)) {
@@ -571,7 +554,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             super.setString(alternateQueryText);
             try {
                 result.add(super.parse());
-            } catch (SyntaxError e) {
+            } catch (ParseException e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
                 e.printStackTrace(System.err);
             }
