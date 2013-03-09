@@ -282,9 +282,9 @@ Changelog
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
-[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.2-solr-3.x/hon-lucene-synonyms-1.2.1-solr-3.x.jar
-[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.2-solr-4.0.0/hon-lucene-synonyms-1.2.1-solr-4.0.0.jar
-[14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.2-solr-4.1.0/hon-lucene-synonyms-1.2.1-solr-4.1.0.jar
+[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.2-solr-3.x/hon-lucene-synonyms-1.2.2-solr-3.x.jar
+[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.2-solr-4.0.0/hon-lucene-synonyms-1.2.2-solr-4.0.0.jar
+[14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.2-solr-4.1.0/hon-lucene-synonyms-1.2.2-solr-4.1.0.jar
 [15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
 [16]: http://wiki.apache.org/solr/DisMaxQParserPlugin#mm_.28Minimum_.27Should.27_Match.29
 [101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
