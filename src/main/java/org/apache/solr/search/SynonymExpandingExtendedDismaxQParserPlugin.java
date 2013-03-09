@@ -42,22 +42,23 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
-import org.apache.lucene.analysis.util.ResourceLoader;
-import org.apache.lucene.analysis.util.ResourceLoaderAware;
-import org.apache.lucene.analysis.util.TokenFilterFactory;
-import org.apache.lucene.analysis.util.TokenizerFactory;
-import org.apache.lucene.queries.function.BoostedQuery;
+import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.util.Version;
+import org.apache.solr.analysis.TokenFilterFactory;
 import org.apache.solr.analysis.TokenizerChain;
+import org.apache.solr.analysis.TokenizerFactory;
+import org.apache.solr.common.ResourceLoader;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
+import org.apache.solr.common.params.DefaultSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.search.function.BoostedQuery;
+import org.apache.solr.util.plugin.ResourceLoaderAware;
 
 /**
  * An advanced multi-field query parser.
@@ -93,18 +94,15 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
         return result;
     }
 
-    public void inform(ResourceLoader loader) throws IOException {
+    public void inform(ResourceLoader loader) {
         // TODO it would be nice if the user didn't have to encode tokenizers/filters
         // as a NamedList.  But for now this is the hack I'm using
         synonymAnalyzers = new HashMap<String, Analyzer>();
 
-        Object testMatchVersion = args.get("luceneMatchVersion");
-        Version luceneMatchVersion = null;
-        if (testMatchVersion == null || !(testMatchVersion instanceof String)) {
-            throw new SolrException(ErrorCode.SERVER_ERROR,
+        Object luceneMatchVersion = args.get("luceneMatchVersion");
+        if (luceneMatchVersion == null || !(luceneMatchVersion instanceof String)) {
+            throw new SolrException(ErrorCode.SERVER_ERROR, 
                     "luceneMatchVersion must be defined for the synonym_edismax parser");
-        } else {
-            luceneMatchVersion = Version.valueOf(args.get("luceneMatchVersion").toString());
         }
         
         Object xmlSynonymAnalyzers = args.get("synonymAnalyzers");
@@ -128,21 +126,22 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
                     }
                     Map<String, String> params = convertNamedListToMap((NamedList<?>)analyzerEntry.getValue());
                     
+                    // add the lucene match version because it's usually required
+                    params.put("luceneMatchVersion", (String)luceneMatchVersion);
+                    
                     if (!params.containsKey("class")) {
                         continue;
                     }
 
                     String className = params.get("class");
                     if (key.equals("tokenizer")) {
-                        tokenizerFactory = (TokenizerFactory) loader.newInstance(className, TokenizerFactory.class);
-                        tokenizerFactory.setLuceneMatchVersion(luceneMatchVersion);
+                        tokenizerFactory = (TokenizerFactory) loader.newInstance(className);
                         tokenizerFactory.init(params);
                         if (tokenizerFactory instanceof ResourceLoaderAware) {
                             ((ResourceLoaderAware)tokenizerFactory).inform(loader);
                         }
                     } else if (key.equals("filter")) {
-                        TokenFilterFactory filterFactory = (TokenFilterFactory) loader.newInstance(className, TokenFilterFactory.class);
-                        filterFactory.setLuceneMatchVersion(luceneMatchVersion);
+                        TokenFilterFactory filterFactory = (TokenFilterFactory) loader.newInstance(className);
                         filterFactory.init(params);
                         if (filterFactory instanceof ResourceLoaderAware) {
                             ((ResourceLoaderAware)filterFactory).inform(loader);
@@ -211,18 +210,18 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
     
 
     @Override
-    public Query getHighlightQuery() throws SyntaxError {
+    public Query getHighlightQuery() throws ParseException {
         return queryToHighlight != null ? queryToHighlight : super.getHighlightQuery();
     }
     
 
     @Override
-    public Query parse() throws SyntaxError {
+    public Query parse() throws ParseException {
         Query query = super.parse();
 
         SolrParams localParams = getLocalParams();
         SolrParams params = getParams();
-        SolrParams solrParams = localParams == null ? params : SolrParams.wrapDefaults(localParams, params);
+        SolrParams solrParams = localParams == null ? params : new DefaultSolrParams(localParams, params);
 
         // disable/enable synonym handling altogether
         if (!solrParams.getBool(Params.SYNONYMS, false)) {
@@ -521,7 +520,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             super.setString(alternateQueryText);
             try {
                 result.add(super.parse());
-            } catch (SyntaxError e) {
+            } catch (ParseException e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
                 e.printStackTrace(System.err);
             }
