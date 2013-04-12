@@ -24,8 +24,17 @@ package org.apache.solr.search;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.Set;
+import java.util.LinkedHashSet;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
