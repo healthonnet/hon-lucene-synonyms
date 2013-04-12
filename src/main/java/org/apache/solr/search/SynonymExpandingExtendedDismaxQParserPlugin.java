@@ -32,9 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
-import java.util.SortedSet;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -335,13 +335,14 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME,
                 new StringReader(getQueryStringFromParser()));
         
-        SortedMap<Integer, SortedSet<TextInQuery>> startPosToTextsInQuery = new TreeMap<Integer, SortedSet<TextInQuery>>();
+        SortedMap<Integer, Set<TextInQuery>> startPosToTextsInQuery = new TreeMap<Integer, Set<TextInQuery>>();
         
         
         boolean constructPhraseQueries = solrParams.getBool(Params.SYNONYMS_CONSTRUCT_PHRASES, false);
         
         try {
             tokenStream.reset();
+            tokenStream.addAttribute(TypeAttribute.class);
             while (tokenStream.incrementToken()) {
                 CharTermAttribute term = tokenStream.getAttribute(CharTermAttribute.class);
                 OffsetAttribute offsetAttribute = tokenStream.getAttribute(OffsetAttribute.class);
@@ -363,9 +364,9 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                             offsetAttribute.endOffset());
                     
                     // brain-dead multimap logic... man, I wish we had Google Guava here
-                    SortedSet<TextInQuery> existingList = startPosToTextsInQuery.get(offsetAttribute.startOffset());
+                    Set<TextInQuery> existingList = startPosToTextsInQuery.get(offsetAttribute.startOffset());
                     if (existingList == null) {
-                        existingList = new TreeSet<TextInQuery>();
+                        existingList = new LinkedHashSet<TextInQuery>();
                         startPosToTextsInQuery.put(offsetAttribute.startOffset(), existingList);
                     }
                     existingList.add(textInQuery);
@@ -384,7 +385,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         
         List<List<TextInQuery>> sortedTextsInQuery = new ArrayList<List<TextInQuery>>(
                 startPosToTextsInQuery.values().size());
-        for (SortedSet<TextInQuery> sortedSet : startPosToTextsInQuery.values()) {
+        for (Set<TextInQuery> sortedSet : startPosToTextsInQuery.values()) {
             sortedTextsInQuery.add(new ArrayList<TextInQuery>(sortedSet));
         }
         
