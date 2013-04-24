@@ -252,13 +252,13 @@ Python-based unit tests are in the ```test/``` directory. You can run them using
 
 ```
 # launches Solr on localhost:8983. Alternatively, you can just follow the "Getting Started" directions
-./run_solr_for_unit_tests.sh /path/to/my/optional/solr-4.1.0.tgz
+./run_solr_for_unit_tests.sh /path/to/my/optional/solr-4.2.0.tgz
 
 # run some Python unit tests against the local Solr on localhost:8983
 nosetests test/
 ```
 
-Currently I test against Solr 4.1.
+Currently I test against Solr 4.2.
 
 Changelog
 ------------
