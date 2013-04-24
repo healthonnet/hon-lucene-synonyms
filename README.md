@@ -245,6 +245,9 @@ each branch, build it, and put it in the ```target/s3``` direcdtory:
 ./build_all_versions.sh
 ```
 
+Basically, my strategy is to maintain a main ```master```/```solr-4.1.0``` branch, with offshoot branches (```solr-4.0.0``` 
+and ```solr-3.x```) that are ```git rebase```'d every time I need to build a new version.
+
 Testing
 ---------
 
