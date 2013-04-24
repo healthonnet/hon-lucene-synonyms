@@ -36,7 +36,7 @@ Download the latest JAR file depending on your Solr version:
 
 * [hon-lucene-synonyms-1.2.3-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, 3.6.0, 3.6.1, and 3.6.2
 * [hon-lucene-synonyms-1.2.3-solr-4.0.0.jar][13] for Solr 4.0.0
-* [hon-lucene-synonyms-1.2.3-solr-4.1.0.jar][14] for Solr 4.1.0, 4.2.0
+* [hon-lucene-synonyms-1.2.3-solr-4.1.0.jar][14] for Solr 4.1.0 and 4.2.0
 
 ### Step 2
 
