@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
-Current version : 1.2.2 ([changelog][15])
+Current version : 1.2.3 ([changelog][15])
 
 Developer
 -----------
@@ -34,9 +34,9 @@ running in Jetty.
 
 Download the latest JAR file depending on your Solr version:
 
-* [hon-lucene-synonyms-1.2.2-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, 3.6.0, 3.6.1, and 3.6.2
-* [hon-lucene-synonyms-1.2.2-solr-4.0.0.jar][13] for Solr 4.0.0
-* [hon-lucene-synonyms-1.2.2-solr-4.1.0.jar][14] for Solr 4.1.0
+* [hon-lucene-synonyms-1.2.3-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, 3.6.0, 3.6.1, and 3.6.2
+* [hon-lucene-synonyms-1.2.3-solr-4.0.0.jar][13] for Solr 4.0.0
+* [hon-lucene-synonyms-1.2.3-solr-4.1.0.jar][14] for Solr 4.1.0, 4.2.0
 
 ### Step 2
 
@@ -223,7 +223,7 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.constructPhrases</font></strong></td>
 <td style="padding:0 1em;"><font size="-1">boolean</font></td>
 <td style="padding:0 1em;"><font size="-1">false</font></td>
-<td style="padding:0 1em;"><font size="-1"><strong>v1.2.2:</strong> True if expanded synonyms should always be treated like phrases (i.e. wrapped in quotes).  This option is offered in case your synonyms contain lots of phrases composed of common words (e.g. "man's best friend" for "dog").  Only affects the expanded synonyms; not the original query. See <a href='http://github.com/healthonnet/hon-lucene-synonyms/issues/5'>issue #5</a> for more discussion.</font></td>
+<td style="padding:0 1em;"><font size="-1"><strong>v1.2.2+:</strong> True if expanded synonyms should always be treated like phrases (i.e. wrapped in quotes).  This option is offered in case your synonyms contain lots of phrases composed of common words (e.g. "man's best friend" for "dog").  Only affects the expanded synonyms; not the original query. See <a href='http://github.com/healthonnet/hon-lucene-synonyms/issues/5'>issue #5</a> for more discussion.</font></td>
 </tr>
 </table>
 
@@ -263,6 +263,10 @@ Currently I test against Solr 4.2.
 Changelog
 ------------
 
+* v1.2.3
+ * Fixed [#16][116]
+ * Verified support for Solr 4.2.0 with the 4.1.0 branch (unit tests passed)
+ * Improved automation of unit tests
 * v1.2.2
  * Added ```synonyms.constructPhrases``` option to fix [issue #5][105]
  * Added proper handling for phrase slop settings
@@ -285,9 +289,9 @@ Changelog
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
-[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.2-solr-3.x/hon-lucene-synonyms-1.2.2-solr-3.x.jar
-[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.2-solr-4.0.0/hon-lucene-synonyms-1.2.2-solr-4.0.0.jar
-[14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.2-solr-4.1.0/hon-lucene-synonyms-1.2.2-solr-4.1.0.jar
+[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-3.x/hon-lucene-synonyms-1.2.3-solr-3.x.jar
+[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-4.0.0/hon-lucene-synonyms-1.2.3-solr-4.0.0.jar
+[14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-4.1.0/hon-lucene-synonyms-1.2.3-solr-4.1.0.jar
 [15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
 [16]: http://wiki.apache.org/solr/DisMaxQParserPlugin#mm_.28Minimum_.27Should.27_Match.29
 [101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
@@ -295,3 +299,4 @@ Changelog
 [103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3
 [104]: http://github.com/healthonnet/hon-lucene-synonyms/issues/4
 [105]: http://github.com/healthonnet/hon-lucene-synonyms/issues/5
+[116]: http://github.com/healthonnet/hon-lucene-synonyms/issues/16
