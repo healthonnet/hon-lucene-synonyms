@@ -239,7 +239,7 @@ mvn install
 ```
 
 Since there are several branches depending on the Solr version, there's also a build script that will ```git checkout```
-each branch, build it, and put it in the ```target/s3``` direcdtory:
+each branch, build it, and put it in the ```target/s3``` directory:
 
 ```
 ./build_all_versions.sh
