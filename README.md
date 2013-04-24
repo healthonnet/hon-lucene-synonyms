@@ -248,10 +248,13 @@ each branch, build it, and put it in the ```target/s3``` direcdtory:
 Testing
 ---------
 
-Python-based unit tests are in the ```test/``` directory.  You can run them by following the "Getting Started" directions
-and then running:
+Python-based unit tests are in the ```test/``` directory. You can run them using: 
 
 ```
+# launches Solr on localhost:8983. Alternatively, you can just follow the "Getting Started" directions
+./run_solr_for_unit_tests.sh /path/to/my/optional/solr-4.1.0.tgz
+
+# run some Python unit tests against the local Solr on localhost:8983
 nosetests test/
 ```
 
