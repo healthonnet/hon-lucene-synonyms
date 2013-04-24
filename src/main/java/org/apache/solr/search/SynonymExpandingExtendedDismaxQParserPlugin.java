@@ -443,28 +443,33 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                 // It's only when we have >1 paths in the next column that we need to start taking copies.
                 // So if a lot of this logic seems tortured, it's only because I'm trying to minimize object
                 // creation.
-                AlternateQuery currentAlternateQuery = alternateQueries.get(j);
-                AlternateQuery originalAlternateQuery = currentAlternateQuery;
+                AlternateQuery originalAlternateQuery = alternateQueries.get(j);
                 
                 boolean usedFirst = false;
                 
-                for (int k = 0;k < textsInQuery.size(); k++) {
+                for (int k = 0; k < textsInQuery.size(); k++) {
                     
                     TextInQuery textInQuery =  textsInQuery.get(k);
                     if (originalAlternateQuery.getEndPosition() > textInQuery.getStartPosition()) {
                         // cannot be appended, e.g. "canis" token in "canis familiaris"
                         continue;
                     }
+                    
+                    AlternateQuery currentAlternateQuery;
+                    
                     if (!usedFirst) {
                         // re-use the existing object
                         usedFirst = true;
-                        if (textsInQuery.size() > 1) {
+                        currentAlternateQuery = originalAlternateQuery;
+                        
+                        if (k < textsInQuery.size() - 1) {
                             // make a defensive clone for future usage
                             originalAlternateQuery = (AlternateQuery) currentAlternateQuery.clone();
                         }
                     } else if (k == textsInQuery.size() - 1) {
                         // we're sure we're the last one to use it, so we can just use the original clone
                         currentAlternateQuery = originalAlternateQuery;
+                        alternateQueries.add(currentAlternateQuery);
                     } else {
                         // need to clone to a new object
                         currentAlternateQuery = (AlternateQuery) originalAlternateQuery.clone();

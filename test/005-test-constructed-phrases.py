@@ -14,6 +14,7 @@ class TestBasic(unittest.TestCase):
     {'id': '1', 'name': 'my dog licks my face'}, \
     {'id': '2', 'name': 'my canis familiaris licks my face'}, \
     {'id': '3', 'name': "my man's best friend licks my face"}, \
+    {'id': '4', 'name': 'backpack'},
     ]
     solr_connection = None
     
@@ -40,6 +41,13 @@ class TestBasic(unittest.TestCase):
         self.tst_query({'synonyms.constructPhrases':'true'}, 'my hound licks my face', 3)
         self.tst_query({'synonyms.constructPhrases':'true'}, 'my canis familiaris licks my face', 3)
         self.tst_query({'synonyms.constructPhrases':'true'}, "my man's best friend licks my face", 3)
+
+    def test_issue_16(self):
+        self.tst_query({'mm' : '01%'}, 'meaningful token canis familiaris', 3)
+        self.tst_query({'mm' : '01%'}, 'backpack', 1)
+	self.tst_query({'mm' : '01%'}, 'back pack', 1)
+	self.tst_query({'mm' : '01%'}, 'north land back pack', 1)
+        self.tst_query({'mm' : '01%'}, 'north land backpack', 1)
                             
     def tst_query(self, extra_params, query, expected_num_docs):
         
