@@ -2,9 +2,9 @@
 #
 # Set it up so we can painless run the python nose tests against the localhost 8983.
 #
-# Downloads the latest Solr 4.1.0, puts in the synonyms jar, adds a synonyms file, and starts up a local solr on 8983.
+# Downloads the latest Solr 4.2.0, puts in the synonyms jar, adds a synonyms file, and starts up a local solr on 8983.
 #
-# Optionally takes solr-4.1.0.tgz as an argument, if you have it.  If not, it wgets it.
+# Optionally takes solr-4.2.0.tgz as an argument, if you have it.  If not, it wgets it.
 #
 
 SOLRJAR=$1
@@ -16,9 +16,9 @@ mkdir -p target/webapp
 cd target/webapp
 
 if [[ -z $SOLRJAR ]]; then 
-    wget 'http://archive.apache.org/dist/lucene/solr/4.1.0/solr-4.1.0.tgz'
+    wget 'http://archive.apache.org/dist/lucene/solr/4.2.0/solr-4.2.0.tgz'
 else
-    cp $SOLRJAR ./solr-4.1.0.tgz
+    cp $SOLRJAR ./solr-4.2.0.tgz
 fi
 
 tar -xzf solr-*.tgz
