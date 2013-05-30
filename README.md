@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
-Current version : 1.2
+Current version : 1.3.0
 
 Developer
 -----------
@@ -36,6 +36,7 @@ Download the latest JAR file depending on your Solr version:
 
 * [hon-lucene-synonyms-1.2-solr-3.x.jar][12] for Solr 3.5.0, 3.6.0, 3.6.1, and 3.6.2
 * [hon-lucene-synonyms-1.2-solr-4.0.0.jar][13] for Solr 4.0.0
+* [hon-lucene-synonyms-1.3.0-solr-4.3.0.jar][13] for Solr 4.3.0
 
 Solr 4.1.0 is not supported yet.  [I'm working on it!][10]
 
@@ -105,6 +106,37 @@ bottom (before ```</config>```):
 
 Note that you must modify the ```luceneMatchVersion``` above to match the 
 ```<luceneMatchVersion>...</luceneMatchVersion>``` tag at the beginning of the ```solr/conf/solrconfig.xml``` file.
+
+From version 4.3.0 for Solr 4.3.0 and beyond, there is a new way of loading Tokenizers and Token filters, and the XML format
+is somewhat different:
+```xml
+<queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
+  <lst name="synonymAnalyzers">
+    <lst name="myCoolAnalyzer">
+      <lst name="tokenizer">
+        <str name="class">standard</str>
+        <str name="luceneMatchVersion">LUCENE_43</str>
+      </lst>
+      <lst name="filter">
+        <str name="class">shingle</str>
+        <str name="luceneMatchVersion">LUCENE_43</str>
+        <str name="outputUnigramsIfNoShingles">true</str>
+        <str name="outputUnigrams">true</str>
+        <str name="minShingleSize">2</str>
+        <str name="maxShingleSize">4</str>
+      </lst>
+      <lst name="filter">
+        <str name="class">synonym</str>
+        <str name="luceneMatchVersion">LUCENE_43</str>
+        <str name="tokenizerFactory">solr.KeywordTokenizerFactory</str>
+        <str name="synonyms">example_synonym_file.txt</str>
+        <str name="expand">true</str>
+        <str name="ignoreCase">true</str>
+      </lst>
+    </lst>
+  </lst>
+</queryParser>
+```
 
 ### Step 7
 

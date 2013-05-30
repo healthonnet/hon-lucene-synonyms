@@ -51,7 +51,6 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.util.Version;
 import org.apache.solr.analysis.TokenizerChain;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
@@ -100,15 +99,6 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
         // as a NamedList.  But for now this is the hack I'm using
         synonymAnalyzers = new HashMap<String, Analyzer>();
 
-        Object testMatchVersion = args.get("luceneMatchVersion");
-        Version luceneMatchVersion = null;
-        if (testMatchVersion == null || !(testMatchVersion instanceof String)) {
-            throw new SolrException(ErrorCode.SERVER_ERROR,
-                    "luceneMatchVersion must be defined for the synonym_edismax parser");
-        } else {
-            luceneMatchVersion = Version.valueOf(args.get("luceneMatchVersion").toString());
-        }
-        
         Object xmlSynonymAnalyzers = args.get("synonymAnalyzers");
         
         if (xmlSynonymAnalyzers != null && xmlSynonymAnalyzers instanceof NamedList) {
@@ -136,16 +126,12 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
 
                     String className = params.get("class");
                     if (key.equals("tokenizer")) {
-                        tokenizerFactory = (TokenizerFactory) loader.newInstance(className, TokenizerFactory.class);
-                        tokenizerFactory.setLuceneMatchVersion(luceneMatchVersion);
-                        tokenizerFactory.init(params);
+                        tokenizerFactory = TokenizerFactory.forName(className, params);
                         if (tokenizerFactory instanceof ResourceLoaderAware) {
                             ((ResourceLoaderAware)tokenizerFactory).inform(loader);
                         }
                     } else if (key.equals("filter")) {
-                        TokenFilterFactory filterFactory = (TokenFilterFactory) loader.newInstance(className, TokenFilterFactory.class);
-                        filterFactory.setLuceneMatchVersion(luceneMatchVersion);
-                        filterFactory.init(params);
+                        TokenFilterFactory filterFactory = TokenFilterFactory.forName(className, params);
                         if (filterFactory instanceof ResourceLoaderAware) {
                             ((ResourceLoaderAware)filterFactory).inform(loader);
                         }

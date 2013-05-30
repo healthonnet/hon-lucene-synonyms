@@ -1,7 +1,8 @@
 package org.apache.solr.search;
 
-import org.junit.Assert;
 import org.junit.Test;
+
+import static junit.framework.Assert.*;
 
 public class SynonymExpandingParserTest {
 
@@ -10,7 +11,7 @@ public class SynonymExpandingParserTest {
         Class<?> cast = Class.forName("org.apache.solr.search.QParserPlugin");
         Class<?> clazz = Class.forName("org.apache.solr.search.SynonymExpandingExtendedDismaxQParserPlugin");
         
-        Assert.assertTrue(cast.isAssignableFrom(clazz));
+        assertTrue(cast.isAssignableFrom(clazz));
         
     }
     
