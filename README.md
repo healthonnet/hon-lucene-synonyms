@@ -1,9 +1,9 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
-Current version : 1.3.0
+Current version : 1.3.0 ([changelog][15])
 
-Developer
+Maintainer
 -----------
 
 [Nolan Lawson][7]
@@ -34,11 +34,10 @@ running in Jetty.
 
 Download the latest JAR file depending on your Solr version:
 
-* [hon-lucene-synonyms-1.2-solr-3.x.jar][12] for Solr 3.5.0, 3.6.0, 3.6.1, and 3.6.2
-* [hon-lucene-synonyms-1.2-solr-4.0.0.jar][13] for Solr 4.0.0
-* [hon-lucene-synonyms-1.3.0-solr-4.3.0.jar][13] for Solr 4.3.0
-
-Solr 4.1.0 is not supported yet.  [I'm working on it!][10]
+* [hon-lucene-synonyms-1.2.3-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, 3.6.0, 3.6.1, and 3.6.2
+* [hon-lucene-synonyms-1.2.3-solr-4.0.0.jar][13] for Solr 4.0.0
+* [hon-lucene-synonyms-1.2.3-solr-4.1.0.jar][14] for Solr 4.1.0 and 4.2.0
+* [hon-lucene-synonyms-1.3.0-solr-4.3.0.jar][17] for Solr 4.3.0 (requires config change)
 
 ### Step 2
 
@@ -51,21 +50,23 @@ Extract the compressed file and cd to the ```example/``` directory.
 
 ### Step 4
 
-Now, you need to bundle the ```hon-lucene-synonyms-xxx.jar``` file into ```webapps/solr.war```.
+Now, you need to bundle the ```hon-lucene-synonyms-*.jar``` file into ```webapps/solr.war```.
 Below is a script that will work quite nicely on UNIX systems. **Be sure to change the 
-```/path/to/my/hon-lucene-synonyms-xxx.jar``` part before running this script**.
+```/path/to/my/hon-lucene-synonyms-*.jar``` part before running this script**.
 
 ```
 mkdir myjar
 cd myjar
 jar -xf ../webapps/solr.war 
-cp /path/to/my/hon-lucene-synonyms-xxx.jar WEB-INF/lib/
+cp /path/to/my/hon-lucene-synonyms-*.jar WEB-INF/lib/
 jar -cf ../webapps/solr.war *
 cd ..
 ```
 
 Note that this plugin will not work in any location other than the ```WEB-INF/lib/``` directory of the ```solr.war``` 
-itself, because of [issues with the ClassLoader][11].
+itself, because of [issues with the ClassLoader][102].
+
+**UPDATE**: We have tested to run with the jar in `$SOLR_HOME/lib` as well, and it works (Jetty).
 
 ### Step 5
 
@@ -77,6 +78,7 @@ Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` direc
 Edit ```solr/conf/solrconfig.xml``` (```solr/collection1/conf/solrconfig.xml``` in 4.x) and add these lines near the 
 bottom (before ```</config>```):
 
+#### Before version 1.3.0 (up to Solr 4.2.x):
 ```xml
 <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
   <str name="luceneMatchVersion">LUCENE_36</str>
@@ -107,7 +109,8 @@ bottom (before ```</config>```):
 Note that you must modify the ```luceneMatchVersion``` above to match the 
 ```<luceneMatchVersion>...</luceneMatchVersion>``` tag at the beginning of the ```solr/conf/solrconfig.xml``` file.
 
-From version 4.3.0 for Solr 4.3.0 and beyond, there is a new way of loading Tokenizers and Token filters, and the XML format
+#### From version 1.3.0 and Solr 4.3 and beyond:
+From version 1.3.0 for Solr 4.3.0 and beyond, there is a new way of loading Tokenizers and Token filters, and the XML format
 is somewhat different:
 ```xml
 <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
@@ -158,8 +161,16 @@ You should see a response like this:
   <lst name="debug">
     <str name="rawquerystring">dog</str>
     <str name="querystring">dog</str>
-    <str name="parsedquery">+(DisjunctionMaxQuery((text:dog)) (((DisjunctionMaxQuery((text:canis)) DisjunctionMaxQuery((text:familiaris)))~2) DisjunctionMaxQuery((text:hound)) DisjunctionMaxQuery((text:pooch))))</str>
-    <str name="parsedquery_toString">+((text:dog) ((((text:canis) (text:familiaris))~2) (text:hound) (text:pooch)))</str>
+    <str name="parsedquery">
+        +(DisjunctionMaxQuery((text:dog)) (((DisjunctionMaxQuery((text:canis)) 
+        DisjunctionMaxQuery((text:familiaris)))~2) DisjunctionMaxQuery((text:hound)) 
+        ((DisjunctionMaxQuery((text:man's)) DisjunctionMaxQuery((text:best)) 
+        DisjunctionMaxQuery((text:friend)))~3) DisjunctionMaxQuery((text:pooch))))
+    </str>
+    <str name="parsedquery_toString">
+        +((text:dog) ((((text:canis) (text:familiaris))~2) (text:hound) 
+        (((text:man's) (text:best) (text:friend))~3) (text:pooch)))
+    </str>
     <lst name="explain"/>
     <str name="QParser">SynonymExpandingExtendedDismaxQParser</str>
     ...
@@ -167,7 +178,31 @@ You should see a response like this:
 </response>
 ```
 
-Note that the input query ```dog``` has been expanded into ```dog```, ```canis familiaris```, ```hound```, and ```pooch```.
+Note that the input query ```dog``` has been expanded into ```dog```, ```hound```, ```pooch```, ```canis familiaris```, and ```man's best friend```.
+
+Tweaking the results
+---------------------
+
+Boost the non-synonym part to 1.2 and the synonym part to 1.1 by adding ```synonyms.originalBoost=1.1&synonyms.synonymBoost=1.2```:
+
+```
++((text:dog)^1.1 (((((text:canis) (text:familiaris))~2) (text:hound) 
+(((text:man's) (text:best) (text:friend))~3) (text:pooch))^1.2))
+```
+
+Apply a [minimum "should" match][16] of 75% by adding ```mm=75%25```:
+
+```
++((text:dog) ((((text:canis) (text:familiaris))~1) (text:hound) 
+(((text:man's) (text:best) (text:friend))~2) (text:pooch)))
+```
+
+Observe how phrase queries are properly handled by using ```q="dog"``` instead of ```q=dog```:
+
+<pre style="white-space:normal;">
++((text:dog) ((text:"canis familiaris") (text:hound) (text:"man's best friend") (text:pooch)))
+</pre>
+
 
 Gotchas
 ---------
@@ -220,6 +255,12 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><font size="-1">false</font></td>
 <td style="padding:0 1em;"><font size="-1">True if synonym expansion should be disabled when the user input contains a phrase query (i.e. a quoted query). This option is offered because expansion of phrase queries may be considered non-intuitive to users.</font></td>
 </tr>
+<tr>
+<td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.constructPhrases</font></strong></td>
+<td style="padding:0 1em;"><font size="-1">boolean</font></td>
+<td style="padding:0 1em;"><font size="-1">false</font></td>
+<td style="padding:0 1em;"><font size="-1"><strong>v1.2.2+:</strong> True if expanded synonyms should always be treated like phrases (i.e. wrapped in quotes).  This option is offered in case your synonyms contain lots of phrases composed of common words (e.g. "man's best friend" for "dog").  Only affects the expanded synonyms; not the original query. See <a href='http://github.com/healthonnet/hon-lucene-synonyms/issues/5'>issue #5</a> for more discussion.</font></td>
+</tr>
 </table>
 
 
@@ -233,6 +274,54 @@ Download the code and run:
 mvn install
 ```
 
+Since there are several branches depending on the Solr version, there's also a build script that will ```git checkout```
+each branch, build it, and put it in the ```target/s3``` directory:
+
+```
+./build_all_versions.sh
+```
+
+Basically, my strategy is to maintain a main ```master```/```solr-4.1.0``` branch, with offshoot branches (```solr-4.0.0``` 
+and ```solr-3.x```) that are ```git rebase```'d every time I need to build a new version.
+
+Testing
+---------
+
+Python-based unit tests are in the ```test/``` directory. You can run them using: 
+
+```
+# launches Solr on localhost:8983. Alternatively, you can just follow the "Getting Started" directions
+./run_solr_for_unit_tests.sh /path/to/my/optional/solr-4.2.0.tgz
+
+# run some Python unit tests against the local Solr on localhost:8983
+nosetests test/
+```
+
+Currently I test against Solr 4.2.
+
+Changelog
+------------
+
+* v1.3.0
+ * Added support for Solr 4.3.0 ([#219][219])
+ * New way of loading Tokenizers and TokenFilters
+ * New XML syntax for config in solrconfig.xml
+* v1.2.3
+ * Fixed [#16][116]
+ * Verified support for Solr 4.2.0 with the 4.1.0 branch (unit tests passed)
+ * Improved automation of unit tests
+* v1.2.2
+ * Added ```synonyms.constructPhrases``` option to fix [issue #5][105]
+ * Added proper handling for phrase slop settings
+* v1.2.1
+ * Added support for Solr 4.1.0 ([#4][104])
+* v1.2
+ * Added support for Solr 4.0.0 ([#3][103])
+* v1.1
+ * Added support for Solr 3.6.1 and 3.6.2 ([#1][101])
+ * Added "Getting Started" instructions to clarify plugin usage ([#2][102])
+* v1.0
+ * Initial release
 
 [1]: http://www.apache.org/licenses/LICENSE-2.0.html
 [2]: http://nolanlawson.com/2012/10/31/better-synonym-handling-in-solr
@@ -243,7 +332,16 @@ mvn install
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
-[10]: http://github.com/healthonnet/hon-lucene-synonyms/issues/4
-[11]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
-[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2-solr-3.x/hon-lucene-synonyms-1.2-solr-3.x.jar
-[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2-solr-4.0.0/hon-lucene-synonyms-1.2-solr-4.0.0.jar
+[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-3.x/hon-lucene-synonyms-1.2.3-solr-3.x.jar
+[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-4.0.0/hon-lucene-synonyms-1.2.3-solr-4.0.0.jar
+[14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-4.1.0/hon-lucene-synonyms-1.2.3-solr-4.1.0.jar
+[15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
+[16]: http://wiki.apache.org/solr/DisMaxQParserPlugin#mm_.28Minimum_.27Should.27_Match.29
+[17]: https://dl.dropboxusercontent.com/u/20080302/hon-lucene-synonyms-1.3.0-solr-4.3.0.jar
+[101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
+[102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
+[103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3
+[104]: http://github.com/healthonnet/hon-lucene-synonyms/issues/4
+[105]: http://github.com/healthonnet/hon-lucene-synonyms/issues/5
+[116]: http://github.com/healthonnet/hon-lucene-synonyms/issues/16
+[219]: https://github.com/healthonnet/hon-lucene-synonyms/pull/19

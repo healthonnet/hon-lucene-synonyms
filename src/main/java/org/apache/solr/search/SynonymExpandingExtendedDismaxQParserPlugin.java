@@ -54,11 +54,9 @@ import org.apache.lucene.search.Query;
 import org.apache.solr.analysis.TokenizerChain;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
-import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
-import org.apache.solr.util.SolrPluginUtils;
 
 /**
  * An advanced multi-field query parser.
@@ -167,6 +165,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         public static final String SYNONYMS_ORIGINAL_BOOST = "synonyms.originalBoost";
         public static final String SYNONYMS_SYNONYM_BOOST = "synonyms.synonymBoost";
         public static final String SYNONYMS_DISABLE_PHRASE_QUERIES = "synonyms.disablePhraseQueries";
+        public static final String SYNONYMS_CONSTRUCT_PHRASES = "synonyms.constructPhrases";
         
     }
 
@@ -186,11 +185,6 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         static final Pattern COMPLEX_QUERY_OPERATORS_PATTERN = Pattern.compile("(?:\\*|\\b(?:OR|AND|-|\\+)\\b)"); 
     }
 
-    /** shorten the class references for utilities */
-    private static class U extends SolrPluginUtils {
-      /* :NOOP */
-    }
-    
     private Map<String, Analyzer> synonymAnalyzers;
     private Query queryToHighlight;
     
@@ -211,7 +205,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
     @Override
     public Query parse() throws SyntaxError {
         Query query = super.parse();
-        
+
         SolrParams localParams = getLocalParams();
         SolrParams params = getParams();
         SolrParams solrParams = localParams == null ? params : SolrParams.wrapDefaults(localParams, params);
@@ -239,7 +233,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         }
         
         if (solrParams.getBool(Params.SYNONYMS_DISABLE_PHRASE_QUERIES, false)
-                && getString().indexOf('"') != -1) {
+                && getQueryStringFromParser().indexOf('"') != -1) {
             // disable if a phrase query is detected, i.e. there's a '"'
             return query;
         }
@@ -258,22 +252,17 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         
         List<Query> synonymQueries = generateSynonymQueries(synonymAnalyzer, solrParams);
         
-        boolean hasComplexQueryOperators = Const.COMPLEX_QUERY_OPERATORS_PATTERN.matcher(getString()).find();
+        boolean hasComplexQueryOperators = Const.COMPLEX_QUERY_OPERATORS_PATTERN.matcher(getQueryStringFromParser()).find();
         
         if (hasComplexQueryOperators // TODO: support complex operators
                 || synonymQueries.isEmpty()) { // didn't find more than 0 synonyms, i.e. it's just the original phrase
             return;
         }
         
-        // TODO: EDisMax does not do minShouldMatch if complex query operators exist, and neither do we.
-        // But in the future we might, so keep doMinShouldMatch separate for now
-        boolean doMinShouldMatch = true;
-        String minShouldMatch = solrParams.get(DisMaxParams.MM, "100%");
-        
         float originalBoost = solrParams.getFloat(Params.SYNONYMS_ORIGINAL_BOOST, 1.0F);
         float synonymBoost = solrParams.getFloat(Params.SYNONYMS_SYNONYM_BOOST, 1.0F);
         
-        applySynonymQueries(query, synonymQueries, originalBoost, synonymBoost, doMinShouldMatch, minShouldMatch);
+        applySynonymQueries(query, synonymQueries, originalBoost, synonymBoost);
     }
 
     /**
@@ -286,15 +275,11 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
      * @param synonymQueries
      * @param originalBoost
      * @param synonymBoost
-     * @param doMinShouldMatch
-     * @param minShouldMatch
      */
-    private void applySynonymQueries(Query query, List<Query> synonymQueries, float originalBoost, float synonymBoost,
-            boolean doMinShouldMatch, String minShouldMatch) {
+    private void applySynonymQueries(Query query, List<Query> synonymQueries, float originalBoost, float synonymBoost) {
 
         if (query instanceof BoostedQuery) {
-            applySynonymQueries(((BoostedQuery) query).getQuery(), synonymQueries, originalBoost, synonymBoost, 
-                    doMinShouldMatch, minShouldMatch);
+            applySynonymQueries(((BoostedQuery) query).getQuery(), synonymQueries, originalBoost, synonymBoost);
         } else if (query instanceof BooleanQuery) {
             BooleanQuery booleanQuery =(BooleanQuery) query;
             
@@ -308,9 +293,6 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                     // combine all synonym queries together with the same boost
                     BooleanQuery allSynonymQueries = new BooleanQuery();
                     for (Query synonymQuery : synonymQueries) {
-                        if (doMinShouldMatch && synonymQuery instanceof BooleanQuery) {
-                            U.setMinShouldMatch((BooleanQuery)synonymQuery, minShouldMatch);
-                        }
                         allSynonymQueries.add(synonymQuery, Occur.SHOULD);
                     }
                     
@@ -336,10 +318,13 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
     private List<Query> generateSynonymQueries(Analyzer synonymAnalyzer, SolrParams solrParams) throws IOException {
 
         // TODO: make the token stream reusable?
-        TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME, 
-                new StringReader(getString()));
+        TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME,
+                new StringReader(getQueryStringFromParser()));
         
         SortedMap<Integer, SortedSet<TextInQuery>> startPosToTextsInQuery = new TreeMap<Integer, SortedSet<TextInQuery>>();
+        
+        
+        boolean constructPhraseQueries = solrParams.getBool(Params.SYNONYMS_CONSTRUCT_PHRASES, false);
         
         try {
             tokenStream.reset();
@@ -352,7 +337,14 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                     // ignore shingles; we only care about synonyms and the original text
                     // TODO: filter other types as well
                     
-                    TextInQuery textInQuery = new TextInQuery(term.toString(), 
+                    String termToAdd = term.toString();
+                    
+                    if (constructPhraseQueries && typeAttribute.type().equals("SYNONYM")) {
+                        // make a phrase out of the synonym
+                        termToAdd = new StringBuilder(termToAdd).insert(0,'"').append('"').toString();
+                    }
+                    
+                    TextInQuery textInQuery = new TextInQuery(termToAdd, 
                             offsetAttribute.startOffset(), 
                             offsetAttribute.endOffset());
                     
@@ -383,7 +375,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         }
         
         // have to use the start positions and end positions to figure out all possible combinations
-        List<String> alternateQueries = buildUpAlternateQueries(sortedTextsInQuery);
+        List<String> alternateQueries = buildUpAlternateQueries(solrParams, sortedTextsInQuery);
 
         return createSynonymQueries(solrParams, alternateQueries);
     }
@@ -402,12 +394,13 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
      * hound nibble
      * pooch nibble
      * 
+     * @param solrParams
      * @param textsInQueryLists
      * @return
      */
-    private List<String> buildUpAlternateQueries(List<List<TextInQuery>> textsInQueryLists) {
+    private List<String> buildUpAlternateQueries(SolrParams solrParams, List<List<TextInQuery>> textsInQueryLists) {
         
-        String originalUserQuery = getString();
+        String originalUserQuery = getQueryStringFromParser();
         
         if (textsInQueryLists.isEmpty()) {
             return Collections.emptyList();
@@ -430,28 +423,49 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             int alternateQueriesLength = alternateQueries.size();
             
             for (int j = 0; j < alternateQueriesLength; j++) {
-                AlternateQuery alternateQuery = alternateQueries.get(j);
+                
+                // When we're working with a lattice, assuming there's only one path to take in the next column,
+                // we can (and MUST) use all the original objects in the current column.
+                // It's only when we have >1 paths in the next column that we need to start taking copies.
+                // So if a lot of this logic seems tortured, it's only because I'm trying to minimize object
+                // creation.
+                AlternateQuery originalAlternateQuery = alternateQueries.get(j);
                 
                 boolean usedFirst = false;
                 
-                for (int k = 0;k < textsInQuery.size(); k++) {
+                for (int k = 0; k < textsInQuery.size(); k++) {
+                    
                     TextInQuery textInQuery =  textsInQuery.get(k);
-                    if (alternateQuery.getEndPosition() > textInQuery.getStartPosition()) { // cannot be appended
-                        break; // already in order, so we can safely break
+                    if (originalAlternateQuery.getEndPosition() > textInQuery.getStartPosition()) {
+                        // cannot be appended, e.g. "canis" token in "canis familiaris"
+                        continue;
                     }
+                    
+                    AlternateQuery currentAlternateQuery;
+                    
                     if (!usedFirst) {
                         // re-use the existing object
                         usedFirst = true;
+                        currentAlternateQuery = originalAlternateQuery;
+                        
+                        if (k < textsInQuery.size() - 1) {
+                            // make a defensive clone for future usage
+                            originalAlternateQuery = (AlternateQuery) currentAlternateQuery.clone();
+                        }
+                    } else if (k == textsInQuery.size() - 1) {
+                        // we're sure we're the last one to use it, so we can just use the original clone
+                        currentAlternateQuery = originalAlternateQuery;
+                        alternateQueries.add(currentAlternateQuery);
                     } else {
                         // need to clone to a new object
-                        alternateQuery = (AlternateQuery) alternateQuery.clone();
-                        alternateQueries.add(alternateQuery);
+                        currentAlternateQuery = (AlternateQuery) originalAlternateQuery.clone();
+                        alternateQueries.add(currentAlternateQuery);
                     }
-                    // text in the original query between the two tokens, usually a space
+                    // text in the original query between the two tokens, usually a space, comma, etc.
                     CharSequence betweenTokens = originalUserQuery.subSequence(
-                            alternateQuery.getEndPosition(), textInQuery.getStartPosition());
-                    alternateQuery.getStringBuilder().append(betweenTokens).append(textInQuery.getText());
-                    alternateQuery.setEndPosition(textInQuery.getEndPosition());
+                            currentAlternateQuery.getEndPosition(), textInQuery.getStartPosition());
+                    currentAlternateQuery.getStringBuilder().append(betweenTokens).append(textInQuery.getText());
+                    currentAlternateQuery.setEndPosition(textInQuery.getEndPosition());
                 }
             }
         }
@@ -459,10 +473,13 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         List<String> result = new ArrayList<String>();
         
         for (AlternateQuery alternateQuery : alternateQueries) {
+            
+            StringBuilder sb = alternateQuery.getStringBuilder();
+            
             // append whatever text followed the last token, e.g. '"'
-            alternateQuery.getStringBuilder().append(originalUserQuery.subSequence(
-                    alternateQuery.getEndPosition(), originalUserQuery.length()));
-            result.add(alternateQuery.getStringBuilder().toString());
+            sb.append(originalUserQuery.subSequence(alternateQuery.getEndPosition(), originalUserQuery.length()));
+            
+            result.add(sb.toString());
         }
         return result;
     }
@@ -476,48 +493,37 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
      * @return
      */
     private List<Query> createSynonymQueries(SolrParams solrParams, List<String> alternateQueryTexts) {
-
-        //
-        // begin copied code from ExtendedDismaxQParser
-        //        
         
-        // have to build up the queryFields again because in Solr 3.6.1 they made it private.
-        Map<String,Float> queryFields = SolrPluginUtils.parseFieldBoosts(solrParams.getParams(DisMaxParams.QF));
-        if (0 == queryFields.size()) {
-            queryFields.put(req.getSchema().getDefaultSearchFieldName(), 1.0f);
-        }
-        
-        if (queryFields.keySet().iterator().next() == null) {
-            throw new RuntimeException("'qf' is null and there's no 'defaultSearchField' in schema.xml. " +
-                        "Synonyms cannot be generated in these conditions! " +
-                        "Please either add 'qf', or add 'defaultSearchField'");
-        }
-
-        float tiebreaker = solrParams.getFloat(DisMaxParams.TIE, 0.0f);
-        int qslop = solrParams.getInt(DisMaxParams.QS, 0);
-        ExtendedSolrQueryParser up = new ExtendedSolrQueryParser(this,
-                Const.IMPOSSIBLE_FIELD_NAME);
-        up.addAlias(Const.IMPOSSIBLE_FIELD_NAME, tiebreaker, queryFields);
-        up.setPhraseSlop(qslop); // slop for explicit user phrase queries
-        up.setAllowLeadingWildcard(true);
-        //
-        // end copied code
-        //
+        String originalString = getString();
+        String nullsafeOriginalString = getQueryStringFromParser();
         
         List<Query> result = new ArrayList<Query>();
         for (String alternateQueryText : alternateQueryTexts) {
-            if (alternateQueryText.equals(getString())) { // alternate query is the same as what the user entered
+            if (alternateQueryText.equalsIgnoreCase(nullsafeOriginalString)) { 
+                // alternate query is the same as what the user entered
                 continue;
             }
+            
+            super.setString(alternateQueryText);
             try {
-                result.add(up.parse(alternateQueryText));
+                result.add(super.parse());
             } catch (SyntaxError e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
                 e.printStackTrace(System.err);
             }
         }
         
+        super.setString(originalString); // cover our tracks
+        
         return result;
+    }
+
+    /**
+     * Ensures that we return a valid string, even if null
+     * @return the entered query string fetched from QParser.getString()
+     */
+    private String getQueryStringFromParser() {
+      return (getString() == null) ? "" : getString();
     }
     
     /**
