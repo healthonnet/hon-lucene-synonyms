@@ -302,9 +302,9 @@ Changelog
 ------------
 
 * v1.3.1
- * Fixed issue #20 - Avoid luceneMatchVersion in config
+ * Avoid luceneMatchVersion in config ([#20][220])
 * v1.3.0
- * Added support for Solr 4.3.0 ([#219][219])
+ * Added support for Solr 4.3.0 ([#19][219])
  * New way of loading Tokenizers and TokenFilters
  * New XML syntax for config in solrconfig.xml
 * v1.2.3
@@ -312,7 +312,7 @@ Changelog
  * Verified support for Solr 4.2.0 with the 4.1.0 branch (unit tests passed)
  * Improved automation of unit tests
 * v1.2.2
- * Added ```synonyms.constructPhrases``` option to fix [issue #5][105]
+ * Added ```synonyms.constructPhrases``` option to fix [#5][105]
  * Added proper handling for phrase slop settings
 * v1.2.1
  * Added support for Solr 4.1.0 ([#4][104])
@@ -345,4 +345,5 @@ Changelog
 [104]: http://github.com/healthonnet/hon-lucene-synonyms/issues/4
 [105]: http://github.com/healthonnet/hon-lucene-synonyms/issues/5
 [116]: http://github.com/healthonnet/hon-lucene-synonyms/issues/16
-[219]: https://github.com/healthonnet/hon-lucene-synonyms/pull/19
+[219]: http://github.com/healthonnet/hon-lucene-synonyms/issues/19
+[220]: http://github.com/healthonnet/hon-lucene-synonyms/issues/20
