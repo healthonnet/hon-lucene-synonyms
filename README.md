@@ -37,7 +37,7 @@ Download the latest JAR file depending on your Solr version:
 * [hon-lucene-synonyms-1.2.3-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, 3.6.0, 3.6.1, and 3.6.2
 * [hon-lucene-synonyms-1.2.3-solr-4.0.0.jar][13] for Solr 4.0.0
 * [hon-lucene-synonyms-1.2.3-solr-4.1.0.jar][14] for Solr 4.1.0 and 4.2.0
-* [hon-lucene-synonyms-1.3.1-solr-4.3.0.jar][17] for Solr 4.3.0 (requires config change)
+* [hon-lucene-synonyms-1.3.1-solr-4.3.0.jar][17] for Solr 4.3.x
 
 ### Step 2
 
@@ -109,10 +109,11 @@ bottom (before ```</config>```):
 Note that you must modify the ```luceneMatchVersion``` above to match the 
 ```<luceneMatchVersion>...</luceneMatchVersion>``` tag at the beginning of the ```solr/conf/solrconfig.xml``` file.
 
-#### From version 1.3.0 and Solr 4.3 and beyond:
-From version 1.3.0 for Solr 4.3.0 and beyond, there is a new way of loading Tokenizers and Token filters, and the XML format
-is somewhat different, you refer to the class by a simple name rather than package and class name. As of 1.3.1 you do not
-need to duplicate luceneMatchVersion in this configuration, it will inherit from `solrconfig.xml`:
+#### From version 1.3.1 and Solr 4.3 and beyond:
+From version 1.3.1 you do not need to specify luceneMatchVersion in this configuration, it will inherit from `solrconfig.xml`.
+Also, there is support for loading Tokenizers and Token filters by service name through the new SPI method. That means you
+may put `synonym` as `class` attribute instead of `solr.SynonymFilterFactory` if you choose so. The config can thus look like:
+
 ```xml
 <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
   <lst name="synonymAnalyzers">

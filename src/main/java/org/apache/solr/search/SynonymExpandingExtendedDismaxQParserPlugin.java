@@ -57,6 +57,7 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
+import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
 
 /**
@@ -71,7 +72,7 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
     private NamedList<?> args;
     private Map<String, Analyzer> synonymAnalyzers;
     private Version luceneMatchVersion = null;
-    private ResourceLoader loader;
+    private SolrResourceLoader loader;
 
     @SuppressWarnings("rawtypes")
     // TODO it would be nice if the user didn't have to encode tokenizers/filters
@@ -102,7 +103,8 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
     }
 
     public void inform(ResourceLoader loader) throws IOException {
-        this.loader = loader;
+        // TODO: Can we assume that loader always is a sub type of SolrResourceLoader?
+        this.loader = (SolrResourceLoader) loader;
     }
 
     /*
@@ -126,6 +128,7 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
                     NamedList<?> analyzerAsNamedList = (NamedList<?>) entry.getValue();
 
                     TokenizerFactory tokenizerFactory = null;
+                    TokenFilterFactory filterFactory = null;
                     List<TokenFilterFactory> filterFactories = new LinkedList<TokenFilterFactory>();
 
                     for (Entry<String, ?> analyzerEntry : analyzerAsNamedList) {
@@ -135,20 +138,36 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
                         }
                         Map<String, String> params = convertNamedListToMap((NamedList<?>)analyzerEntry.getValue());
 
-                        if (!params.containsKey("class")) {
+                        String className = params.get("class");
+                        if (className == null) {
                             continue;
                         }
 
                         params.put("luceneMatchVersion", luceneMatchVersion.toString());
 
-                        String className = params.get("class");
                         if (key.equals("tokenizer")) {
-                            tokenizerFactory = TokenizerFactory.forName(className, params);
+                            try {
+                                tokenizerFactory = TokenizerFactory.forName(className, params);
+                            } catch (IllegalArgumentException iae) {
+                                if (!className.contains(".")) {
+                                    iae.printStackTrace();
+                                }
+                                // Now try by classname instead of SPI keyword
+                                tokenizerFactory = loader.newInstance(className, TokenizerFactory.class, new String[]{}, new Class[] { Map.class }, new Object[] { params });
+                            }
                             if (tokenizerFactory instanceof ResourceLoaderAware) {
                                 ((ResourceLoaderAware)tokenizerFactory).inform(loader);
                             }
                         } else if (key.equals("filter")) {
-                            TokenFilterFactory filterFactory = TokenFilterFactory.forName(className, params);
+                            try {
+                                filterFactory = TokenFilterFactory.forName(className, params);
+                            } catch (IllegalArgumentException iae) {
+                                if (!className.contains(".")) {
+                                    iae.printStackTrace();
+                                }
+                                // Now try by classname instead of SPI keyword
+                                filterFactory = loader.newInstance(className, TokenFilterFactory.class, new String[]{}, new Class[] { Map.class }, new Object[] { params });
+                            }
                             if (filterFactory instanceof ResourceLoaderAware) {
                                 ((ResourceLoaderAware)filterFactory).inform(loader);
                             }
