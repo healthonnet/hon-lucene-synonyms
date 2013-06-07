@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
-Current version : 1.3.0 ([changelog][15])
+Current version : 1.3.1 ([changelog][15])
 
 Maintainer
 -----------
@@ -37,7 +37,7 @@ Download the latest JAR file depending on your Solr version:
 * [hon-lucene-synonyms-1.2.3-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, 3.6.0, 3.6.1, and 3.6.2
 * [hon-lucene-synonyms-1.2.3-solr-4.0.0.jar][13] for Solr 4.0.0
 * [hon-lucene-synonyms-1.2.3-solr-4.1.0.jar][14] for Solr 4.1.0 and 4.2.0
-* [hon-lucene-synonyms-1.3.0-solr-4.3.0.jar][17] for Solr 4.3.0 (requires config change)
+* [hon-lucene-synonyms-1.3.1-solr-4.3.0.jar][17] for Solr 4.3.x
 
 ### Step 2
 
@@ -109,20 +109,20 @@ bottom (before ```</config>```):
 Note that you must modify the ```luceneMatchVersion``` above to match the 
 ```<luceneMatchVersion>...</luceneMatchVersion>``` tag at the beginning of the ```solr/conf/solrconfig.xml``` file.
 
-#### From version 1.3.0 and Solr 4.3 and beyond:
-From version 1.3.0 for Solr 4.3.0 and beyond, there is a new way of loading Tokenizers and Token filters, and the XML format
-is somewhat different:
+#### From version 1.3.1 and Solr 4.3 and beyond:
+From version 1.3.1 you do not need to specify luceneMatchVersion in this configuration, it will inherit from `solrconfig.xml`.
+Also, there is support for loading Tokenizers and Token filters by service name through the new SPI method. That means you
+may put `synonym` as `class` attribute instead of `solr.SynonymFilterFactory` if you choose so. The config can thus look like:
+
 ```xml
 <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
   <lst name="synonymAnalyzers">
     <lst name="myCoolAnalyzer">
       <lst name="tokenizer">
         <str name="class">standard</str>
-        <str name="luceneMatchVersion">LUCENE_43</str>
       </lst>
       <lst name="filter">
         <str name="class">shingle</str>
-        <str name="luceneMatchVersion">LUCENE_43</str>
         <str name="outputUnigramsIfNoShingles">true</str>
         <str name="outputUnigrams">true</str>
         <str name="minShingleSize">2</str>
@@ -130,7 +130,6 @@ is somewhat different:
       </lst>
       <lst name="filter">
         <str name="class">synonym</str>
-        <str name="luceneMatchVersion">LUCENE_43</str>
         <str name="tokenizerFactory">solr.KeywordTokenizerFactory</str>
         <str name="synonyms">example_synonym_file.txt</str>
         <str name="expand">true</str>
@@ -281,7 +280,7 @@ each branch, build it, and put it in the ```target/s3``` directory:
 ./build_all_versions.sh
 ```
 
-Basically, my strategy is to maintain a main ```master```/```solr-4.1.0``` branch, with offshoot branches (```solr-4.0.0``` 
+Basically, my strategy is to maintain a main ```master```/```solr-4.3.x``` branch, with offshoot branches (```solr-4.0.0``` 
 and ```solr-3.x```) that are ```git rebase```'d every time I need to build a new version.
 
 Testing
@@ -302,6 +301,8 @@ Currently I test against Solr 4.2.
 Changelog
 ------------
 
+* v1.3.1
+ * Fixed issue #20 - Avoid luceneMatchVersion in config
 * v1.3.0
  * Added support for Solr 4.3.0 ([#219][219])
  * New way of loading Tokenizers and TokenFilters
@@ -337,7 +338,7 @@ Changelog
 [14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-4.1.0/hon-lucene-synonyms-1.2.3-solr-4.1.0.jar
 [15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
 [16]: http://wiki.apache.org/solr/DisMaxQParserPlugin#mm_.28Minimum_.27Should.27_Match.29
-[17]: https://dl.dropboxusercontent.com/u/20080302/hon-lucene-synonyms-1.3.0-solr-4.3.0.jar
+[17]: https://dl.dropboxusercontent.com/u/20080302/hon-lucene-synonyms-1.3.1-solr-4.3.0.jar
 [101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
 [102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
 [103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3
