@@ -260,6 +260,12 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><font size="-1">false</font></td>
 <td style="padding:0 1em;"><font size="-1"><strong>v1.2.2+:</strong> True if expanded synonyms should always be treated like phrases (i.e. wrapped in quotes).  This option is offered in case your synonyms contain lots of phrases composed of common words (e.g. "man's best friend" for "dog").  Only affects the expanded synonyms; not the original query. See <a href='http://github.com/healthonnet/hon-lucene-synonyms/issues/5'>issue #5</a> for more discussion.</font></td>
 </tr>
+<tr>
+<td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.bag</font></strong></td>
+<td style="padding:0 1em;"><font size="-1">boolean</font></td>
+<td style="padding:0 1em;"><font size="-1">false</font></td>
+<td style="padding:0 1em;"><font size="-1"><strong>v1.3.2+:</strong> When false (default), this plugin generates additional synonym queries by using the original query string as a template: dog bite => dog bite, canis familiaris bite, dog chomp, canis familiaris chomp. When true a simpler, "bag of terms" query is created from the synonyms. IE dog bite => bite dog chomp canis familiaris. The simpler query will be more performant but loses positional information. Use with synonyms.constructPhrases to keep synonym phrases such as "canis familiaris".
+</tr>
 </table>
 
 

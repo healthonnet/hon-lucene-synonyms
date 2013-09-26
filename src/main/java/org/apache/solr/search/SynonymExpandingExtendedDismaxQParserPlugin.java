@@ -206,7 +206,17 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         public static final String SYNONYMS_SYNONYM_BOOST = "synonyms.synonymBoost";
         public static final String SYNONYMS_DISABLE_PHRASE_QUERIES = "synonyms.disablePhraseQueries";
         public static final String SYNONYMS_CONSTRUCT_PHRASES = "synonyms.constructPhrases";
-        
+        // instead of splicing synonyms into the original query string, ie
+		//    dog bite
+        //    canine familiaris bite
+        //    dog chomp
+        //    canine familiaris chomp
+        // do this: 
+        //    dog bite 
+        //	  "canine familiaris" chomp
+        // with phrases off:
+        //    dog bite canine familiaris chomp
+        public static final String SYNONYMS_BAG = "synonyms.bag";
     }
 
     /**
@@ -366,6 +376,9 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         
         boolean constructPhraseQueries = solrParams.getBool(Params.SYNONYMS_CONSTRUCT_PHRASES, false);
         
+        boolean bag = solrParams.getBool(Params.SYNONYMS_BAG, false);
+        List<String> synonymBag = new ArrayList<String>();
+        
         try {
             tokenStream.reset();
             while (tokenStream.incrementToken()) {
@@ -379,22 +392,27 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                     
                     String termToAdd = term.toString();
                     
+                    if (typeAttribute.type().equals("SYNONYM")) {
+                        synonymBag.add(termToAdd);                    	
+                    }
+                    
                     if (constructPhraseQueries && typeAttribute.type().equals("SYNONYM")) {
                         // make a phrase out of the synonym
                         termToAdd = new StringBuilder(termToAdd).insert(0,'"').append('"').toString();
                     }
-                    
-                    TextInQuery textInQuery = new TextInQuery(termToAdd, 
-                            offsetAttribute.startOffset(), 
-                            offsetAttribute.endOffset());
-                    
-                    // brain-dead multimap logic... man, I wish we had Google Guava here
-                    SortedSet<TextInQuery> existingList = startPosToTextsInQuery.get(offsetAttribute.startOffset());
-                    if (existingList == null) {
-                        existingList = new TreeSet<TextInQuery>();
-                        startPosToTextsInQuery.put(offsetAttribute.startOffset(), existingList);
+                    if (!bag) {
+	                    TextInQuery textInQuery = new TextInQuery(termToAdd, 
+	                            offsetAttribute.startOffset(), 
+	                            offsetAttribute.endOffset());
+	                    
+	                    // brain-dead multimap logic... man, I wish we had Google Guava here
+	                    SortedSet<TextInQuery> existingList = startPosToTextsInQuery.get(offsetAttribute.startOffset());
+	                    if (existingList == null) {
+	                        existingList = new TreeSet<TextInQuery>();
+	                        startPosToTextsInQuery.put(offsetAttribute.startOffset(), existingList);
+	                    }
+	                    existingList.add(textInQuery);
                     }
-                    existingList.add(textInQuery);
                 }
             }
             tokenStream.end();
@@ -407,15 +425,19 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                 throw new RuntimeException("uncaught exception in synonym processing", e);
             }
         }
+               
+        List<String> alternateQueries = synonymBag;
         
-        List<List<TextInQuery>> sortedTextsInQuery = new ArrayList<List<TextInQuery>>(
-                startPosToTextsInQuery.values().size());
-        for (SortedSet<TextInQuery> sortedSet : startPosToTextsInQuery.values()) {
-            sortedTextsInQuery.add(new ArrayList<TextInQuery>(sortedSet));
+        if (!bag) {
+	        List<List<TextInQuery>> sortedTextsInQuery = new ArrayList<List<TextInQuery>>(
+	                startPosToTextsInQuery.values().size());
+	        for (SortedSet<TextInQuery> sortedSet : startPosToTextsInQuery.values()) {
+	            sortedTextsInQuery.add(new ArrayList<TextInQuery>(sortedSet));
+	        }
+	        
+	        // have to use the start positions and end positions to figure out all possible combinations
+	        alternateQueries = buildUpAlternateQueries(solrParams, sortedTextsInQuery);
         }
-        
-        // have to use the start positions and end positions to figure out all possible combinations
-        List<String> alternateQueries = buildUpAlternateQueries(solrParams, sortedTextsInQuery);
 
         return createSynonymQueries(solrParams, alternateQueries);
     }
@@ -523,7 +545,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         }
         return result;
     }
-
+    
     /**
      * From a list of alternate queries in text format, parse them using the default
      * ExtendedSolrQueryParser and return the queries.
