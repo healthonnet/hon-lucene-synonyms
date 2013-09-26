@@ -264,7 +264,7 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.bag</font></strong></td>
 <td style="padding:0 1em;"><font size="-1">boolean</font></td>
 <td style="padding:0 1em;"><font size="-1">false</font></td>
-<td style="padding:0 1em;"><font size="-1"><strong>v1.3.2+:</strong> When true, doesn't splice the synonyms back into the original query string, and instead simply ors a bag of all generated synonyms to the query. Instead of generating queries >dog bite< >hound bite< >dog chomp< >hound chomp< simply generates >dog bite< hound chomp</font></td>
+<td style="padding:0 1em;"><font size="-1"><strong>v1.3.2+:</strong> When false (default), this plugin generates synonym queries by using the original query string as a template: <font face="monospace">dog bite</font> => <font face="monospace">dog bite</font>, <font face="monospace">hound bite</font>, <font face="monospace">dog chomp</font>, <font face="monospace">hound chomp</font>. When true a simpler query is generated dog bite => <font face="monospace">dog bite hound chomp</font></td>When false (default), this plugin generates additional synonym queries by using the original query string as a template: dog bite => dog bite, canis familiaris bite, dog chomp, canis familiaris chomp. When true a simpler, "bag of terms" query is created from the synonyms. IE dog bite => bite dog chomp "canis familiaris". The simpler query will be more performant but loses positional information.
 </tr>
 </table>
 
