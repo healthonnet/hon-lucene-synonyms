@@ -377,7 +377,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         boolean constructPhraseQueries = solrParams.getBool(Params.SYNONYMS_CONSTRUCT_PHRASES, false);
         
         boolean bag = solrParams.getBool(Params.SYNONYMS_BAG, false);
-        List<String> queryBag = new ArrayList<String>();
+        List<String> synonymBag = new ArrayList<String>();
         
         try {
             tokenStream.reset();
@@ -392,15 +392,15 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                     
                     String termToAdd = term.toString();
                     
+                    if (typeAttribute.type().equals("SYNONYM")) {
+                        synonymBag.add(termToAdd);                    	
+                    }
+                    
                     if (constructPhraseQueries && typeAttribute.type().equals("SYNONYM")) {
                         // make a phrase out of the synonym
                         termToAdd = new StringBuilder(termToAdd).insert(0,'"').append('"').toString();
                     }
-                    
-                    if (bag) {
-                    	queryBag.add(termToAdd);                    	
-                    }
-                    else {
+                    if (!bag) {
 	                    TextInQuery textInQuery = new TextInQuery(termToAdd, 
 	                            offsetAttribute.startOffset(), 
 	                            offsetAttribute.endOffset());
@@ -426,7 +426,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
             }
         }
                
-        List<String> alternateQueries = queryBag;
+        List<String> alternateQueries = synonymBag;
         
         if (!bag) {
 	        List<List<TextInQuery>> sortedTextsInQuery = new ArrayList<List<TextInQuery>>(
