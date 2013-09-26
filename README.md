@@ -264,7 +264,7 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.bag</font></strong></td>
 <td style="padding:0 1em;"><font size="-1">boolean</font></td>
 <td style="padding:0 1em;"><font size="-1">false</font></td>
-<td style="padding:0 1em;"><font size="-1"><strong>v1.3.2+:> When true, doesn't splice the synonyms back into the original query string, and instead simply ors a bag of all generated synonyms to the query.</strong></font></td>
+<td style="padding:0 1em;"><font size="-1"><strong>v1.3.2+:</strong> When true, doesn't splice the synonyms back into the original query string, and instead simply ors a bag of all generated synonyms to the query. Instead of generating queries >dog bite< >hound bite< >dog chomp< >hound chomp< simply generates >dog bite< hound chomp</font></td>
 </tr>
 </table>
 
