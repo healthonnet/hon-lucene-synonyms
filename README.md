@@ -260,6 +260,12 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><font size="-1">false</font></td>
 <td style="padding:0 1em;"><font size="-1"><strong>v1.2.2+:</strong> True if expanded synonyms should always be treated like phrases (i.e. wrapped in quotes).  This option is offered in case your synonyms contain lots of phrases composed of common words (e.g. "man's best friend" for "dog").  Only affects the expanded synonyms; not the original query. See <a href='http://github.com/healthonnet/hon-lucene-synonyms/issues/5'>issue #5</a> for more discussion.</font></td>
 </tr>
+<tr>
+<td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.ignoreQueryOperators</font></strong></td>
+<td style="padding:0 1em;"><font size="-1">boolean</font></td>
+<td style="padding:0 1em;"><font size="-1">false</font></td>
+<td style="padding:0 1em;"><font size="-1"><strong>v1.3.2+:</strong> If you treat query operators as usual words and want the synonyms be added to the query anyhow, set this option to True.</font></td>
+</tr>
 </table>
 
 
@@ -304,6 +310,8 @@ nosetests test/
 Changelog
 ------------
 
+* v1.3.2
+ * Added synonyms.ignoreQueryOperators option
 * v1.3.1
  * Avoid luceneMatchVersion in config ([#20][220])
 * v1.3.0
