@@ -206,6 +206,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         public static final String SYNONYMS_SYNONYM_BOOST = "synonyms.synonymBoost";
         public static final String SYNONYMS_DISABLE_PHRASE_QUERIES = "synonyms.disablePhraseQueries";
         public static final String SYNONYMS_CONSTRUCT_PHRASES = "synonyms.constructPhrases";
+        public static final String SYNONYMS_IGNORE_QUERY_OPERATORS = "synonyms.ignoreQueryOperators";
         
     }
 
@@ -292,7 +293,8 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         
         List<Query> synonymQueries = generateSynonymQueries(synonymAnalyzer, solrParams);
         
-        boolean hasComplexQueryOperators = Const.COMPLEX_QUERY_OPERATORS_PATTERN.matcher(getQueryStringFromParser()).find();
+        boolean ignoreQueryOperators = solrParams.getBool(Params.SYNONYMS_IGNORE_QUERY_OPERATORS, false);
+        boolean hasComplexQueryOperators = ignoreQueryOperators ? false : Const.COMPLEX_QUERY_OPERATORS_PATTERN.matcher(getQueryStringFromParser()).find();
         
         if (hasComplexQueryOperators // TODO: support complex operators
                 || synonymQueries.isEmpty()) { // didn't find more than 0 synonyms, i.e. it's just the original phrase
