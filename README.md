@@ -317,11 +317,12 @@ Changelog
 ------------
 
 * v1.3.2
-  * Added synonyms.ignoreQueryOperators option ([#28][228])
+  * Added synonyms.ignoreQueryOperators option ([#28][128])
+  * Added synonyms.bag option ([#30][130])
 * v1.3.1
-  * Avoid luceneMatchVersion in config ([#20][220])
+  * Avoid luceneMatchVersion in config ([#20][120])
 * v1.3.0
-  * Added support for Solr 4.3.0 ([#19][219])
+  * Added support for Solr 4.3.0 ([#19][119])
   * New way of loading Tokenizers and TokenFilters
   * New XML syntax for config in solrconfig.xml
 * v1.2.3
@@ -362,6 +363,7 @@ Changelog
 [104]: http://github.com/healthonnet/hon-lucene-synonyms/issues/4
 [105]: http://github.com/healthonnet/hon-lucene-synonyms/issues/5
 [116]: http://github.com/healthonnet/hon-lucene-synonyms/issues/16
-[219]: http://github.com/healthonnet/hon-lucene-synonyms/issues/19
-[220]: http://github.com/healthonnet/hon-lucene-synonyms/issues/20
-[228]: http://github.com/healthonnet/hon-lucene-synonyms/issues/28
+[119]: http://github.com/healthonnet/hon-lucene-synonyms/issues/19
+[120]: http://github.com/healthonnet/hon-lucene-synonyms/issues/20
+[128]: http://github.com/healthonnet/hon-lucene-synonyms/issues/28
+[130]: http://github.com/healthonnet/hon-lucene-synonyms/issues/30
