@@ -254,7 +254,7 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><font size="-1">false</font></td>
 <td style="padding:0 1em;"><font size="-1">True if synonym expansion should be disabled when the user input contains a phrase query (i.e. a quoted query). This option is offered because expansion of phrase queries may be considered non-intuitive to users.</font></td>
 </tr>
-<tr>
+<tr style="background:#DDDDDD;">
 <td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.constructPhrases</font></strong></td>
 <td style="padding:0 1em;"><font size="-1">boolean</font></td>
 <td style="padding:0 1em;"><font size="-1">false</font></td>
@@ -264,7 +264,7 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.ignoreQueryOperators</font></strong></td>
 <td style="padding:0 1em;"><font size="-1">boolean</font></td>
 <td style="padding:0 1em;"><font size="-1">false</font></td>
-<td style="padding:0 1em;"><font size="-1"><strong>v1.3.2+:</strong> If you treat query operators as usual words and want the synonyms be added to the query anyhow, set this option to True.</font></td>
+<td style="padding:0 1em;"><font size="-1"><strong>v1.3.2+:</strong> If you treat query operators (e.g. AND and OR) as usual words and want the synonyms be added to the query anyhow, set this option to true.</font></td>
 </tr>
 </table>
 
@@ -300,7 +300,7 @@ sudo easy_install nose
 sudo easy_install solrpy
 
 # launches Solr on localhost:8983. Alternatively, you can just follow the "Getting Started" directions
-python run_solr_for_unit_tests.py /path/to/my/optional/solr.tgz
+python run_solr_for_unit_tests.py
 
 # run some Python unit tests against the local Solr on localhost:8983
 nosetests test/
@@ -311,29 +311,29 @@ Changelog
 ------------
 
 * v1.3.2
- * Added synonyms.ignoreQueryOperators option
+  * Added synonyms.ignoreQueryOperators option ([#28][228])
 * v1.3.1
- * Avoid luceneMatchVersion in config ([#20][220])
+  * Avoid luceneMatchVersion in config ([#20][220])
 * v1.3.0
- * Added support for Solr 4.3.0 ([#19][219])
- * New way of loading Tokenizers and TokenFilters
- * New XML syntax for config in solrconfig.xml
+  * Added support for Solr 4.3.0 ([#19][219])
+  * New way of loading Tokenizers and TokenFilters
+  * New XML syntax for config in solrconfig.xml
 * v1.2.3
- * Fixed [#16][116]
- * Verified support for Solr 4.2.0 with the 4.1.0 branch (unit tests passed)
- * Improved automation of unit tests
+  * Fixed [#16][116]
+  * Verified support for Solr 4.2.0 with the 4.1.0 branch (unit tests passed)
+  * Improved automation of unit tests
 * v1.2.2
- * Added ```synonyms.constructPhrases``` option to fix [#5][105]
- * Added proper handling for phrase slop settings
+  * Added ```synonyms.constructPhrases``` option to fix [#5][105]
+  * Added proper handling for phrase slop settings
 * v1.2.1
- * Added support for Solr 4.1.0 ([#4][104])
+  * Added support for Solr 4.1.0 ([#4][104])
 * v1.2
- * Added support for Solr 4.0.0 ([#3][103])
+  * Added support for Solr 4.0.0 ([#3][103])
 * v1.1
- * Added support for Solr 3.6.1 and 3.6.2 ([#1][101])
- * Added "Getting Started" instructions to clarify plugin usage ([#2][102])
+  * Added support for Solr 3.6.1 and 3.6.2 ([#1][101])
+  * Added "Getting Started" instructions to clarify plugin usage ([#2][102])
 * v1.0
- * Initial release
+  * Initial release
 
 [1]: http://www.apache.org/licenses/LICENSE-2.0.html
 [2]: http://nolanlawson.com/2012/10/31/better-synonym-handling-in-solr
@@ -358,3 +358,4 @@ Changelog
 [116]: http://github.com/healthonnet/hon-lucene-synonyms/issues/16
 [219]: http://github.com/healthonnet/hon-lucene-synonyms/issues/19
 [220]: http://github.com/healthonnet/hon-lucene-synonyms/issues/20
+[228]: http://github.com/healthonnet/hon-lucene-synonyms/issues/28
