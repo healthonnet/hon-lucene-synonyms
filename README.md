@@ -317,8 +317,8 @@ Changelog
 ------------
 
 * v1.3.2
-  * Added synonyms.ignoreQueryOperators option ([#28][128])
-  * Added synonyms.bag option ([#30][130])
+  * Added ```synonyms.ignoreQueryOperators``` option ([#28][128])
+  * Added ```synonyms.bag``` option ([#30][130])
 * v1.3.1
   * Avoid luceneMatchVersion in config ([#20][120])
 * v1.3.0
