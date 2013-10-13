@@ -1,2 +1,3 @@
 dog,hound,pooch,canis familiaris,man's best friend
 back pack=>backpack
+e-commerce,electronic commerce,e commerce
