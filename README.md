@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
-Current version : 1.3.1 ([changelog][15])
+Current version : 1.3.2 ([changelog][15])
 
 Maintainer
 -----------
@@ -37,7 +37,7 @@ Download the latest JAR file depending on your Solr version:
 * [hon-lucene-synonyms-1.2.3-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, 3.6.0, 3.6.1, and 3.6.2
 * [hon-lucene-synonyms-1.2.3-solr-4.0.0.jar][13] for Solr 4.0.0
 * [hon-lucene-synonyms-1.2.3-solr-4.1.0.jar][14] for Solr 4.1.0 and 4.2.0
-* [hon-lucene-synonyms-1.3.1-solr-4.3.0.jar][17] for Solr 4.3.x
+* [hon-lucene-synonyms-1.3.2-solr-4.3.0.jar][17] for Solr 4.3.x
 
 ### Step 2
 
@@ -356,7 +356,7 @@ Changelog
 [14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-4.1.0/hon-lucene-synonyms-1.2.3-solr-4.1.0.jar
 [15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
 [16]: http://wiki.apache.org/solr/DisMaxQParserPlugin#mm_.28Minimum_.27Should.27_Match.29
-[17]: https://dl.dropboxusercontent.com/u/20080302/hon-lucene-synonyms-1.3.1-solr-4.3.0.jar
+[17]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.2-solr-4.3.0/hon-lucene-synonyms-1.3.2-solr-4.3.0.jar
 [101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
 [102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
 [103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3
