@@ -1,11 +1,18 @@
 #!/usr/bin/env python
 #
 # Set it up so we can painless run the python nose tests against the localhost 8983.
+# Summary:
+# 
+# ./run_solr_for_unit_tests.py [--debug] [--debug-port=9999] [--port=8983]
 #
+# Add the argument "--debug" to start the Jetty server in debug mode.  Specify the port with "--debug-port=XXXX".
 # Assumes you're running this on a *nix machine.
 #
 
-import sys, os, shutil, urllib, xml.dom.minidom, tarfile
+import sys, os, shutil, urllib, xml.dom.minidom, tarfile, getopt
+
+args = {'--debug-port' : 9999, '--port' : 8983}
+args.update(dict(getopt.getopt(sys.argv[1:], '', ['debug', 'debug-port=', 'port='])[0]))
 
 os.system("mvn clean package")
 
@@ -50,11 +57,11 @@ if not os.path.isfile(mvn_filename):
   urllib.urlretrieve(tgz_url, local_filename, reporthook) 
   
   # use maven to store the file locally in the future
-  install_cmd = """mvn install:install-file 
-                -DgroupId=org.healthonnet 
-                -DartifactId=hon-lucene-synonyms-solrdep
-                -Dversion=%s
-                -Dfile=%s
+  install_cmd = """mvn install:install-file \
+                -DgroupId=org.healthonnet \
+                -DartifactId=hon-lucene-synonyms-solrdep \
+                -Dversion=%s \
+                -Dfile=%s \
                 -Dpackaging=tgz""" % (solr_version, local_filename)
   os.system(install_cmd)
 else:
@@ -108,4 +115,9 @@ fileout = open(conf_filename,'w')
 fileout.write(filetext.replace('</config>', conf_to_add + '</config>'))
 fileout.close()
 
-os.system('cd %s/example; java -jar start.jar' % solrdir)
+debug = ('-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=%s' % args['--debug-port']) if '--debug' in args else '' 
+cmd = 'cd %(solrdir)s/example; java %(debug)s -jar start.jar jetty.port=%(port)s' % \
+    {'debug' : debug, 'solrdir' : solrdir, 'port' : args['--port']}
+
+print "Running jetty with command: " + cmd
+os.system(cmd)
