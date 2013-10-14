@@ -1,4 +1,4 @@
-#!/usr/sh/env python
+#!/usr/bin/env python
 #
 # Set it up so we can painless run the python nose tests against the localhost 8983.
 #
