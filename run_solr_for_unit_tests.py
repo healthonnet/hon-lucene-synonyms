@@ -14,11 +14,13 @@ os.mkdir('target/webapp')
 
 def find_solr_version():
   pom = xml.dom.minidom.parse('pom.xml')
-  for dependency in pom.getElementsByTagName('dependency'):
-    for typenode in dependency.getElementsByTagName('type'):
-      # this must be the solr dependency; nothing else is 'war' type
-      if typenode.lastChild.data == 'war':
-         return dependency.getElementsByTagName('version')[0].lastChild.data
+
+  def isSolrCoreDep(dep):
+	return filter((lambda artifact : artifact.lastChild.data == 'solr-core'), dep.getElementsByTagName('artifactId'))
+  
+  solrCoreDep = filter(isSolrCoreDep, pom.getElementsByTagName('dependency'))[0]
+
+  return solrCoreDep.getElementsByTagName('version')[0].lastChild.data
 
 # compare major.minor.patch-style versions, e.g. 1.2 vs 1.2.1 vs 1.2.3 etc.
 def version_compare(ver1, ver2):
@@ -34,7 +36,9 @@ solr_version = find_solr_version()
 tgz_filename = ('solr-%s' if (version_compare(solr_version, '4.1.0') >= 0) else 'apache-solr-%s') % solr_version
 
 local_filename = 'target/webapp/solr.tgz'
-mvn_filename = os.environ['HOME'] + ('/.m2/repository/org/healthonnet/hon-lucene-synonyms-solrdep/%s/hon-lucene-synonyms-solrdep-%s.tgz' % (solr_version, solr_version))
+mvn_filename = os.environ['HOME'] + \
+    ('/.m2/repository/org/healthonnet/hon-lucene-synonyms-solrdep/%s/hon-lucene-synonyms-solrdep-%s.tgz' \
+    % (solr_version, solr_version))
 
 if not os.path.isfile(mvn_filename):
   # download the tgz file
@@ -46,7 +50,13 @@ if not os.path.isfile(mvn_filename):
   urllib.urlretrieve(tgz_url, local_filename, reporthook) 
   
   # use maven to store the file locally in the future
-  os.system('mvn install:install-file -DgroupId=org.healthonnet -DartifactId=hon-lucene-synonyms-solrdep -Dversion=%s -Dfile=%s -Dpackaging=tgz' % (solr_version, local_filename))
+  install_cmd = """mvn install:install-file 
+                -DgroupId=org.healthonnet 
+                -DartifactId=hon-lucene-synonyms-solrdep
+                -Dversion=%s
+                -Dfile=%s
+                -Dpackaging=tgz""" % (solr_version, local_filename)
+  os.system(install_cmd)
 else:
   shutil.copy(mvn_filename, local_filename)
 
