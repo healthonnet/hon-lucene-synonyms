@@ -111,7 +111,7 @@ Note that you must modify the ```luceneMatchVersion``` above to match the
 
 #### From version 1.3.1 and Solr 4.3 and beyond:
 From version 1.3.1 you do not need to specify luceneMatchVersion in this configuration, it will inherit from `solrconfig.xml`.
-Also, there is support for loading Tokenizers and Token filters by service name through the new SPI method. That means you
+Also, there is support for loading Tokenizers and Token filters by service name through the new SPI method (introduced in Solr 4.3.0). That means you
 may put `synonym` as `class` attribute instead of `solr.SynonymFilterFactory` if you choose so. The config can thus look like:
 
 ```xml
