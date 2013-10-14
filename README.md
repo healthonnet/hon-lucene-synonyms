@@ -34,10 +34,10 @@ running in Jetty.
 
 Download the latest JAR file depending on your Solr version:
 
-* [hon-lucene-synonyms-1.2.3-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, 3.6.0, 3.6.1, and 3.6.2
+* [hon-lucene-synonyms-1.2.3-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, and 3.6.x
 * [hon-lucene-synonyms-1.2.3-solr-4.0.0.jar][13] for Solr 4.0.0
-* [hon-lucene-synonyms-1.2.3-solr-4.1.0.jar][14] for Solr 4.1.0 and 4.2.0
-* [hon-lucene-synonyms-1.3.2-solr-4.3.0.jar][17] for Solr 4.3.x
+* [hon-lucene-synonyms-1.2.3-solr-4.1.0.jar][14] for Solr 4.1.0 and 4.2.x
+* [hon-lucene-synonyms-1.3.2-solr-4.3.0.jar][17] for Solr 4.3+
 
 ### Step 2
 
