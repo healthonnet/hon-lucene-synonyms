@@ -85,7 +85,7 @@ bottom (before ```</config>```):
   <lst name="synonymAnalyzers">
     <lst name="myCoolAnalyzer">
       <lst name="tokenizer">
-        <str name="class">standard</str>
+        <str name="class">solr.StandardTokenizerFactory</str>
       </lst>
       <lst name="filter">
         <str name="class">solr.ShingleFilterFactory</str>
