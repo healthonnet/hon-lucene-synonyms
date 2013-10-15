@@ -30,13 +30,15 @@ Getting Started
 The following tutorial will set up a working synonym-enabled Solr app using the ```example/``` directory from Solr itself, 
 running in Jetty.
 
+**Protip:** The [unit tests](#testing) will do these steps automatically.
+
 ### Step 1
 
 Download the latest JAR file depending on your Solr version:
 
-* [hon-lucene-synonyms-1.2.3-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, and 3.6.x
-* [hon-lucene-synonyms-1.2.3-solr-4.0.0.jar][13] for Solr 4.0.0
-* [hon-lucene-synonyms-1.2.3-solr-4.1.0.jar][14] for Solr 4.1.0 and 4.2.x
+* [hon-lucene-synonyms-1.3.2-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, and 3.6.x
+* [hon-lucene-synonyms-1.3.2-solr-4.0.0.jar][13] for Solr 4.0.0
+* [hon-lucene-synonyms-1.3.2-solr-4.1.0.jar][14] for Solr 4.1.0 and 4.2.x
 * [hon-lucene-synonyms-1.3.2-solr-4.3.0.jar][17] for Solr 4.3+
 
 ### Step 2
@@ -66,26 +68,24 @@ cd ..
 Note that this plugin will not work in any location other than the ```WEB-INF/lib/``` directory of the ```solr.war``` 
 itself, because of [issues with the ClassLoader][102].
 
-**UPDATE**: We have tested to run with the jar in `$SOLR_HOME/lib` as well, and it works (Jetty).
+**Update**: We have tested to run with the jar in `$SOLR_HOME/lib` as well, and it works (Jetty).
 
 ### Step 5
 
 Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` directory 
-(or ```solr/collection1/conf/``` in Solr 4.x).
+(```solr/collection1/conf/``` in Solr 4.x).
 
 ### Step 6
 
 Edit ```solr/conf/solrconfig.xml``` (```solr/collection1/conf/solrconfig.xml``` in 4.x) and add these lines near the 
 bottom (before ```</config>```):
 
-#### Before version 1.3.0 (up to Solr 4.2.x):
 ```xml
 <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
-  <str name="luceneMatchVersion">LUCENE_36</str>
   <lst name="synonymAnalyzers">
     <lst name="myCoolAnalyzer">
       <lst name="tokenizer">
-        <str name="class">solr.StandardTokenizerFactory</str>
+        <str name="class">standard</str>
       </lst>
       <lst name="filter">
         <str name="class">solr.ShingleFilterFactory</str>
@@ -106,39 +106,12 @@ bottom (before ```</config>```):
 </queryParser>
 ```
 
-Note that you must modify the ```luceneMatchVersion``` above to match the 
-```<luceneMatchVersion>...</luceneMatchVersion>``` tag at the beginning of the ```solr/conf/solrconfig.xml``` file.
+This defines the analyzer that will be used to generate synonyms.
 
-#### From version 1.3.1 and Solr 4.3 and beyond:
-From version 1.3.1 you do not need to specify luceneMatchVersion in this configuration, it will inherit from `solrconfig.xml`.
-Also, there is support for loading Tokenizers and Token filters by service name through the new SPI method (introduced in Solr 4.3.0). That means you
-may put `synonym` as `class` attribute instead of `solr.SynonymFilterFactory` if you choose so. The config can thus look like:
+**Protip**: You can customize this analyzer based on your synonym set.  E.g. if your synonyms are all two words or less, you can safely set ```maxShingleSize``` to 2.
 
-```xml
-<queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
-  <lst name="synonymAnalyzers">
-    <lst name="myCoolAnalyzer">
-      <lst name="tokenizer">
-        <str name="class">standard</str>
-      </lst>
-      <lst name="filter">
-        <str name="class">shingle</str>
-        <str name="outputUnigramsIfNoShingles">true</str>
-        <str name="outputUnigrams">true</str>
-        <str name="minShingleSize">2</str>
-        <str name="maxShingleSize">4</str>
-      </lst>
-      <lst name="filter">
-        <str name="class">synonym</str>
-        <str name="tokenizerFactory">solr.KeywordTokenizerFactory</str>
-        <str name="synonyms">example_synonym_file.txt</str>
-        <str name="expand">true</str>
-        <str name="ignoreCase">true</str>
-      </lst>
-    </lst>
-  </lst>
-</queryParser>
-```
+**Solr 4.3+ Protip**: For Solr 4.3 and up, we support loading Tokenizers and Token Filters by service name through the new SPI method. That means you
+may put `synonym` instead of `solr.SynonymFilterFactory` or `shingle` instead of `solr.ShingleFilterFactory`, if you'd like to make your configuration more succinct.
 
 ### Step 7
 
@@ -286,19 +259,18 @@ mvn install
 ```
 
 Since there are several branches depending on the Solr version, there's also a build script that will ```git checkout```
-each branch, build it, and put it in the ```target/s3``` directory:
+each branch, build it, and put the compiled jar files into the ```target/s3``` directory:
 
 ```
 ./build_all_versions.sh
 ```
 
-Basically, my strategy is to maintain a main ```master```/```solr-4.3.x``` branch, with offshoot branches (```solr-4.0.0``` 
-and ```solr-3.x```) that are ```git rebase```'d every time I need to build a new version.
+Basically, my strategy is to maintain a main ```master```/```solr-4.3.x``` branch, with offshoot branches ```solr-3.x```, ```solr-4.0.0```, and ```solr-4.1.0```.  When I need to backport changes to older versions of Solr, I just ```git rebase```  each of the offshoots.
 
 Testing
 ---------
 
-Python-based unit tests are in the ```test/``` directory. You can run them using: 
+Python-based unit tests are in the ```test/``` directory. You can run them using these commands: 
 
 ```
 # install the solrpy and nose packages
@@ -306,7 +278,7 @@ sudo easy_install nose
 sudo easy_install solrpy
 
 # launches Solr on localhost:8983. Alternatively, you can just follow the "Getting Started" directions
-python run_solr_for_unit_tests.py
+./run_solr_for_unit_tests.py
 
 # run some Python unit tests against the local Solr on localhost:8983
 nosetests test/
@@ -351,9 +323,9 @@ Changelog
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
-[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-3.x/hon-lucene-synonyms-1.2.3-solr-3.x.jar
-[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-4.0.0/hon-lucene-synonyms-1.2.3-solr-4.0.0.jar
-[14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.2.3-solr-4.1.0/hon-lucene-synonyms-1.2.3-solr-4.1.0.jar
+[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.2-solr-3.x/hon-lucene-synonyms-1.3.2-solr-3.x.jar
+[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.2-solr-4.0.0/hon-lucene-synonyms-1.3.2-solr-4.0.0.jar
+[14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.2-solr-4.1.0/hon-lucene-synonyms-1.3.2-solr-4.1.0.jar
 [15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
 [16]: http://wiki.apache.org/solr/DisMaxQParserPlugin#mm_.28Minimum_.27Should.27_Match.29
 [17]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.2-solr-4.3.0/hon-lucene-synonyms-1.3.2-solr-4.3.0.jar
