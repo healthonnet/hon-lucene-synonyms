@@ -77,7 +77,7 @@ os.system('cp target/hon-lucene-synonyms-*.jar %s/example/myjar/WEB-INF/lib' % s
 os.system('cd %s/example/myjar; jar -cf ../webapps/solr.war *; cd -' % solrdir)
 
 # they changed the location of the example conf dir in solr 4.0.0
-confdir = 'collection1/conf' if version_compare(solr_version, '4.0.0') <= 0 else 'conf'
+confdir = 'collection1/conf' if version_compare(solr_version, '4.0.0') >= 0 else 'conf'
 shutil.copy('examples/example_synonym_file.txt', solrdir + '/example/solr/' + confdir)
 
 # add the config to the config file
@@ -116,7 +116,7 @@ fileout.write(filetext.replace('</config>', conf_to_add + '</config>'))
 fileout.close()
 
 debug = ('-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=%s' % args['--debug-port']) if '--debug' in args else '' 
-cmd = 'cd %(solrdir)s/example; java %(debug)s -jar start.jar jetty.port=%(port)s' % \
+cmd = 'cd %(solrdir)s/example; java %(debug)s -Djetty.port=%(port)s -jar start.jar' % \
     {'debug' : debug, 'solrdir' : solrdir, 'port' : args['--port']}
 
 print "Running jetty with command: " + cmd
