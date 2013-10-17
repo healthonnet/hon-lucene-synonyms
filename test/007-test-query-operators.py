@@ -33,6 +33,8 @@ class TestBasic(unittest.TestCase):
 
         # means "shouldn't contain the word commerce"
         self.tst_query({}, 'e -commerce', 0)
+        # it's also no good as a single word
+        self.tst_query({}, 'ecommerce', 0)
         
     def tst_query(self, extra_params, query, expected_num_docs):
         
