@@ -233,7 +233,7 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
          */
         static final String IMPOSSIBLE_FIELD_NAME = "\uFFFC\uFFFC\uFFFC";
         
-        static final Pattern COMPLEX_QUERY_OPERATORS_PATTERN = Pattern.compile("(?:\\*|\\b(?:OR|AND|-|\\+)\\b)"); 
+        static final Pattern COMPLEX_QUERY_OPERATORS_PATTERN = Pattern.compile("(?:\\*|\\s-\\b|\\b(?:OR|AND|\\+)\\b)"); 
     }
 
     private Map<String, Analyzer> synonymAnalyzers;
