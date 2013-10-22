@@ -77,34 +77,8 @@ Download [example_synonym_file.txt][5] and copy it to the ```solr/conf/``` direc
 
 ### Step 6
 
-Edit ```solr/conf/solrconfig.xml``` (```solr/collection1/conf/solrconfig.xml``` in 4.x) and add these lines near the 
-bottom (before ```</config>```):
-
-```xml
-<queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
-  <lst name="synonymAnalyzers">
-    <lst name="myCoolAnalyzer">
-      <lst name="tokenizer">
-        <str name="class">solr.StandardTokenizerFactory</str>
-      </lst>
-      <lst name="filter">
-        <str name="class">solr.ShingleFilterFactory</str>
-        <str name="outputUnigramsIfNoShingles">true</str>
-        <str name="outputUnigrams">true</str>
-        <str name="minShingleSize">2</str>
-        <str name="maxShingleSize">4</str>
-      </lst>
-      <lst name="filter">
-        <str name="class">solr.SynonymFilterFactory</str>
-        <str name="tokenizerFactory">solr.KeywordTokenizerFactory</str>
-        <str name="synonyms">example_synonym_file.txt</str>
-        <str name="expand">true</str>
-        <str name="ignoreCase">true</str>
-      </lst>
-    </lst>
-  </lst>
-</queryParser>
-```
+Download [example_config.xml][18] and copy the contents into ```solr/conf/solrconfig.xml```
+(```solr/collection1/conf/solrconfig.xml``` in 4.x), just before the ```</config>``` tag at the end.
 
 This defines the analyzer that will be used to generate synonyms.
 
@@ -184,8 +158,6 @@ the parser in the first place.
 
 Also, you must either define ```qf``` in the query parameters or ```defaultSearchField``` in ```solr/conf/schema.xml```,
 so that the parser knows which fields to use during synonym expansion. 
-
-Got hyphens in your synonyms?  You'll want to manually replace them with spaces.  (See [#32][132].)
 
 Query parameters
 ------------
@@ -286,13 +258,17 @@ sudo easy_install solrpy
 nosetests test/
 ```
 
-
 Changelog
 ------------
 
+* v1.3.3
+  * Fixed [#9][109], [#26][126], and [#32][132].
+    <em>Note that this is a documentation change; not a code change, so to get
+    the benefit of this "fix," you'll need to manually perform [Step 6](#step-6) again.</em>
 * v1.3.2
   * Added ```synonyms.ignoreQueryOperators``` option ([#28][128])
   * Added ```synonyms.bag``` option ([#30][130])
+  * The ```run_solr_for_unit_tests.py``` script now downloads the proper version of Solr.
 * v1.3.1
   * Avoid luceneMatchVersion in config ([#20][120])
 * v1.3.0
@@ -321,7 +297,7 @@ Changelog
 [3]: http://wiki.apache.org/solr/ExtendedDisMax
 [4]: http://wiki.apache.org/solr/AnalyzersTokenizersTokenFilters#solr.SynonymFilterFactory
 [5]: http://raw.github.com/healthonnet/hon-lucene-synonyms/master/examples/example_synonym_file.txt
-[6]: http://www.hon.ch
+[6]: http://www.healthonnet.org
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
@@ -331,14 +307,17 @@ Changelog
 [15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
 [16]: http://wiki.apache.org/solr/DisMaxQParserPlugin#mm_.28Minimum_.27Should.27_Match.29
 [17]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.2-solr-4.3.0/hon-lucene-synonyms-1.3.2-solr-4.3.0.jar
+[18]: http://raw.github.com/healthonnet/hon-lucene-synonyms/master/examples/example_config.xml
 [101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
 [102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
 [103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3
 [104]: http://github.com/healthonnet/hon-lucene-synonyms/issues/4
 [105]: http://github.com/healthonnet/hon-lucene-synonyms/issues/5
+[109]: http://github.com/healthonnet/hon-lucene-synonyms/issues/9
 [116]: http://github.com/healthonnet/hon-lucene-synonyms/issues/16
 [119]: http://github.com/healthonnet/hon-lucene-synonyms/issues/19
 [120]: http://github.com/healthonnet/hon-lucene-synonyms/issues/20
+[126]: http://github.com/healthonnet/hon-lucene-synonyms/issues/26
 [128]: http://github.com/healthonnet/hon-lucene-synonyms/issues/28
 [130]: http://github.com/healthonnet/hon-lucene-synonyms/issues/30
 [132]: http://github.com/healthonnet/hon-lucene-synonyms/issues/32
