@@ -185,6 +185,8 @@ the parser in the first place.
 Also, you must either define ```qf``` in the query parameters or ```defaultSearchField``` in ```solr/conf/schema.xml```,
 so that the parser knows which fields to use during synonym expansion. 
 
+Got hyphens in your synonyms?  You'll want to manually replace them with spaces.  (See [#32][132].)
+
 Query parameters
 ------------
 
@@ -339,3 +341,4 @@ Changelog
 [120]: http://github.com/healthonnet/hon-lucene-synonyms/issues/20
 [128]: http://github.com/healthonnet/hon-lucene-synonyms/issues/28
 [130]: http://github.com/healthonnet/hon-lucene-synonyms/issues/30
+[132]: http://github.com/healthonnet/hon-lucene-synonyms/issues/32
