@@ -261,7 +261,7 @@ nosetests test/
 Changelog
 ------------
 
-* v1.3.3
+* v1.3.3 (upcoming)
   * Fixed [#9][109], [#26][126], and [#32][132].
     <em>Note that this is a documentation change; not a code change, so to get
     the benefit of this "fix," you'll need to manually perform [Step 6](#step-6) again.</em>
