@@ -4,14 +4,16 @@
 # This one tests some of the problems found in issues #28 and #32
 #
 
-import unittest, solr, urllib
+import unittest, solr, urllib, time
 
 class TestBasic(unittest.TestCase):
     
     url = 'http://localhost:8983/solr'
     test_data = [ \
-    {'id': '1', 'name': "e-commerce"}, \
-    {'id': '2', 'name': "electronic commerce"}, \
+    {'id': '1', 'name': "blood and bones"}, \
+    {'id': '2', 'name': u"\u8840\u3068\u9aa8"}, \
+    {'id': '3', 'name': 'bfo'}, \
+    {'id': '4', 'name': u'brystforst\xf8rrende operation'}, \
     ]
     solr_connection = None
     
@@ -26,19 +28,12 @@ class TestBasic(unittest.TestCase):
         self.solr_connection.commit()
  
     def test_queries(self):
-            
-        self.tst_query({}, 'commerce', 2)
-        self.tst_query({}, 'electronic commerce', 2)
-        self.tst_query({}, 'e-commerce', 2)
+        
+        self.tst_query({}, 'blood and bones', 2)
+        self.tst_query({}, u"\u8840\u3068\u9aa8".encode('utf-8'), 2)
 
-        # means "shouldn't contain the word commerce"
-        self.tst_query({}, 'e -commerce', 0)
-        # it's also no good as a single word
-        self.tst_query({}, 'ecommerce', 0)
-
-        # it doesn't expand synonyms when using a space instead of a hyphen
-        # (i.e. it only matches document #1)
-        self.tst_query({}, 'e commerce', 1)
+        self.tst_query({}, 'bfo', 2)
+        self.tst_query({}, u'brystforst\xf8rrende operation'.encode('utf-8'), 2)
         
     def tst_query(self, extra_params, query, expected_num_docs):
         

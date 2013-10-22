@@ -81,31 +81,8 @@ confdir = 'collection1/conf' if version_compare(solr_version, '4.0.0') >= 0 else
 shutil.copy('examples/example_synonym_file.txt', solrdir + '/example/solr/' + confdir)
 
 # add the config to the config file
-conf_to_add = """
-<queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
-  <lst name="synonymAnalyzers">
-    <lst name="myCoolAnalyzer">
-      <lst name="tokenizer">
-        <str name="class">solr.StandardTokenizerFactory</str>
-      </lst>
-      <lst name="filter">
-        <str name="class">solr.ShingleFilterFactory</str>
-        <str name="outputUnigramsIfNoShingles">true</str>
-        <str name="outputUnigrams">true</str>
-        <str name="minShingleSize">2</str>
-        <str name="maxShingleSize">4</str>
-      </lst>
-      <lst name="filter">
-        <str name="class">solr.SynonymFilterFactory</str>
-        <str name="tokenizerFactory">solr.KeywordTokenizerFactory</str>
-        <str name="synonyms">example_synonym_file.txt</str>
-        <str name="expand">true</str>
-        <str name="ignoreCase">true</str>
-      </lst>
-    </lst>
-  </lst>
-</queryParser>
-"""
+conf_to_add = open('examples/example_config.xml', 'r').read()
+
 
 conf_filename = solrdir + '/example/solr/' + confdir + '/solrconfig.xml'
 filein = open(conf_filename,'r')
