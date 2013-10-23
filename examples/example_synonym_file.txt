@@ -7,3 +7,6 @@ e-commerce,electronic commerce
 # issues 9 and 26
 bfo, brystforstørrende operation
 血と骨,Blood and Bones
+
+# issue 29
+Swedish turnips, rutabagas

@@ -1,8 +1,6 @@
 #
 # Basic unit tests for HON-Lucene-Synonyms
 #
-# This one tests some of the problems found in issue #9
-#
 
 import unittest, solr, urllib, time
 
@@ -10,10 +8,9 @@ class TestBasic(unittest.TestCase):
     
     url = 'http://localhost:8983/solr'
     test_data = [ \
-    {'id': '1', 'name': "blood and bones"}, \
-    {'id': '2', 'name': u"\u8840\u3068\u9aa8"}, \
-    {'id': '3', 'name': 'bfo'}, \
-    {'id': '4', 'name': u'brystforst\xf8rrende operation'}, \
+    {'id': '1', 'name': "Everybody loves rutabagas."}, \
+    {'id': '2', 'name': "But what the hell are Swedish turnips?"}, \
+    {'id': '3', 'name': 'Answer: the same thing, apparently.'} \
     ]
     solr_connection = None
     
@@ -29,15 +26,12 @@ class TestBasic(unittest.TestCase):
  
     def test_queries(self):
         
-        self.tst_query({}, 'blood and bones', 2)
-        self.tst_query({}, u"\u8840\u3068\u9aa8".encode('utf-8'), 2)
-
-        self.tst_query({}, 'bfo', 2)
-        self.tst_query({}, u'brystforst\xf8rrende operation'.encode('utf-8'), 2)
+        self.tst_query({}, 'Swedish turnips', 2)
+        self.tst_query({}, 'healthy Swedish turnips', 2)
         
     def tst_query(self, extra_params, query, expected_num_docs):
         
-        params = {'q': query, 'qf' : 'name', 'mm' : '100%', 'defType' : 'synonym_edismax', 'synonyms' : 'true'}
+        params = {'q': query, 'qf' : 'name', 'mm' : '66%', 'defType' : 'synonym_edismax', 'synonyms' : 'true'}
         params.update(extra_params)
         
         response = self.solr_connection.query(**params)
