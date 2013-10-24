@@ -10,3 +10,6 @@ bfo, brystforstørrende operation
 
 # issue 29
 Swedish turnips, rutabagas
+
+# issue 31 - need two and only two single-word synonyms
+jigglypuff, purin
