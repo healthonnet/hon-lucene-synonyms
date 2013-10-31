@@ -33,10 +33,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -64,10 +60,8 @@ import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
-import com.google.common.collect.TreeMultiset;
 
 /**
  * An advanced multi-field query parser.
@@ -271,6 +265,11 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         this.synonymAnalyzers = synonymAnalyzers;
     }
 
+    @Override
+    public String[] getDefaultHighlightFields() {
+      return mainQueryParser.getDefaultHighlightFields();
+    }
+    
     @Override
     public Query getHighlightQuery() throws SyntaxError {
         return queryToHighlight != null ? queryToHighlight : mainQueryParser.getHighlightQuery();
