@@ -25,6 +25,7 @@ package org.apache.solr.search;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -63,6 +64,10 @@ import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.SortedMultiset;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.TreeMultiset;
 
 /**
  * An advanced multi-field query parser.
@@ -392,7 +397,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME,
                 new StringReader(getQueryStringFromParser()));
         
-        SortedMap<Integer, SortedSet<TextInQuery>> startPosToTextsInQuery = new TreeMap<Integer, SortedSet<TextInQuery>>();
+        SortedSetMultimap<Integer, TextInQuery> startPosToTextsInQuery = TreeMultimap.create();
         
         
         boolean constructPhraseQueries = solrParams.getBool(Params.SYNONYMS_CONSTRUCT_PHRASES, false);
@@ -422,17 +427,13 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                         termToAdd = new StringBuilder(termToAdd).insert(0,'"').append('"').toString();
                     }
                     if (!bag) {
+                        // create a graph of all possible synonym combinations,
+                        // e.g. dog bite, hound bite, dog nibble, hound nibble, etc.
 	                    TextInQuery textInQuery = new TextInQuery(termToAdd, 
 	                            offsetAttribute.startOffset(), 
 	                            offsetAttribute.endOffset());
 	                    
-	                    // brain-dead multimap logic... man, I wish we had Google Guava here
-	                    SortedSet<TextInQuery> existingList = startPosToTextsInQuery.get(offsetAttribute.startOffset());
-	                    if (existingList == null) {
-	                        existingList = new TreeSet<TextInQuery>();
-	                        startPosToTextsInQuery.put(offsetAttribute.startOffset(), existingList);
-	                    }
-	                    existingList.add(textInQuery);
+	                    startPosToTextsInQuery.put(offsetAttribute.startOffset(), textInQuery);
                     }
                 }
             }
@@ -450,9 +451,10 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         List<String> alternateQueries = synonymBag;
         
         if (!bag) {
+            // use a graph rather than a bag
 	        List<List<TextInQuery>> sortedTextsInQuery = new ArrayList<List<TextInQuery>>(
 	                startPosToTextsInQuery.values().size());
-	        for (SortedSet<TextInQuery> sortedSet : startPosToTextsInQuery.values()) {
+	        for (Collection<TextInQuery> sortedSet : startPosToTextsInQuery.asMap().values()) {
 	            sortedTextsInQuery.add(new ArrayList<TextInQuery>(sortedSet));
 	        }
 	        
