@@ -52,8 +52,8 @@ class TestBasic(unittest.TestCase):
         self.tst_all_scores_equal({'bf' : bf}, 'purin', 2)
         
         # boost  (w/ standard date boosting function)
-        self.tst_all_scores_equal({'bf' : bf}, 'jigglypuff', 2)
-        self.tst_all_scores_equal({'bf' : bf}, 'purin', 2)
+        self.tst_all_scores_equal({'boost' : bf}, 'jigglypuff', 2)
+        self.tst_all_scores_equal({'boost' : bf}, 'purin', 2)
         
     def tst_all_scores_equal(self, extra_params, query, expected_num_docs):
         

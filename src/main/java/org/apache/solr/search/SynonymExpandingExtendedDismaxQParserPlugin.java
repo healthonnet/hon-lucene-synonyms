@@ -27,6 +27,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -55,10 +56,13 @@ import org.apache.lucene.util.Version;
 import org.apache.solr.analysis.TokenizerChain;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
+import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * An advanced multi-field query parser.
@@ -194,12 +198,22 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
     }
 }
 
-class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
+class SynonymExpandingExtendedDismaxQParser extends QParser {
 
+    // delegate all our parsing to these two parsers - one for the "synonym" query and the other for the main query
+    private ExtendedDismaxQParser synonymQueryParser;
+    private ExtendedDismaxQParser mainQueryParser;
+    
     /**
      * Convenience class for parameters
      */
     public static class Params {
+        
+        /**
+         * @see org.apache.solr.search.ExtendedDismaxQParser.DMP#MULT_BOOST
+         */
+        public static String MULT_BOOST = "boost";
+        
         public static final String SYNONYMS = "synonyms";
         public static final String SYNONYMS_ANALYZER = "synonyms.analyzer";
         public static final String SYNONYMS_ORIGINAL_BOOST = "synonyms.originalBoost";
@@ -207,16 +221,18 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         public static final String SYNONYMS_DISABLE_PHRASE_QUERIES = "synonyms.disablePhraseQueries";
         public static final String SYNONYMS_CONSTRUCT_PHRASES = "synonyms.constructPhrases";
         public static final String SYNONYMS_IGNORE_QUERY_OPERATORS = "synonyms.ignoreQueryOperators";
-        // instead of splicing synonyms into the original query string, ie
-		//    dog bite
-        //    canine familiaris bite
-        //    dog chomp
-        //    canine familiaris chomp
-        // do this: 
-        //    dog bite 
-        //	  "canine familiaris" chomp
-        // with phrases off:
-        //    dog bite canine familiaris chomp
+        /** 
+         * instead of splicing synonyms into the original query string, ie
+		 *    dog bite
+         *    canine familiaris bite
+         *    dog chomp
+         *    canine familiaris chomp
+         * do this: 
+         *    dog bite 
+         *	  "canine familiaris" chomp
+         * with phrases off:
+         *    dog bite canine familiaris chomp
+         */
         public static final String SYNONYMS_BAG = "synonyms.bag";        
     }
 
@@ -242,20 +258,23 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
     public SynonymExpandingExtendedDismaxQParser(String qstr, SolrParams localParams, SolrParams params,
             SolrQueryRequest req, Map<String, Analyzer> synonymAnalyzers) {
         super(qstr, localParams, params, req);
+        mainQueryParser = new ExtendedDismaxQParser(qstr, localParams, params, req);
+        
+        // ensure the synonyms aren't artificially boosted
+        synonymQueryParser = new ExtendedDismaxQParser(qstr, NoBoostSolrParams.wrap(localParams),
+                NoBoostSolrParams.wrap(params), req);
         this.synonymAnalyzers = synonymAnalyzers;
     }
-    
-    
 
     @Override
     public Query getHighlightQuery() throws SyntaxError {
-        return queryToHighlight != null ? queryToHighlight : super.getHighlightQuery();
+        return queryToHighlight != null ? queryToHighlight : mainQueryParser.getHighlightQuery();
     }
     
 
     @Override
     public Query parse() throws SyntaxError {
-        Query query = super.parse();
+        Query query = mainQueryParser.parse();
 
         SolrParams localParams = getLocalParams();
         SolrParams params = getParams();
@@ -558,7 +577,6 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
      */
     private List<Query> createSynonymQueries(SolrParams solrParams, List<String> alternateQueryTexts) {
         
-        String originalString = getString();
         String nullsafeOriginalString = getQueryStringFromParser();
         
         List<Query> result = new ArrayList<Query>();
@@ -568,16 +586,14 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
                 continue;
             }
             
-            super.setString(alternateQueryText);
+            synonymQueryParser.setString(alternateQueryText);
             try {
-                result.add(super.parse());
+                result.add(synonymQueryParser.parse());
             } catch (SyntaxError e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
                 e.printStackTrace(System.err);
             }
         }
-        
-        super.setString(originalString); // cover our tracks
         
         return result;
     }
@@ -697,6 +713,49 @@ class SynonymExpandingExtendedDismaxQParser extends ExtendedDismaxQParser {
         @Override
         public String toString() {
             return "AlternateQuery [stringBuilder=" + stringBuilder + ", endPosition=" + endPosition + "]";
+        }
+    }
+    
+    /**
+     * Extends a set of solr params, hiding the boost-related parameters (bq, bf, boost).  This is useful
+     * for constructing the synonym queries using the superclass, because we don't want to boost them artificially
+     * 
+     * @see issue 31
+     * @author nolan
+     *
+     */
+    @SuppressWarnings("serial")
+    private static class NoBoostSolrParams extends SolrParams {
+
+        private static final ImmutableSet<String> BOOST_PARAMS = ImmutableSet.of(
+                DisMaxParams.BQ, DisMaxParams.BF, Params.MULT_BOOST);
+        
+        private SolrParams delegateParams;
+        
+        private NoBoostSolrParams(SolrParams delegate) {
+            this.delegateParams = delegate;
+        }
+        
+        @Override
+        public String get(String param) {
+            return delegateParams.get(param);
+        }
+
+        @Override
+        public String[] getParams(String param) {
+            if (param != null && BOOST_PARAMS.contains(param)) {
+                return null;
+            }
+            return delegateParams.getParams(param);
+        }
+
+        @Override
+        public Iterator<String> getParameterNamesIterator() {
+            return delegateParams.getParameterNamesIterator();
+        }
+        
+        public static NoBoostSolrParams wrap(SolrParams delegateParams) {
+            return delegateParams == null ? null : new NoBoostSolrParams(delegateParams);
         }
     }
 
