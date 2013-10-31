@@ -58,7 +58,6 @@ import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
-import org.apache.solr.search.grouping.endresulttransformer.MainEndResultTransformer;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SortedSetMultimap;
