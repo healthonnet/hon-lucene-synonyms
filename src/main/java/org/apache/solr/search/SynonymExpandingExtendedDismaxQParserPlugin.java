@@ -58,6 +58,7 @@ import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.search.grouping.endresulttransformer.MainEndResultTransformer;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SortedSetMultimap;
@@ -273,6 +274,13 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
     @Override
     public Query getHighlightQuery() throws SyntaxError {
         return queryToHighlight != null ? queryToHighlight : mainQueryParser.getHighlightQuery();
+    }
+    
+    @Override
+    public void addDebugInfo(NamedList<Object> debugInfo) {
+        debugInfo.add("mainQueryParser", createDebugInfo(mainQueryParser));
+        debugInfo.add("synonymQueryParser", createDebugInfo(synonymQueryParser));
+        debugInfo.add("queryToHighlight", queryToHighlight);
     }
     
 
@@ -605,6 +613,17 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
      */
     private String getQueryStringFromParser() {
       return (getString() == null) ? "" : getString();
+    }
+    
+    /**
+     * Convenience method to simplify code
+     * @param qparser
+     * @return
+     */
+    private static NamedList<Object> createDebugInfo(QParser qparser) {
+        NamedList<Object> result = new NamedList<Object>();
+        qparser.addDebugInfo(result);
+        return result;
     }
     
     /**
