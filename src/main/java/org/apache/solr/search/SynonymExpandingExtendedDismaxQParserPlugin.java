@@ -14,13 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/*
- * This parser was originally derived from DismaxQParser from Solr.
- * All changes are Copyright 2008, Lucid Imagination, Inc.
- */
-
 package org.apache.solr.search;
+
+import static org.apache.solr.search.ReasonForNotExpandingSynonyms.AnalyzerNotFound;
+import static org.apache.solr.search.ReasonForNotExpandingSynonyms.DidntFindAnySynonyms;
+import static org.apache.solr.search.ReasonForNotExpandingSynonyms.HasComplexQueryOperators;
+import static org.apache.solr.search.ReasonForNotExpandingSynonyms.IgnoringPhrases;
+import static org.apache.solr.search.ReasonForNotExpandingSynonyms.NoAnalyzerSpecified;
+import static org.apache.solr.search.ReasonForNotExpandingSynonyms.PluginDisabled;
+import static org.apache.solr.search.ReasonForNotExpandingSynonyms.UnhandledException;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -28,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -53,20 +54,23 @@ import org.apache.lucene.util.Version;
 import org.apache.solr.analysis.TokenizerChain;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
-import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 /**
- * An advanced multi-field query parser.
  * 
- * @lucene.experimental
+ * Main implementation of the synonym-expanding ExtendedDismaxQParser plugin for Solr.
+ * 
+ * This parser was originally derived from ExtendedDismaxQParser, which itself was derived from the 
+ * DismaxQParser from Solr.
+ * 
+ * @see http://github.com/healthonnet/hon-lucene-synonyms
  */
 public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin implements
         ResourceLoaderAware {
@@ -254,6 +258,12 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
     private Map<String, Analyzer> synonymAnalyzers;
     private Query queryToHighlight;
     
+    /**
+     * variables used purely for debugging
+     */
+    private List<String> expandedSynonyms;
+    private ReasonForNotExpandingSynonyms reasonForNotExpandingSynonyms;
+    
     public SynonymExpandingExtendedDismaxQParser(String qstr, SolrParams localParams, SolrParams params,
             SolrQueryRequest req, Map<String, Analyzer> synonymAnalyzers) {
         super(qstr, localParams, params, req);
@@ -277,9 +287,17 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
     
     @Override
     public void addDebugInfo(NamedList<Object> debugInfo) {
+        if (queryToHighlight != null) {
+            debugInfo.add("queryToHighlight", queryToHighlight);
+        }
+        if (expandedSynonyms != null) {
+            debugInfo.add("expandedSynonyms", Ordering.natural().nullsFirst().sortedCopy(expandedSynonyms));
+        }
+        if (reasonForNotExpandingSynonyms != null) {
+            debugInfo.add("reasonForNotExpandingSynonyms", reasonForNotExpandingSynonyms.toNamedList());
+        }
         debugInfo.add("mainQueryParser", createDebugInfo(mainQueryParser));
         debugInfo.add("synonymQueryParser", createDebugInfo(synonymQueryParser));
-        debugInfo.add("queryToHighlight", queryToHighlight);
     }
     
 
@@ -293,6 +311,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
 
         // disable/enable synonym handling altogether
         if (!solrParams.getBool(Params.SYNONYMS, false)) {
+            reasonForNotExpandingSynonyms = PluginDisabled;
             return query;
         }
         
@@ -303,6 +322,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                 // only one analyzer defined; just use that one
                 analyzerName = synonymAnalyzers.keySet().iterator().next();
             } else {
+                reasonForNotExpandingSynonyms = NoAnalyzerSpecified;
                 return query;
             }
         }
@@ -310,12 +330,14 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         Analyzer synonymAnalyzer = synonymAnalyzers.get(analyzerName);
         
         if (synonymAnalyzer == null) { // couldn't find analyzer
+            reasonForNotExpandingSynonyms = AnalyzerNotFound;
             return query;
         }
         
         if (solrParams.getBool(Params.SYNONYMS_DISABLE_PHRASE_QUERIES, false)
                 && getQueryStringFromParser().indexOf('"') != -1) {
             // disable if a phrase query is detected, i.e. there's a '"'
+            reasonForNotExpandingSynonyms = IgnoringPhrases;
             return query;
         }
 
@@ -323,6 +345,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
             attemptToApplySynonymsToQuery(query, solrParams, synonymAnalyzer);
         } catch (IOException e) {
             // TODO: better error handling - for now just bail out
+            reasonForNotExpandingSynonyms = UnhandledException;
             e.printStackTrace(System.err);
         }
 
@@ -336,8 +359,11 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         boolean ignoreQueryOperators = solrParams.getBool(Params.SYNONYMS_IGNORE_QUERY_OPERATORS, false);
         boolean hasComplexQueryOperators = ignoreQueryOperators ? false : Const.COMPLEX_QUERY_OPERATORS_PATTERN.matcher(getQueryStringFromParser()).find();
         
-        if (hasComplexQueryOperators // TODO: support complex operators
-                || synonymQueries.isEmpty()) { // didn't find more than 0 synonyms, i.e. it's just the original phrase
+        if (hasComplexQueryOperators) { // TODO: support complex operators
+            reasonForNotExpandingSynonyms = HasComplexQueryOperators;
+            return;
+        } else if (synonymQueries.isEmpty()) { // didn't find more than 0 synonyms, i.e. it's just the original phrase
+            reasonForNotExpandingSynonyms = DidntFindAnySynonyms;
             return;
         }
         
@@ -467,7 +493,10 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
 	        // have to use the start positions and end positions to figure out all possible combinations
 	        alternateQueries = buildUpAlternateQueries(solrParams, sortedTextsInQuery);
         }
-
+        
+        // save for debugging purposes
+        expandedSynonyms = alternateQueries;
+        
         return createSynonymQueries(solrParams, alternateQueries);
     }
 
@@ -623,159 +652,6 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         NamedList<Object> result = new NamedList<Object>();
         qparser.addDebugInfo(result);
         return result;
-    }
-    
-    /**
-     * Simple POJO for representing a piece of text found in the original query or expanded using shingles/synonyms.
-     * @author nolan
-     *
-     */
-    private static class TextInQuery implements Comparable<TextInQuery> {
-
-        private String text;
-        private int endPosition;
-        private int startPosition;
-        
-        public TextInQuery(String text, int startPosition, int endPosition) {
-            this.text = text;
-            this.startPosition = startPosition;
-            this.endPosition = endPosition;
-        }
-        
-        public String getText() {
-            return text;
-        }
-        public int getEndPosition() {
-            return endPosition;
-        }
-        public int getStartPosition() {
-            return startPosition;
-        }
-        
-        @Override
-        public String toString() {
-            return "TextInQuery [text=" + text + ", endPosition=" + endPosition + ", startPosition=" + startPosition + "]";
-        }
-
-        public int compareTo(TextInQuery other) {
-            if (this.startPosition != other.startPosition) {
-                return this.startPosition - other.startPosition;
-            } else if (this.endPosition != other.endPosition) {
-                return this.endPosition - other.endPosition;
-            }
-            return this.text.compareTo(other.text);
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + endPosition;
-            result = prime * result + startPosition;
-            result = prime * result + ((text == null) ? 0 : text.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            TextInQuery other = (TextInQuery) obj;
-            if (endPosition != other.endPosition)
-                return false;
-            if (startPosition != other.startPosition)
-                return false;
-            if (text == null) {
-                if (other.text != null)
-                    return false;
-            } else if (!text.equals(other.text))
-                return false;
-            return true;
-        }
-    }
-    
-    /**
-     * Simple POJO for containing an alternate query that we're building up
-     * @author nolan
-     *
-     */
-    private static class AlternateQuery implements Cloneable {
-
-        private StringBuilder stringBuilder;
-        private int endPosition;
-        
-        public AlternateQuery(StringBuilder stringBuilder, int endPosition) {
-            this.stringBuilder = stringBuilder;
-            this.endPosition = endPosition;
-        }
-
-        public StringBuilder getStringBuilder() {
-            return stringBuilder;
-        }
-
-        public int getEndPosition() {
-            return endPosition;
-        }
-        
-        public void setEndPosition(int endPosition) {
-            this.endPosition = endPosition;
-        }
-
-        public Object clone() {
-            return new AlternateQuery(new StringBuilder(stringBuilder), endPosition);
-        }
-
-        @Override
-        public String toString() {
-            return "AlternateQuery [stringBuilder=" + stringBuilder + ", endPosition=" + endPosition + "]";
-        }
-    }
-    
-    /**
-     * Extends a set of solr params, hiding the boost-related parameters (bq, bf, boost).  This is useful
-     * for constructing the synonym queries using the superclass, because we don't want to boost them artificially
-     * 
-     * @see issue 31
-     * @author nolan
-     *
-     */
-    @SuppressWarnings("serial")
-    private static class NoBoostSolrParams extends SolrParams {
-
-        private static final ImmutableSet<String> BOOST_PARAMS = ImmutableSet.of(
-                DisMaxParams.BQ, DisMaxParams.BF, Params.MULT_BOOST);
-        
-        private SolrParams delegateParams;
-        
-        private NoBoostSolrParams(SolrParams delegate) {
-            this.delegateParams = delegate;
-        }
-        
-        @Override
-        public String get(String param) {
-            return delegateParams.get(param);
-        }
-
-        @Override
-        public String[] getParams(String param) {
-            if (param != null && BOOST_PARAMS.contains(param)) {
-                return null;
-            }
-            return delegateParams.getParams(param);
-        }
-
-        @Override
-        public Iterator<String> getParameterNamesIterator() {
-            return delegateParams.getParameterNamesIterator();
-        }
-        
-        public static NoBoostSolrParams wrap(SolrParams delegateParams) {
-            return delegateParams == null ? null : new NoBoostSolrParams(delegateParams);
-        }
     }
 
 }
