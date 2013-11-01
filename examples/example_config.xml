@@ -1,9 +1,29 @@
+<!-- Main configuration for a synonym-expanding ExtendedDismaxQParserPlugin.  See 
+     https://github.com/healthonnet/hon-lucene-synonyms
+     for more info on this plugin.
+  -->
 <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
+  <!-- You can define more than one synonym analyzer in the following list.
+       For example, you might have one set of synonyms for English, one for French,
+       one for Spanish, etc. 
+    -->
   <lst name="synonymAnalyzers">
+    <!-- Name your analyzer something useful, e.g. "analyzer_en", "analyzer_fr", "analyzer_es", etc.
+         If you only have one, the name doesn't matter (hence "myCoolAnalyzer"). 
+      -->
     <lst name="myCoolAnalyzer">
+      <!-- We recommend a WhitespaceTokenizerFactory.
+           This seems to work best with most people's synonym files.
+           For details, read the discussion here: http://github.com/healthonnet/hon-lucene-synonyms/issues/26 
+        -->
       <lst name="tokenizer">
         <str name="class">solr.WhitespaceTokenizerFactory</str>
       </lst>
+      <!-- The ShingleFilterFactory outputs synonyms of multiple token lengths (e.g. unigrams, bigrams, trigrams, etc.).
+           The default here is to assume you don't have any synonyms longer than 4 tokens.
+           You can tweak this depending on what your synonyms look like. E.g. if you only have unigrams, you can remove
+           it entirely, and if your synonyms are up to 7 tokens in length, you should set the maxShingleSize to 7. 
+        -->
       <lst name="filter">
         <str name="class">solr.ShingleFilterFactory</str>
         <str name="outputUnigramsIfNoShingles">true</str>
@@ -11,6 +31,9 @@
         <str name="minShingleSize">2</str>
         <str name="maxShingleSize">4</str>
       </lst>
+      <!-- This is where you set your synonym file.  For the unit tests and "Getting Started" examples, we use example_synonym_file.txt.
+           This plugin will work best if you keep expand set to true and have all your synonyms comma-separated (rather than =>-separated).
+        -->
       <lst name="filter">
         <str name="class">solr.SynonymFilterFactory</str>
         <str name="tokenizerFactory">solr.KeywordTokenizerFactory</str>
