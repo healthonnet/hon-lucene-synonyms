@@ -1,6 +1,10 @@
 #
 # Basic unit tests for HON-Lucene-Synonyms
 #
+# This test confirms that the main query is weighted higher than the synonym query,
+# when synonyms.originalBoost is higher than synonyms.synonymBoost.
+# 
+#
 
 import unittest, solr, urllib, time
 
@@ -11,6 +15,8 @@ class TestBasic(unittest.TestCase):
     {'id': '1', 'name': "I have a dog."}, \
     {'id': '2', 'name': "I have a pooch."}, \
     {'id': '3', 'name': "I have a canis familiaris."}, \
+    {'id': '4', 'name': "I have a jigglypuff."}, \
+    {'id': '5', 'name': "I have a purin."}, \
     ]
     solr_connection = None
     
@@ -26,14 +32,18 @@ class TestBasic(unittest.TestCase):
  
     def test_queries(self):
         
-        # the document containing the actual term should be first, but all 3 docs should match
+        # the document containing the actual term should be first, but all related docs should match
         self.tst_query('dog', 3, '1')
         self.tst_query('pooch', 3, '2')
         self.tst_query('canis familiaris', 3, '3')
+        self.tst_query('purin', 2, '5')
+        self.tst_query('jigglypuff', 2, '4')
+
         
     def tst_query(self, query, expected_num_docs, expected_doc_id):
 
-        params = {'q': query, 'fl' : '*,score', 'qf' : 'name', 'mm' : '100%', 'defType' : 'synonym_edismax', 'synonyms' : 'true'}
+        params = {'q': query, 'fl' : '*,score', 'qf' : 'name', 'mm' : '100%', 'defType' : 'synonym_edismax', 'synonyms' : 'true',\
+                'synonyms.originalBoost' : 2.0, 'synonyms.synonymBoost' : 1.0}
         
         response = self.solr_connection.query(**params)
         results = response.results
