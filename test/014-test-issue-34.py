@@ -35,20 +35,26 @@ class TestBasic(unittest.TestCase):
  
     def test_queries(self):
         
-        self.tst_query('"dog"', False, 3)
-        self.tst_query('"pooch"', False, 3)
-        self.tst_query('"hound"', False, 3)
-        self.tst_query('"canis familiaris"', False, 3)
+        self.tst_query('"dog"', False, False, 3)
+        self.tst_query('"pooch"', False, False, 3)
+        self.tst_query('"hound"', False, False, 3)
+        self.tst_query('"canis familiaris"', False, False, 3)
 
-        self.tst_query('"dog"', True, 1)
-        self.tst_query('"pooch"', True, 1)
-        self.tst_query('"hound"', True, 1)
-        self.tst_query('"canis familiaris"', True, 0)
+        self.tst_query('"dog"', True, False, 1)
+        self.tst_query('"pooch"', True, False, 1)
+        self.tst_query('"hound"', True, False, 1)
+        self.tst_query('"canis familiaris"', True, False, 0)
+
+        self.tst_query('dog', False, True, 3)
+        self.tst_query('pooch', False, True, 3)
+        self.tst_query('hound', False, True, 3)
+        self.tst_query('canis familiaris', False, True, 4)
         
-    def tst_query(self, query, disable_phrase_queries, expected_num_docs):
+    def tst_query(self, query, disable_phrase_queries, construct_phrases, expected_num_docs):
 
         params = {'q': query, 'fl' : '*,score', 'qf' : 'name', 'mm' : '1%', 'defType' : 'synonym_edismax', 'synonyms' : 'true', \
-                'synonyms.disablePhraseQueries' : str(disable_phrase_queries).lower()}
+                'synonyms.disablePhraseQueries' : str(disable_phrase_queries).lower(), \
+                'synonyms.constructPhrases' : str(construct_phrases).lower()}
         
         response = self.solr_connection.query(**params)
         results = response.results
