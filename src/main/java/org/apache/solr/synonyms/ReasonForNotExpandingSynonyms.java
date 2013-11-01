@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.solr.search;
+package org.apache.solr.synonyms;
 
 import org.apache.solr.common.util.NamedList;
 
@@ -23,7 +23,7 @@ import org.apache.solr.common.util.NamedList;
  * @author nolan
  *
  */
-enum ReasonForNotExpandingSynonyms {
+public enum ReasonForNotExpandingSynonyms {
     
     PluginDisabled("You have to set synonyms=true to enable the plugin."),
     NoAnalyzerSpecified("You defined >1 synonym analyzer in your configuration, but you left synonyms.analyzer empty."),

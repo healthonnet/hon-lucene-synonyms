@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.solr.search;
+package org.apache.solr.synonyms;
 
 /**
  * Simple POJO for containing an alternate query that we're building up
  * @author nolan
  *
  */
-class AlternateQuery implements Cloneable {
+public class AlternateQuery implements Cloneable {
 
     private StringBuilder stringBuilder;
     private int endPosition;

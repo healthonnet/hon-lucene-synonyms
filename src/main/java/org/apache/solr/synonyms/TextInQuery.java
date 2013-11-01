@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.solr.search;
+package org.apache.solr.synonyms;
 
 /**
  * Simple POJO for representing a piece of text found in the original query or expanded using shingles/synonyms.
  * @author nolan
  *
  */
-class TextInQuery implements Comparable<TextInQuery> {
+public class TextInQuery implements Comparable<TextInQuery> {
 
     private String text;
     private int endPosition;

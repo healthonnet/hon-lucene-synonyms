@@ -16,13 +16,13 @@
  */
 package org.apache.solr.search;
 
-import static org.apache.solr.search.ReasonForNotExpandingSynonyms.AnalyzerNotFound;
-import static org.apache.solr.search.ReasonForNotExpandingSynonyms.DidntFindAnySynonyms;
-import static org.apache.solr.search.ReasonForNotExpandingSynonyms.HasComplexQueryOperators;
-import static org.apache.solr.search.ReasonForNotExpandingSynonyms.IgnoringPhrases;
-import static org.apache.solr.search.ReasonForNotExpandingSynonyms.NoAnalyzerSpecified;
-import static org.apache.solr.search.ReasonForNotExpandingSynonyms.PluginDisabled;
-import static org.apache.solr.search.ReasonForNotExpandingSynonyms.UnhandledException;
+import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.AnalyzerNotFound;
+import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.DidntFindAnySynonyms;
+import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.HasComplexQueryOperators;
+import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.IgnoringPhrases;
+import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.NoAnalyzerSpecified;
+import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.PluginDisabled;
+import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.UnhandledException;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -58,6 +58,12 @@ import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.search.SynonymExpandingExtendedDismaxQParserPlugin.Const;
+import org.apache.solr.search.SynonymExpandingExtendedDismaxQParserPlugin.Params;
+import org.apache.solr.synonyms.AlternateQuery;
+import org.apache.solr.synonyms.NoBoostSolrParams;
+import org.apache.solr.synonyms.ReasonForNotExpandingSynonyms;
+import org.apache.solr.synonyms.TextInQuery;
 
 import com.google.common.collect.Ordering;
 import com.google.common.collect.SortedSetMultimap;
@@ -76,6 +82,54 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
         ResourceLoaderAware {
     public static final String NAME = "synonym_edismax";
 
+    /**
+     * Convenience class for parameters
+     */
+    public static class Params {
+        
+        /**
+         * @see org.apache.solr.search.ExtendedDismaxQParser.DMP#MULT_BOOST
+         */
+        public static String MULT_BOOST = "boost";
+        
+        public static final String SYNONYMS = "synonyms";
+        public static final String SYNONYMS_ANALYZER = "synonyms.analyzer";
+        public static final String SYNONYMS_ORIGINAL_BOOST = "synonyms.originalBoost";
+        public static final String SYNONYMS_SYNONYM_BOOST = "synonyms.synonymBoost";
+        public static final String SYNONYMS_DISABLE_PHRASE_QUERIES = "synonyms.disablePhraseQueries";
+        public static final String SYNONYMS_CONSTRUCT_PHRASES = "synonyms.constructPhrases";
+        public static final String SYNONYMS_IGNORE_QUERY_OPERATORS = "synonyms.ignoreQueryOperators";
+        /** 
+         * instead of splicing synonyms into the original query string, ie
+         *    dog bite
+         *    canine familiaris bite
+         *    dog chomp
+         *    canine familiaris chomp
+         * do this: 
+         *    dog bite 
+         *    "canine familiaris" chomp
+         * with phrases off:
+         *    dog bite canine familiaris chomp
+         */
+        public static final String SYNONYMS_BAG = "synonyms.bag";        
+    }
+
+    /**
+     * Convenience class for calling constants.
+     * @author nolan
+     *
+     */
+    public static class Const {
+        /**
+         * A field we can't ever find in any schema, so we can safely tell
+         * DisjunctionMaxQueryParser to use it as our defaultField, and map aliases
+         * from it to any field in our schema.
+         */
+        static final String IMPOSSIBLE_FIELD_NAME = "\uFFFC\uFFFC\uFFFC";
+        
+        static final Pattern COMPLEX_QUERY_OPERATORS_PATTERN = Pattern.compile("(?:\\*|\\s-\\b|\\b(?:OR|AND|\\+)\\b)"); 
+    }    
+    
     private NamedList<?> args;
     private Map<String, Analyzer> synonymAnalyzers;
     private Version luceneMatchVersion = null;
@@ -206,54 +260,6 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
     // delegate all our parsing to these two parsers - one for the "synonym" query and the other for the main query
     private ExtendedDismaxQParser synonymQueryParser;
     private ExtendedDismaxQParser mainQueryParser;
-    
-    /**
-     * Convenience class for parameters
-     */
-    public static class Params {
-        
-        /**
-         * @see org.apache.solr.search.ExtendedDismaxQParser.DMP#MULT_BOOST
-         */
-        public static String MULT_BOOST = "boost";
-        
-        public static final String SYNONYMS = "synonyms";
-        public static final String SYNONYMS_ANALYZER = "synonyms.analyzer";
-        public static final String SYNONYMS_ORIGINAL_BOOST = "synonyms.originalBoost";
-        public static final String SYNONYMS_SYNONYM_BOOST = "synonyms.synonymBoost";
-        public static final String SYNONYMS_DISABLE_PHRASE_QUERIES = "synonyms.disablePhraseQueries";
-        public static final String SYNONYMS_CONSTRUCT_PHRASES = "synonyms.constructPhrases";
-        public static final String SYNONYMS_IGNORE_QUERY_OPERATORS = "synonyms.ignoreQueryOperators";
-        /** 
-         * instead of splicing synonyms into the original query string, ie
-		 *    dog bite
-         *    canine familiaris bite
-         *    dog chomp
-         *    canine familiaris chomp
-         * do this: 
-         *    dog bite 
-         *	  "canine familiaris" chomp
-         * with phrases off:
-         *    dog bite canine familiaris chomp
-         */
-        public static final String SYNONYMS_BAG = "synonyms.bag";        
-    }
-
-    /**
-     * Convenience class for calling constants.
-     * @author nolan
-     *
-     */
-    private static class Const {
-        /**
-         * A field we can't ever find in any schema, so we can safely tell
-         * DisjunctionMaxQueryParser to use it as our defaultField, and map aliases
-         * from it to any field in our schema.
-         */
-        static final String IMPOSSIBLE_FIELD_NAME = "\uFFFC\uFFFC\uFFFC";
-        
-        static final Pattern COMPLEX_QUERY_OPERATORS_PATTERN = Pattern.compile("(?:\\*|\\s-\\b|\\b(?:OR|AND|\\+)\\b)"); 
-    }
 
     private Map<String, Analyzer> synonymAnalyzers;
     private Query queryToHighlight;

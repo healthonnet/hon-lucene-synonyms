@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.solr.search;
+package org.apache.solr.synonyms;
 
 import java.util.Iterator;
 
 import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.SolrParams;
+import org.apache.solr.search.SynonymExpandingExtendedDismaxQParserPlugin.Params;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -31,10 +32,11 @@ import com.google.common.collect.ImmutableSet;
  * @author nolan
  *
  */
-@SuppressWarnings("serial") class NoBoostSolrParams extends SolrParams {
+@SuppressWarnings("serial")
+public class NoBoostSolrParams extends SolrParams {
 
     private static final ImmutableSet<String> BOOST_PARAMS = ImmutableSet.of(
-            DisMaxParams.BQ, DisMaxParams.BF, SynonymExpandingExtendedDismaxQParser.Params.MULT_BOOST);
+            DisMaxParams.BQ, DisMaxParams.BF, Params.MULT_BOOST);
     
     private SolrParams delegateParams;
     
