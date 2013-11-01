@@ -372,18 +372,18 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                     Query mainUserQuery = booleanClause.getQuery();
                     mainUserQuery.setBoost(originalBoost);
                     
-                    // combine all synonym queries together with the same boost
-                    BooleanQuery allSynonymQueries = new BooleanQuery();
-                    for (Query synonymQuery : synonymQueries) {
-                        allSynonymQueries.add(synonymQuery, Occur.SHOULD);
-                    }
-                    
-                    allSynonymQueries.setBoost(synonymBoost);
-                    
-                    // now combine with the original main user query
+                    // add all synonyms queries separately, each with the synonym boost
                     BooleanQuery combinedQuery = new BooleanQuery();
                     combinedQuery.add(mainUserQuery, Occur.SHOULD);
-                    combinedQuery.add(allSynonymQueries, Occur.SHOULD);
+                    
+                    for (Query synonymQuery : synonymQueries) {
+                        BooleanQuery booleanSynonymQuery = new BooleanQuery();
+                        booleanSynonymQuery.add(synonymQuery, Occur.SHOULD);
+                        booleanSynonymQuery.setBoost(synonymBoost);
+                        
+                        combinedQuery.add(booleanSynonymQuery, Occur.SHOULD);
+                    }
+                    
                     booleanClause.setQuery(combinedQuery);
                     queryToHighlight = combinedQuery;
                 }
