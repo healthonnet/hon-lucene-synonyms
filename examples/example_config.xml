@@ -12,12 +12,13 @@
          If you only have one, the name doesn't matter (hence "myCoolAnalyzer"). 
       -->
     <lst name="myCoolAnalyzer">
-      <!-- We recommend a WhitespaceTokenizerFactory.
+      <!-- We recommend a PatternTokenizerFactory that tokenizes based on whitespace and quotes.
            This seems to work best with most people's synonym files.
            For details, read the discussion here: http://github.com/healthonnet/hon-lucene-synonyms/issues/26 
         -->
       <lst name="tokenizer">
-        <str name="class">solr.WhitespaceAndQuoteTokenizerFactory</str>
+        <str name="class">solr.PatternTokenizerFactory</str>
+        <str name="pattern"><![CDATA[(?:\s|\")+]]></str>
       </lst>
       <!-- The ShingleFilterFactory outputs synonyms of multiple token lengths (e.g. unigrams, bigrams, trigrams, etc.).
            The default here is to assume you don't have any synonyms longer than 4 tokens.
