@@ -288,10 +288,10 @@ Python-based unit tests are in the ```test/``` directory. You can run them using
 sudo easy_install nose
 sudo easy_install solrpy
 
-# launches Solr on localhost:8983. Alternatively, you can just follow the "Getting Started" directions
+# downloads, builds, and launches Solr on localhost:8983
 ./run_solr_for_unit_tests.py
 
-# run some Python unit tests against the local Solr on localhost:8983
+# run some Python unit tests against the local Solr
 nosetests test/
 ```
 
