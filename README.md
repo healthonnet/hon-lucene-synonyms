@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
-Current version : 1.3.2 ([changelog][15])
+Current version : 1.3.3 ([changelog][15])
 
 Maintainer
 -----------
@@ -36,10 +36,44 @@ running in Jetty.
 
 Download the latest JAR file depending on your Solr version:
 
-* [hon-lucene-synonyms-1.3.2-solr-3.x.jar][12] for Solr 3.4.0, 3.5.0, and 3.6.x
-* [hon-lucene-synonyms-1.3.2-solr-4.0.0.jar][13] for Solr 4.0.0
-* [hon-lucene-synonyms-1.3.2-solr-4.1.0.jar][14] for Solr 4.1.0 and 4.2.x
-* [hon-lucene-synonyms-1.3.2-solr-4.3.0.jar][17] for Solr 4.3+
+<table border="0" style="border-width:1px;border-color:#999999;border-collapse:collapse;border-style:solid;">
+<tr style="background:gray;color:white;">
+<td style="padding:0 1em;" align="center"><strong>JAR</strong></td>
+<td style="padding:0 1em;" align="center"><strong>Solr</strong></td>
+</tr>
+<tr>
+<td style="padding:0 1em;">
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.3-solr-3.x/hon-lucene-synonyms-1.3.3-solr-3.x.jar'>
+hon-lucene-synonyms-1.3.3-solr-3.x.jar
+</a>
+</td>
+<td style="padding:0 1em;">3.4.0, 3.5.0, and 3.6.x</td>
+</tr>
+<tr style="background:#DDDDDD;">
+<td style="padding:0 1em;">
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.3-solr-4.0.0/hon-lucene-synonyms-1.3.3-solr-4.0.0.jar'>
+hon-lucene-synonyms-1.3.3-solr-4.0.0.jar
+</a>
+</td>
+<td style="padding:0 1em;">4.0.0</td>
+</tr>
+<tr>
+<td style="padding:0 1em;">
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.3-solr-4.1.0/hon-lucene-synonyms-1.3.3-solr-4.1.0.jar'>
+hon-lucene-synonyms-1.3.3-solr-4.1.0.jar
+</a>
+</td>
+<td style="padding:0 1em;">4.1.0 and 4.2.x</td>
+</tr>
+<tr style="background:#DDDDDD;">
+<td style="padding:0 1em;">
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.3-solr-4.3.0/hon-lucene-synonyms-1.3.3-solr-4.3.0.jar'>
+hon-lucene-synonyms-1.3.3-solr-4.3.0.jar
+</a>
+</td>
+<td style="padding:0 1em;">4.3+</td>
+</tr>
+</table>
 
 ### Step 2
 
@@ -157,7 +191,10 @@ Keep in mind that you must add ```defType=synonym_edismax``` and ```synonyms=tru
 the parser in the first place.
 
 Also, you must either define ```qf``` in the query parameters or ```defaultSearchField``` in ```solr/conf/schema.xml```,
-so that the parser knows which fields to use during synonym expansion. 
+so that the parser knows which fields to use during synonym expansion.
+
+If you enable debugging (with ```debugQuery=on```), the plugin will output helpful information about
+how synonyms are being expanded.
 
 Query parameters
 ------------
@@ -261,10 +298,13 @@ nosetests test/
 Changelog
 ------------
 
-* v1.3.3 (upcoming)
-  * Fixed [#9][109], [#26][126], and [#32][132].
+* v1.3.3
+  * Fixed [#33][133]: synonyms are now weighted equally, regardless of how many there are per word.
+  * Fixed [#31][131]: synonyms are no longer given extra weight when using the params ```bq```, ```bf```, and ```boost```.
+  * ```debugQuery=on``` now gives more helpful debug output.
+  * Fixed [#9][109], [#26][126], [#32][132], and [#34][134].
     <em>Note that this is a documentation change; not a code change, so to get
-    the benefit of this "fix," you'll need to manually perform [Step 6](#step-6) again.</em>
+    the benefits of this "fix," you'll need to manually perform [Step 6](#step-6) again.</em>
 * v1.3.2
   * Added ```synonyms.ignoreQueryOperators``` option ([#28][128])
   * Added ```synonyms.bag``` option ([#30][130])
@@ -301,12 +341,8 @@ Changelog
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
-[12]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.2-solr-3.x/hon-lucene-synonyms-1.3.2-solr-3.x.jar
-[13]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.2-solr-4.0.0/hon-lucene-synonyms-1.3.2-solr-4.0.0.jar
-[14]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.2-solr-4.1.0/hon-lucene-synonyms-1.3.2-solr-4.1.0.jar
 [15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
 [16]: http://wiki.apache.org/solr/DisMaxQParserPlugin#mm_.28Minimum_.27Should.27_Match.29
-[17]: http://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.2-solr-4.3.0/hon-lucene-synonyms-1.3.2-solr-4.3.0.jar
 [18]: http://raw.github.com/healthonnet/hon-lucene-synonyms/master/examples/example_config.xml
 [101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
 [102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
@@ -320,4 +356,7 @@ Changelog
 [126]: http://github.com/healthonnet/hon-lucene-synonyms/issues/26
 [128]: http://github.com/healthonnet/hon-lucene-synonyms/issues/28
 [130]: http://github.com/healthonnet/hon-lucene-synonyms/issues/30
+[131]: http://github.com/healthonnet/hon-lucene-synonyms/issues/31
 [132]: http://github.com/healthonnet/hon-lucene-synonyms/issues/32
+[133]: http://github.com/healthonnet/hon-lucene-synonyms/issues/33
+[134]: http://github.com/healthonnet/hon-lucene-synonyms/issues/34
