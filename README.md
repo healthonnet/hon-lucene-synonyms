@@ -191,7 +191,10 @@ Keep in mind that you must add ```defType=synonym_edismax``` and ```synonyms=tru
 the parser in the first place.
 
 Also, you must either define ```qf``` in the query parameters or ```defaultSearchField``` in ```solr/conf/schema.xml```,
-so that the parser knows which fields to use during synonym expansion. 
+so that the parser knows which fields to use during synonym expansion.
+
+If you enable debugging (with ```debugQuery=on```), the plugin will output helpful information about
+how synonyms are being expanded.
 
 Query parameters
 ------------
