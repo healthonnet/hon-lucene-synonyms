@@ -111,7 +111,9 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
          * with phrases off:
          *    dog bite canine familiaris chomp
          */
-        public static final String SYNONYMS_BAG = "synonyms.bag";        
+        public static final String SYNONYMS_BAG = "synonyms.bag";
+        
+        public static final String EDISMAX_OBLIGATORY_MAIN_QUERY = "edismax.obligatoryMainQuery";        
     }
 
     /**
@@ -392,6 +394,8 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
      */
     private void applySynonymQueries(Query query, List<Query> synonymQueries, float originalBoost, float synonymBoost) {
 
+        SolrParams solrParams = localParams == null ? params : SolrParams.wrapDefaults(localParams, params);
+        
         if (query instanceof BoostedQuery) {
             applySynonymQueries(((BoostedQuery) query).getQuery(), synonymQueries, originalBoost, synonymBoost);
         } else if (query instanceof BooleanQuery) {
@@ -419,7 +423,9 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                     booleanClause.setQuery(combinedQuery);
                     // if the query consists of stop words, give it a chance to find it in other fields 
                     // (if qf or pf are used)
-                    booleanClause.setOccur(Occur.SHOULD);
+                    if (!solrParams.getBool(Params.EDISMAX_OBLIGATORY_MAIN_QUERY, true)) {
+                        booleanClause.setOccur(Occur.SHOULD);
+                    }
                     queryToHighlight = combinedQuery;
                 }
             }
@@ -635,25 +641,29 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
             synonymQueryParser.setString(alternateQueryText);
             try {
                 Query alternateQuery = synonymQueryParser.parse();
-                // change MUST of the main query to SHOULD
-                if (alternateQuery instanceof BoostedQuery) {
-                    BoostedQuery alternateBoostedQuery = (BoostedQuery) alternateQuery;
-                    BooleanQuery alternateClause = (BooleanQuery) alternateBoostedQuery.getQuery();
-                    for (BooleanClause booleanClause : alternateClause.getClauses()) {
-                        if (Occur.MUST == booleanClause.getOccur()) {
-                            booleanClause.setOccur(Occur.SHOULD);
-                        }
-                    }
-                    result.add(new BoostedQuery(alternateClause, alternateBoostedQuery.getValueSource()));
-                } else if (alternateQuery instanceof BooleanQuery) {
-                    BooleanQuery alternateBooleanQuery = (BooleanQuery) alternateQuery;
+                if (solrParams.getBool(Params.EDISMAX_OBLIGATORY_MAIN_QUERY, true)) {
+                    result.add(alternateQuery);
+                } else {
                     // change MUST of the main query to SHOULD
-                    for (BooleanClause booleanClause : alternateBooleanQuery.getClauses()) {
-                        if (Occur.MUST == booleanClause.getOccur()) {
-                            booleanClause.setOccur(Occur.SHOULD);
+                    if (alternateQuery instanceof BoostedQuery) {
+                        BoostedQuery alternateBoostedQuery = (BoostedQuery) alternateQuery;
+                        BooleanQuery alternateClause = (BooleanQuery) alternateBoostedQuery.getQuery();
+                        for (BooleanClause booleanClause : alternateClause.getClauses()) {
+                            if (Occur.MUST == booleanClause.getOccur()) {
+                                booleanClause.setOccur(Occur.SHOULD);
+                            }
                         }
+                        result.add(new BoostedQuery(alternateClause, alternateBoostedQuery.getValueSource()));
+                    } else if (alternateQuery instanceof BooleanQuery) {
+                        BooleanQuery alternateBooleanQuery = (BooleanQuery) alternateQuery;
+                        // change MUST of the main query to SHOULD
+                        for (BooleanClause booleanClause : alternateBooleanQuery.getClauses()) {
+                            if (Occur.MUST == booleanClause.getOccur()) {
+                                booleanClause.setOccur(Occur.SHOULD);
+                            }
+                        }
+                        result.add(alternateBooleanQuery);
                     }
-                    result.add(alternateBooleanQuery);
                 }
             } catch (SyntaxError e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
