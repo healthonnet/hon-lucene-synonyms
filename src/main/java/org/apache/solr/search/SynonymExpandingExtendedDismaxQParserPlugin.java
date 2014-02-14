@@ -49,6 +49,7 @@ import org.apache.lucene.queries.function.BoostedQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.Version;
 import org.apache.solr.analysis.TokenizerChain;
@@ -350,7 +351,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         }
 
         try {
-            attemptToApplySynonymsToQuery(query, solrParams, synonymAnalyzer);
+            query = attemptToApplySynonymsToQuery(query, solrParams, synonymAnalyzer);
         } catch (IOException e) {
             // TODO: better error handling - for now just bail out
             reasonForNotExpandingSynonyms = UnhandledException;
@@ -360,7 +361,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         return query;
     }
 
-    private void attemptToApplySynonymsToQuery(Query query, SolrParams solrParams, Analyzer synonymAnalyzer) throws IOException {
+    private Query attemptToApplySynonymsToQuery(Query query, SolrParams solrParams, Analyzer synonymAnalyzer) throws IOException {
         
         List<Query> synonymQueries = generateSynonymQueries(synonymAnalyzer, solrParams);
         
@@ -369,16 +370,16 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         
         if (hasComplexQueryOperators) { // TODO: support complex operators
             reasonForNotExpandingSynonyms = HasComplexQueryOperators;
-            return;
+            return query;
         } else if (synonymQueries.isEmpty()) { // didn't find more than 0 synonyms, i.e. it's just the original phrase
             reasonForNotExpandingSynonyms = DidntFindAnySynonyms;
-            return;
+            return query;
         }
         
         float originalBoost = solrParams.getFloat(Params.SYNONYMS_ORIGINAL_BOOST, 1.0F);
         float synonymBoost = solrParams.getFloat(Params.SYNONYMS_SYNONYM_BOOST, 1.0F);
         
-        applySynonymQueries(query, synonymQueries, originalBoost, synonymBoost);
+        return applySynonymQueries(query, synonymQueries, originalBoost, synonymBoost);
     }
 
     /**
@@ -392,44 +393,100 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
      * @param originalBoost
      * @param synonymBoost
      */
-    private void applySynonymQueries(Query query, List<Query> synonymQueries, float originalBoost, float synonymBoost) {
+    private Query applySynonymQueries(Query query, List<Query> synonymQueries, float originalBoost, float synonymBoost) {
 
         SolrParams solrParams = localParams == null ? params : SolrParams.wrapDefaults(localParams, params);
         
         if (query instanceof BoostedQuery) {
-            applySynonymQueries(((BoostedQuery) query).getQuery(), synonymQueries, originalBoost, synonymBoost);
+            return new BoostedQuery(applySynonymQueries(((BoostedQuery) query).getQuery(), synonymQueries, originalBoost, synonymBoost), ((BoostedQuery) query).getValueSource());
         } else if (query instanceof BooleanQuery) {
-            BooleanQuery booleanQuery =(BooleanQuery) query;
+            BooleanQuery booleanQuery = (BooleanQuery) query;
             
-            for (BooleanClause booleanClause : booleanQuery.getClauses()) {
+			BooleanQuery originalQuery = new BooleanQuery();
+			originalQuery.setBoost(originalBoost);
+			BooleanQuery addQuery = new BooleanQuery();
+			Query combinedQuery;
+			if (true) {
+				combinedQuery = new DisjunctionMaxQuery((float)0.0);
+			} else {
+				combinedQuery = new BooleanQuery();
+			}
+			boolean addQueryFound = false;
+			
+			for (BooleanClause booleanClause : booleanQuery.getClauses()) {
                 if (Occur.MUST == booleanClause.getOccur()) {
                     // standard 'must occur' clause - i.e. the main user query    
                     
                     Query mainUserQuery = booleanClause.getQuery();
-                    mainUserQuery.setBoost(originalBoost);
-                    
-                    // add all synonyms queries separately, each with the synonym boost
-                    BooleanQuery combinedQuery = new BooleanQuery();
-                    combinedQuery.add(mainUserQuery, Occur.SHOULD);
-                    
-                    for (Query synonymQuery : synonymQueries) {
-                        BooleanQuery booleanSynonymQuery = new BooleanQuery();
-                        booleanSynonymQuery.add(synonymQuery, Occur.SHOULD);
-                        booleanSynonymQuery.setBoost(synonymBoost);
-                        
-                        combinedQuery.add(booleanSynonymQuery, Occur.SHOULD);
-                    }
-                    
-                    booleanClause.setQuery(combinedQuery);
-                    // if the query consists of stop words, give it a chance to find it in other fields 
-                    // (if qf or pf are used)
-                    if (!solrParams.getBool(Params.EDISMAX_OBLIGATORY_MAIN_QUERY, true)) {
-                        booleanClause.setOccur(Occur.SHOULD);
-                    }
-                    queryToHighlight = combinedQuery;
-                }
-            }
+
+					if (!solrParams.getBool(Params.EDISMAX_OBLIGATORY_MAIN_QUERY, true)) {
+						originalQuery.add(mainUserQuery, Occur.SHOULD);
+					} else {
+						originalQuery.add(mainUserQuery, Occur.MUST);
+					}
+				} else {
+					Query addUserQuery = booleanClause.getQuery();
+					if (addUserQuery instanceof DisjunctionMaxQuery && !addQueryFound) {
+						originalQuery.add(addUserQuery, Occur.SHOULD);
+					} else {
+						addQueryFound = true;
+						addQuery.add(addUserQuery, Occur.SHOULD);
+					}
+				}
+			}
+
+			if (true) {
+				((DisjunctionMaxQuery) combinedQuery).add(originalQuery);
+			} else {
+				BooleanClause originalClause;
+				// if the query consists of stop words, give it a chance to find it in other fields 
+				// (if qf or pf are used)
+				if (!solrParams.getBool(Params.EDISMAX_OBLIGATORY_MAIN_QUERY, true)) {
+					originalClause = new BooleanClause(originalQuery, Occur.SHOULD);
+				} else {
+					originalClause = new BooleanClause(originalQuery, Occur.MUST);
+				}
+				((BooleanQuery) combinedQuery).add(originalClause);
+			}
+
+			// add all synonyms queries separately, each with the synonym boost
+			for (Query synonymQuery : synonymQueries) {
+				BooleanQuery booleanSynonymQuery = new BooleanQuery();
+				booleanSynonymQuery.add(synonymQuery, Occur.SHOULD);
+				booleanSynonymQuery.setBoost(synonymBoost);
+
+				if (true) {
+					((DisjunctionMaxQuery) combinedQuery).add(booleanSynonymQuery);
+				} else {
+					BooleanClause synClause = new BooleanClause(booleanSynonymQuery, Occur.SHOULD);
+					((BooleanQuery) combinedQuery).add(synClause);
+				}
+			}
+			
+			Query finalQuery;
+			if (addQueryFound) {
+
+				finalQuery = new BooleanQuery();
+				BooleanClause combinedClause;
+				if (!solrParams.getBool(Params.EDISMAX_OBLIGATORY_MAIN_QUERY, true)) {
+					combinedClause = new BooleanClause(combinedQuery, Occur.SHOULD);
+				} else {
+					combinedClause = new BooleanClause(combinedQuery, Occur.MUST);
+				}
+				((BooleanQuery) finalQuery).add(combinedClause);
+				
+				BooleanClause addClause = new BooleanClause(addQuery, Occur.SHOULD);
+				((BooleanQuery) finalQuery).add(addClause);
+			} else {
+				finalQuery = combinedQuery;
+			}
+			
+			queryToHighlight = finalQuery;
+			
+			return finalQuery;
         }
+		
+		return query;
     }
 
     /**
