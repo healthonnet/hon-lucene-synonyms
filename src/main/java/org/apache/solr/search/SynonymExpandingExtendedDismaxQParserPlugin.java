@@ -113,8 +113,6 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
          *    dog bite canine familiaris chomp
          */
         public static final String SYNONYMS_BAG = "synonyms.bag";
-        
-        public static final String EDISMAX_OBLIGATORY_MAIN_QUERY = "edismax.obligatoryMainQuery";        
     }
 
     /**
@@ -419,11 +417,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                     
                     Query mainUserQuery = booleanClause.getQuery();
 
-					if (!solrParams.getBool(Params.EDISMAX_OBLIGATORY_MAIN_QUERY, true)) {
-						originalQuery.add(mainUserQuery, Occur.SHOULD);
-					} else {
-						originalQuery.add(mainUserQuery, Occur.MUST);
-					}
+					originalQuery.add(mainUserQuery, Occur.MUST);
 				} else {
 					Query addUserQuery = booleanClause.getQuery();
 					if (addUserQuery instanceof DisjunctionMaxQuery && !addQueryFound) {
@@ -439,13 +433,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
 				((DisjunctionMaxQuery) combinedQuery).add(originalQuery);
 			} else {
 				BooleanClause originalClause;
-				// if the query consists of stop words, give it a chance to find it in other fields 
-				// (if qf or pf are used)
-				if (!solrParams.getBool(Params.EDISMAX_OBLIGATORY_MAIN_QUERY, true)) {
-					originalClause = new BooleanClause(originalQuery, Occur.SHOULD);
-				} else {
-					originalClause = new BooleanClause(originalQuery, Occur.MUST);
-				}
+				originalClause = new BooleanClause(originalQuery, Occur.MUST);
 				((BooleanQuery) combinedQuery).add(originalClause);
 			}
 
@@ -468,11 +456,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
 
 				finalQuery = new BooleanQuery();
 				BooleanClause combinedClause;
-				if (!solrParams.getBool(Params.EDISMAX_OBLIGATORY_MAIN_QUERY, true)) {
-					combinedClause = new BooleanClause(combinedQuery, Occur.SHOULD);
-				} else {
-					combinedClause = new BooleanClause(combinedQuery, Occur.MUST);
-				}
+				combinedClause = new BooleanClause(combinedQuery, Occur.MUST);
 				((BooleanQuery) finalQuery).add(combinedClause);
 				
 				BooleanClause addClause = new BooleanClause(addQuery, Occur.SHOULD);
@@ -697,31 +681,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
             
             synonymQueryParser.setString(alternateQueryText);
             try {
-                Query alternateQuery = synonymQueryParser.parse();
-                if (solrParams.getBool(Params.EDISMAX_OBLIGATORY_MAIN_QUERY, true)) {
-                    result.add(alternateQuery);
-                } else {
-                    // change MUST of the main query to SHOULD
-                    if (alternateQuery instanceof BoostedQuery) {
-                        BoostedQuery alternateBoostedQuery = (BoostedQuery) alternateQuery;
-                        BooleanQuery alternateClause = (BooleanQuery) alternateBoostedQuery.getQuery();
-                        for (BooleanClause booleanClause : alternateClause.getClauses()) {
-                            if (Occur.MUST == booleanClause.getOccur()) {
-                                booleanClause.setOccur(Occur.SHOULD);
-                            }
-                        }
-                        result.add(new BoostedQuery(alternateClause, alternateBoostedQuery.getValueSource()));
-                    } else if (alternateQuery instanceof BooleanQuery) {
-                        BooleanQuery alternateBooleanQuery = (BooleanQuery) alternateQuery;
-                        // change MUST of the main query to SHOULD
-                        for (BooleanClause booleanClause : alternateBooleanQuery.getClauses()) {
-                            if (Occur.MUST == booleanClause.getOccur()) {
-                                booleanClause.setOccur(Occur.SHOULD);
-                            }
-                        }
-                        result.add(alternateBooleanQuery);
-                    }
-                }
+				result.add(synonymQueryParser.parse());
             } catch (SyntaxError e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
                 e.printStackTrace(System.err);
