@@ -32,7 +32,7 @@ public enum ReasonForNotExpandingSynonyms {
     UnhandledException("Whoops, we ran into an exception we couldn't handle!  File a bug."),
     HasComplexQueryOperators("synonyms.ignoreQueryOperators is set to true, and this query contains complex query "
             + "operators (e.g. AND, OR, *, -, etc.)"),
-    DidntFindAnySynonyms("No synonyms found for this query.  Check your synonyms file."),
+    DidntFindAnySynonyms("No synonyms found for this query.  Check your synonyms file.")
     ;
     
     private String explanation;
