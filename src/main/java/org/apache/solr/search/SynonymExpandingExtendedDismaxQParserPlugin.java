@@ -135,7 +135,7 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
     private Version luceneMatchVersion = null;
     private SolrResourceLoader loader;
 
-    private int alternativeQueryLimit = -1;
+    private int alternateQueryLimit = -1;
 
     @SuppressWarnings("rawtypes")
     // TODO it would be nice if the user didn't have to encode tokenizers/filters
@@ -152,7 +152,7 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
         }
 
         SynonymExpandingExtendedDismaxQParser parser = new SynonymExpandingExtendedDismaxQParser(qstr, localParams, params, req, synonymAnalyzers);
-        parser.setAlternateQueryLimit(alternativeQueryLimit);
+        parser.setAlternateQueryLimit(alternateQueryLimit);
         return parser;
     }
     
@@ -255,10 +255,10 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
                     synonymAnalyzers.put(analyzerName, analyzer);
                 }
 
-                Object alternateQueryLimitParam = args.get("alternativeQueryLimit");
+                Object alternateQueryLimitParam = args.get("alternateQueryLimit");
 
                 if(alternateQueryLimitParam != null) {
-                    alternativeQueryLimit = Integer.valueOf(alternateQueryLimitParam.toString());
+                    alternateQueryLimit = Integer.valueOf(alternateQueryLimitParam.toString());
                 }
             }
         } catch (IOException e) {

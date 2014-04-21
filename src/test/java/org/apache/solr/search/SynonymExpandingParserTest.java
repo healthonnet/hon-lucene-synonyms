@@ -74,12 +74,12 @@ public class SynonymExpandingParserTest {
 
         Analyzer analyzer = PowerMockito.mock(Analyzer.class);
         PowerMockito.when(analyzer.tokenStream(anyString(), any(Reader.class))).thenReturn(synonymFilter);
-        int maxAlterateQueries = 5;
-        parser.setAlternateQueryLimit(maxAlterateQueries);
+        int maxAlternateQueries = 5;
+        parser.setAlternateQueryLimit(maxAlternateQueries);
 
         try {
             List<Query> result = parser.generateSynonymQueries(analyzer, params);
-            assertEquals(maxAlterateQueries, result.size());
+            assertEquals(maxAlternateQueries, result.size());
         } catch (IOException e) {
             e.printStackTrace();
         }
