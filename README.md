@@ -163,11 +163,11 @@ Note that the input query ```dog``` has been expanded into ```dog```, ```hound``
 Tweaking the results
 ---------------------
 
-Boost the non-synonym part to 1.2 and the synonym part to 1.1 by adding ```synonyms.originalBoost=1.1&synonyms.synonymBoost=1.2```:
+Boost the non-synonym part to 1.2 and the synonym part to 1.1 by adding ```synonyms.originalBoost=1.2&synonyms.synonymBoost=1.1```:
 
 ```
-+((text:dog)^1.1 (((((text:canis) (text:familiaris))~2) (text:hound) 
-(((text:man's) (text:best) (text:friend))~3) (text:pooch))^1.2))
++((text:dog)^1.2 (((((text:canis) (text:familiaris))~2) (text:hound) 
+(((text:man's) (text:best) (text:friend))~3) (text:pooch))^1.1))
 ```
 
 Apply a [minimum "should" match][16] of 75% by adding ```mm=75%25```:
