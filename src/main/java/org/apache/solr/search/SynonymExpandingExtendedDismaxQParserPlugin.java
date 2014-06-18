@@ -431,9 +431,12 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
      */
     private List<Query> generateSynonymQueries(Analyzer synonymAnalyzer, SolrParams solrParams) throws IOException {
 
+	String origQuery = getQueryStringFromParser();
+	int queryLen = origQuery.length();
+	
         // TODO: make the token stream reusable?
         TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME,
-                new StringReader(getQueryStringFromParser()));
+                new StringReader(origQuery);
         
         SortedSetMultimap<Integer, TextInQuery> startPosToTextsInQuery = TreeMultimap.create();
         
@@ -460,10 +463,20 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                         synonymBag.add(termToAdd);                    	
                     }
                     
-                    if (constructPhraseQueries && typeAttribute.type().equals("SYNONYM")) {
-                        // make a phrase out of the synonym
-                        termToAdd = new StringBuilder(termToAdd).insert(0,'"').append('"').toString();
-                    }
+                    //Don't quote sibgle term term synonyms
+		    if (constructPhraseQueries && typeAttribute.type().equals("SYNONYM") &&
+			termToAdd.contains(" ")) 
+		    {
+		    	//Don't Quote when original is already surrounded by quotes
+		    	if( offsetAttribute.startOffset()==0 || 
+		    	    offsetAttribute.endOffset() == queryLen ||
+		    	    origQuery.charAt(offsetAttribute.startOffset()-1)!='"' || 
+		    	    origQuery.charAt(offsetAttribute.endOffset())!='"')
+		    	{
+		    	    // make a phrase out of the synonym
+		    	    termToAdd = new StringBuilder(termToAdd).insert(0,'"').append('"').toString();
+		    	}
+		    }
                     if (!bag) {
                         // create a graph of all possible synonym combinations,
                         // e.g. dog bite, hound bite, dog nibble, hound nibble, etc.
