@@ -295,6 +295,25 @@ sudo easy_install solrpy
 nosetests test/
 ```
 
+Windows testing:  
+Download Python 2.7.7 and SetupTools (https://pypi.python.org/pypi/setuptools)
+---
+#install StepTools via a cmd prompt run as administrator
+ez_setup.py
+#Add <python_home>/Scripts to path environment variable
+
+#install packages via a cmd prompt run as administrator (be sure Python/Scripts is on environment path)
+easy_install nose
+easy_install solrpy
+
+# downloads, builds, and launches Solr on localhost:8983
+./run_solr_for_unit_tests_on_windows.py
+
+# run some Python unit tests against the local Solr
+nosetests test/
+```
+
+
 Changelog
 ------------
 
