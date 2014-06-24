@@ -294,9 +294,7 @@ sudo easy_install solrpy
 # run some Python unit tests against the local Solr
 nosetests test/
 ```
-
-Windows Testing
----------
+Windows Testing:
 
 Download Python 2.7.7 and SetupTools (https://pypi.python.org/pypi/setuptools)
 
