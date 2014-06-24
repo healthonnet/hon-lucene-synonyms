@@ -295,26 +295,12 @@ sudo easy_install solrpy
 nosetests test/
 ```
 
-Testing
+Windows Testing
 ---------
 
-Python-based unit tests are in the ```test/``` directory. You can run them using these commands: 
-
-```
-# install the solrpy and nose packages
-sudo easy_install nose
-sudo easy_install solrpy
-
-# downloads, builds, and launches Solr on localhost:8983
-./run_solr_for_unit_tests.py
-
-# run some Python unit tests against the local Solr
-nosetests test/
-```
-
-Windows testing:  
 Download Python 2.7.7 and SetupTools (https://pypi.python.org/pypi/setuptools)
----
+
+```
 #install StepTools via a cmd prompt run as administrator
 ez_setup.py
 #Add <python_home>/Scripts to path environment variable
@@ -329,7 +315,6 @@ easy_install solrpy
 # run some Python unit tests against the local Solr
 nosetests test/
 ```
-
 
 Changelog
 ------------
