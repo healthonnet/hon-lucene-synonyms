@@ -1,18 +1,18 @@
-Enter file contents here#
+#
 # Basic unit tests for HON-Lucene-Synonyms
 #
 # Test that phrase queries synonyms do not get double quoted
 # when search contains quotes. And do not quote single term synonyms
 #
 
+from urllib2 import *
 import unittest, solr, urllib, time
-
 class TestBasic(unittest.TestCase):
     
   #
     # We have the synonyms:
     #
-    # dog, pooch, hound, canis familiaris
+    # dog, pooch, hound, canis familiaris, man's best friend
     #
 
     url = 'http://localhost:8983/solr'
@@ -36,27 +36,35 @@ class TestBasic(unittest.TestCase):
  
     def test_queries(self):
         
-        self.tst_query('"dog"', 8)
-        self.tst_query('"pooch"', 8)
-        self.tst_query('"hound"', 8)
-        self.tst_query('"canis familiaris"', 8)
+        self.tst_query('"dog"', 10)
+        self.tst_query('"pooch"', 10)
+        self.tst_query('"hound"', 10)
+        self.tst_query('"canis familiaris"', 10)
 
-        self.tst_query('dog', 2)
-        self.tst_query('pooch', 2)
-        self.tst_query('hound', 2)
-        self.tst_query('canis familiaris', 2)
+        self.tst_query('dog', 4)
+        self.tst_query('pooch', 4)
+        self.tst_query('hound', 4)
+        self.tst_query('canis familiaris', 4)
         
+
     def tst_query(self, query, quote_cnt):
+	#Properly format spaces in the query
+	query = urllib.quote_plus(query)
+	connstr = self.url +'/select?q='+query+'&fl=*,score&qf=name&defType=synonym_edismax&synonyms=true&synonyms.constructPhrases=true&debugQuery=on'
+	#Add wt=python so response is formatted as python readable
+	conn = urlopen(connstr+'&wt=python')
+	rsp = eval( conn.read() )
+     #print "number of matches=", rsp['response']['numFound']
+	print rsp['debug']['expandedSynonyms']
+	
+	#Count the number of quotes in our expandedSynonyms Debug element
+	cnt = 0
+	for str in rsp['debug']['expandedSynonyms']:
+	   #print str
+	   cnt += str.count('"')
+	print 'Quotes found count = ', cnt
 
-        params = {'q': query, 'fl' : '*,score', 'qf' : 'name', 'defType' : 'synonym_edismax', 'synonyms' : 'true', 'synonyms.constructPhrases' : 'true', 'debugQuery' : 'on' }
-        
-        response = self.solr_connection.query(**params)
-        results = response.results
-
-	   #TODO: Access the 'expandedSynonyms' list from the response and count
-        #      the number of quotes present in the list and compare to value
-        #      passed in, though the anticipated expanded list can also
-        #      be passed in
+	self.assertEqual(cnt, quote_cnt)
 
 if __name__ == '__main__':
     unittest.main()
