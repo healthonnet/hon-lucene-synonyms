@@ -29,6 +29,8 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -609,7 +611,8 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
             }
         }
         
-        List<String> result = new ArrayList<String>();
+        //Make sure result is unique
+        HashSet<String> result = new LinkedHashSet<String>();
         
         for (AlternateQuery alternateQuery : alternateQueries) {
             
@@ -620,7 +623,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
             
             result.add(sb.toString());
         }
-        return result;
+        return new ArrayList<String>(result);
     }
     
     /**
