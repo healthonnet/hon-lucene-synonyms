@@ -438,7 +438,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
 	
         // TODO: make the token stream reusable?
         TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME,
-                new StringReader(origQuery);
+                new StringReader(origQuery));
         
         SortedSetMultimap<Integer, TextInQuery> startPosToTextsInQuery = TreeMultimap.create();
         
