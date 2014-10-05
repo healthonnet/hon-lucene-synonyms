@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
-Current version : 1.3.3 ([changelog][15])
+Current version : 1.3.4 ([changelog][15])
 
 Maintainer
 -----------
@@ -40,35 +40,35 @@ Download the latest JAR file depending on your Solr version:
 <tr style="background:gray;color:white;">
 <td style="padding:0 1em;" align="center"><strong>JAR</strong></td>
 <td style="padding:0 1em;" align="center"><strong>Solr</strong></td>
-</tr>
+</tr>1.3.4
 <tr>
 <td style="padding:0 1em;">
-<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.3-solr-3.x/hon-lucene-synonyms-1.3.3-solr-3.x.jar'>
-hon-lucene-synonyms-1.3.3-solr-3.x.jar
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.4-solr-3.x/hon-lucene-synonyms-1.3.4-solr-3.x.jar'>
+hon-lucene-synonyms-1.3.4-solr-3.x.jar
 </a>
 </td>
 <td style="padding:0 1em;">3.4.0, 3.5.0, and 3.6.x</td>
 </tr>
 <tr style="background:#DDDDDD;">
 <td style="padding:0 1em;">
-<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.3-solr-4.0.0/hon-lucene-synonyms-1.3.3-solr-4.0.0.jar'>
-hon-lucene-synonyms-1.3.3-solr-4.0.0.jar
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.4-solr-4.0.0/hon-lucene-synonyms-1.3.4-solr-4.0.0.jar'>
+hon-lucene-synonyms-1.3.4-solr-4.0.0.jar
 </a>
 </td>
 <td style="padding:0 1em;">4.0.0</td>
 </tr>
 <tr>
 <td style="padding:0 1em;">
-<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.3-solr-4.1.0/hon-lucene-synonyms-1.3.3-solr-4.1.0.jar'>
-hon-lucene-synonyms-1.3.3-solr-4.1.0.jar
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.4-solr-4.1.0/hon-lucene-synonyms-1.3.4-solr-4.1.0.jar'>
+hon-lucene-synonyms-1.3.4-solr-4.1.0.jar
 </a>
 </td>
 <td style="padding:0 1em;">4.1.0 and 4.2.x</td>
 </tr>
 <tr style="background:#DDDDDD;">
 <td style="padding:0 1em;">
-<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.3-solr-4.3.0/hon-lucene-synonyms-1.3.3-solr-4.3.0.jar'>
-hon-lucene-synonyms-1.3.3-solr-4.3.0.jar
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.4-solr-4.3.0/hon-lucene-synonyms-1.3.4-solr-4.3.0.jar'>
+hon-lucene-synonyms-1.3.4-solr-4.3.0.jar
 </a>
 </td>
 <td style="padding:0 1em;">4.3+</td>
@@ -278,6 +278,8 @@ each branch, build it, and put the compiled jar files into the ```target/s3``` d
 
 Basically, my strategy is to maintain a main ```master```/```solr-4.3.x``` branch, with offshoot branches ```solr-3.x```, ```solr-4.0.0```, and ```solr-4.1.0```.  When I need to backport changes to older versions of Solr, I just ```git rebase```  each of the offshoots.
 
+So to build this library, you have to manually rebase all the branches and then make sure the versions are all correct. Yeah, it's a pain. I haven't figured out a better system yet.
+
 Testing
 ---------
 
@@ -298,6 +300,8 @@ nosetests test/
 Changelog
 ------------
 
+* v1.3.4
+  * Fixed [#41][141] thanks to [@rpialum](https://github.com/rpialum).
 * v1.3.3
   * Fixed [#33][133]: synonyms are now weighted equally, regardless of how many there are per word.
   * Fixed [#31][131]: synonyms are no longer given extra weight when using the params ```bq```, ```bf```, and ```boost```.
@@ -360,3 +364,4 @@ Changelog
 [132]: http://github.com/healthonnet/hon-lucene-synonyms/issues/32
 [133]: http://github.com/healthonnet/hon-lucene-synonyms/issues/33
 [134]: http://github.com/healthonnet/hon-lucene-synonyms/issues/34
+[141]: https://github.com/healthonnet/hon-lucene-synonyms/issues/41
