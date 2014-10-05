@@ -9,17 +9,17 @@
             <groupId>org.apache.solr</groupId>
             <artifactId>solr</artifactId>
             <type>war</type>
-            <version>4.3.0</version>
+            <version>4.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
-            <version>4.3.0</version>
+            <version>4.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-            <version>4.3.0</version>
+            <version>4.1.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
