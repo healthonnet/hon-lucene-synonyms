@@ -48,6 +48,7 @@ import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.lucene.queries.function.BoostedQuery;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -191,7 +192,6 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
                     NamedList<?> analyzerAsNamedList = (NamedList<?>) entry.getValue();
 
                     TokenizerFactory tokenizerFactory = null;
-                    TokenFilterFactory filterFactory = null;
                     List<TokenFilterFactory> filterFactories = new LinkedList<TokenFilterFactory>();
 
                     for (Entry<String, ?> analyzerEntry : analyzerAsNamedList) {
@@ -207,30 +207,20 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
                         }
 
                         params.put("luceneMatchVersion", luceneMatchVersion.toString());
-
+                        
                         if (key.equals("tokenizer")) {
-                            try {
-                                tokenizerFactory = TokenizerFactory.forName(className, params);
-                            } catch (IllegalArgumentException iae) {
-                                if (!className.contains(".")) {
-                                    iae.printStackTrace();
-                                }
-                                // Now try by classname instead of SPI keyword
-                                tokenizerFactory = loader.newInstance(className, TokenizerFactory.class, new String[]{}, new Class[] { Map.class }, new Object[] { params });
-                            }
+                        	tokenizerFactory = (TokenizerFactory) loader.newInstance(className, TokenizerFactory.class);
+                        	tokenizerFactory.setLuceneMatchVersion(luceneMatchVersion);
+                        	tokenizerFactory.init(params);
+                            
                             if (tokenizerFactory instanceof ResourceLoaderAware) {
                                 ((ResourceLoaderAware)tokenizerFactory).inform(loader);
                             }
                         } else if (key.equals("filter")) {
-                            try {
-                                filterFactory = TokenFilterFactory.forName(className, params);
-                            } catch (IllegalArgumentException iae) {
-                                if (!className.contains(".")) {
-                                    iae.printStackTrace();
-                                }
-                                // Now try by classname instead of SPI keyword
-                                filterFactory = loader.newInstance(className, TokenFilterFactory.class, new String[]{}, new Class[] { Map.class }, new Object[] { params });
-                            }
+                        	TokenFilterFactory filterFactory = (TokenFilterFactory) loader.newInstance(className, TokenFilterFactory.class);
+                        	filterFactory.setLuceneMatchVersion(luceneMatchVersion);
+                        	filterFactory.init(params);
+                            
                             if (filterFactory instanceof ResourceLoaderAware) {
                                 ((ResourceLoaderAware)filterFactory).inform(loader);
                             }
@@ -289,7 +279,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
     }
     
     @Override
-    public Query getHighlightQuery() throws SyntaxError {
+    public Query getHighlightQuery() throws ParseException {
         return queryToHighlight != null ? queryToHighlight : mainQueryParser.getHighlightQuery();
     }
     
@@ -310,7 +300,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
     
 
     @Override
-    public Query parse() throws SyntaxError {
+    public Query parse() throws ParseException {
         Query query = mainQueryParser.parse();
 
         SolrParams localParams = getLocalParams();
@@ -648,7 +638,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
             synonymQueryParser.setString(alternateQueryText);
             try {
                 result.add(synonymQueryParser.parse());
-            } catch (SyntaxError e) {
+            } catch (ParseException e) {
                 // TODO: better error handling - for now just bail out; ignore this synonym
                 e.printStackTrace(System.err);
             }
