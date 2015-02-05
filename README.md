@@ -3,6 +3,8 @@ Lucene/Solr Synonym-Expanding EDisMax Parser
 
 Current version : 1.3.4 ([changelog][15])
 
+**Note:** This project is not actively maintained anymore, but pull requests are welcome. :smiley:
+
 Maintainer
 -----------
 
