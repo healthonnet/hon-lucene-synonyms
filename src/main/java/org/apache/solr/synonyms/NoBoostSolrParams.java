@@ -46,6 +46,9 @@ public class NoBoostSolrParams extends SolrParams {
     
     @Override
     public String get(String param) {
+        if (param != null && param.equals(DisMaxParams.MM)) {
+            return null;
+        }
         return delegateParams.get(param);
     }
 
