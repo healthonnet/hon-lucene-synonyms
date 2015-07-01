@@ -113,6 +113,13 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
          *    dog bite canine familiaris chomp
          */
         public static final String SYNONYMS_BAG = "synonyms.bag";
+
+        /**
+         * if true, ignore mm param for the synonym query and use it only for the main query
+         * 
+         * @see org.apache.solr.common.params.DisMaxParams#MM
+         */
+        public static final String SYNONYMS_IGNORE_MM = "synonyms.ignoreMM";
     }
 
     /**

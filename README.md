@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser
 =========================
 
-Current version : 1.3.3 ([changelog][15])
+Current version : 1.3.5 ([changelog][15])
 
 Maintainer
 -----------
@@ -256,6 +256,12 @@ The following are parameters that you can use to tweak the synonym expansion.
 <td style="padding:0 1em;"><font size="-1">false</font></td>
 <td style="padding:0 1em;"><font size="-1"><strong>v1.3.2+:</strong> When false (default), this plugin generates additional synonym queries by using the original query string as a template: dog bite => dog bite, canis familiaris bite, dog chomp, canis familiaris chomp. When true a simpler, "bag of terms" query is created from the synonyms. IE dog bite => bite dog chomp canis familiaris. The simpler query will be more performant but loses positional information. Use with synonyms.constructPhrases to keep synonym phrases such as "canis familiaris".
 </tr>
+<tr style="background:#DDDDDD;">
+<td style="padding:0 1em;"><strong><font face="monospace" size="-1">synonyms.ignoreMM</font></strong></td>
+<td style="padding:0 1em;"><font size="-1">boolean</font></td>
+<td style="padding:0 1em;"><font size="-1">false</font></td>
+<td style="padding:0 1em;"><font size="-1"><strong>v1.3.5+:</strong> When false (default), the <strong>mm</strong> param is applied to the original query and to the synonym queries. When true <strong>mm</strong> is ignored for the synonym queries and applied only to the original query.
+</tr>
 </table>
 
 
@@ -298,6 +304,8 @@ nosetests test/
 Changelog
 ------------
 
+* v1.3.5
+  * Added ```synonyms.ignoreMM``` option
 * v1.3.3
   * Fixed [#33][133]: synonyms are now weighted equally, regardless of how many there are per word.
   * Fixed [#31][131]: synonyms are no longer given extra weight when using the params ```bq```, ```bf```, and ```boost```.
