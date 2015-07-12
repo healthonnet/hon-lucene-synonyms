@@ -45,32 +45,32 @@ Download the latest JAR file depending on your Solr version:
 </tr>1.3.4
 <tr>
 <td style="padding:0 1em;">
-<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.4-solr-3.x/hon-lucene-synonyms-1.3.4-solr-3.x.jar'>
-hon-lucene-synonyms-1.3.4-solr-3.x.jar
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.5-solr-3.x/hon-lucene-synonyms-1.3.5-solr-3.x.jar'>
+hon-lucene-synonyms-1.3.5-solr-3.x.jar
 </a>
 </td>
 <td style="padding:0 1em;">3.4.0, 3.5.0, and 3.6.x</td>
 </tr>
 <tr style="background:#DDDDDD;">
 <td style="padding:0 1em;">
-<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.4-solr-4.0.0/hon-lucene-synonyms-1.3.4-solr-4.0.0.jar'>
-hon-lucene-synonyms-1.3.4-solr-4.0.0.jar
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.5-solr-4.0.0/hon-lucene-synonyms-1.3.5-solr-4.0.0.jar'>
+hon-lucene-synonyms-1.3.5-solr-4.0.0.jar
 </a>
 </td>
 <td style="padding:0 1em;">4.0.0</td>
 </tr>
 <tr>
 <td style="padding:0 1em;">
-<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.4-solr-4.1.0/hon-lucene-synonyms-1.3.4-solr-4.1.0.jar'>
-hon-lucene-synonyms-1.3.4-solr-4.1.0.jar
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.5-solr-4.1.0/hon-lucene-synonyms-1.3.5-solr-4.1.0.jar'>
+hon-lucene-synonyms-1.3.5-solr-4.1.0.jar
 </a>
 </td>
 <td style="padding:0 1em;">4.1.0 and 4.2.x</td>
 </tr>
 <tr style="background:#DDDDDD;">
 <td style="padding:0 1em;">
-<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.4-solr-4.3.0/hon-lucene-synonyms-1.3.4-solr-4.3.0.jar'>
-hon-lucene-synonyms-1.3.4-solr-4.3.0.jar
+<a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.5-solr-4.3.0/hon-lucene-synonyms-1.3.5-solr-4.3.0.jar'>
+hon-lucene-synonyms-1.3.5-solr-4.3.0.jar
 </a>
 </td>
 <td style="padding:0 1em;">4.3+</td>
