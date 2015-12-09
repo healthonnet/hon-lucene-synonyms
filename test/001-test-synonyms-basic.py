@@ -6,6 +6,7 @@
 #
 
 import unittest, solr
+from lib import connection_with_core
 
 class TestBasic(unittest.TestCase):
     
@@ -20,10 +21,11 @@ class TestBasic(unittest.TestCase):
     solr_connection = None
     
     def setUp(self):
-        self.solr_connection = solr.SolrConnection('http://localhost:8983/solr')
+        self.solr_connection = connection_with_core(solr.SolrConnection('http://localhost:8983/solr'))
         self.solr_connection.delete_query('*:*')
         self.solr_connection.add_many(self.test_data)
         self.solr_connection.commit()
+
     def tearDown(self):
         self.solr_connection.delete_query('*:*')
         self.solr_connection.commit()
