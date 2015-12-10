@@ -472,7 +472,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                         synonymBag.add(termToAdd);                    	
                     }
                     
-                    //Don't quote sibgle term term synonyms
+                    //Don't quote single term term synonyms
 		    if (constructPhraseQueries && typeAttribute.type().equals("SYNONYM") &&
 			termToAdd.contains(" ")) 
 		    {
