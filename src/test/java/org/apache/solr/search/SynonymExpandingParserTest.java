@@ -1,10 +1,13 @@
 package org.apache.solr.search;
 
+import org.apache.solr.common.SolrException;
+import org.apache.solr.common.util.SimpleOrderedMap;
+import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.response.SolrQueryResponse;
 import org.junit.Test;
 import org.apache.solr.util.AbstractSolrTestCase;
 import org.junit.BeforeClass;
-
-import java.text.MessageFormat;
+import java.util.ArrayList;
 
 public class SynonymExpandingParserTest extends AbstractSolrTestCase {
 
@@ -17,16 +20,16 @@ public class SynonymExpandingParserTest extends AbstractSolrTestCase {
         assertU(adoc("id", "4", "name", "I have a canis."));
         assertU(commit());
     }
-
+//https://issues.apache.org/jira/browse/LUCENE-6400
     public void tQuery(String query, int numFound) {
-        assertQ(req("q", query,
+        SolrQueryRequest request = req("q", query,
                 "fl", "*,score",
                 "qf", "name",
                 "defType", "synonym_edismax",
                 "synonyms", "true",
                 "synonyms.constructPhrases", "true",
-                "debugQuery", "on"),
-                MessageFormat.format("//*[@numFound={0,number,integer}]", numFound));	// tests are xpath queries against solrxml);
+                "debugQuery", "on");
+        assertQuoteCount(request, numFound);
     }
 
     @Test
@@ -34,8 +37,37 @@ public class SynonymExpandingParserTest extends AbstractSolrTestCase {
         /* We have the synonyms:
         dog, pooch, hound, canis familiaris, man's best friend
         */
-//        tQuery("\"dog\"",3);
-//        tQuery("\"canis familiaris\"",3);
-        tQuery("caanis familiaris",3);
+//        tQuery("\"dog\"", 10);
+//        tQuery("\"pooch\"", 10);
+//        tQuery("\"hound\"", 10);
+//        tQuery("\"canis familiaris\"", 10);
+//
+//        tQuery("dog",4);
+//        tQuery("pooch",4);
+//        tQuery("hound",4);
+        tQuery("canis familiaris",4);
     }
+
+    /** Validates a query matches some XPath test expressions and closes the query */
+    public static void assertQuoteCount(SolrQueryRequest req, int quoteCount) {
+        try {
+            SolrQueryResponse rsp = h.queryAndResponse("/search",req);
+            SimpleOrderedMap debug = (SimpleOrderedMap)rsp.getValues().get("debug");
+            ArrayList<String> expandedSynonyms = (ArrayList<String>) debug.get("expandedSynonyms");
+            AbstractSolrTestCase.log.info(expandedSynonyms.toString());
+            int count = 0;
+            for (String synonym : expandedSynonyms) {
+                count += synonym.length() - synonym.replace("\"", "").length();
+            }
+            AbstractSolrTestCase.log.info("Quotes found count = " + count);
+            req.close();
+            assertEquals(quoteCount, count);
+        } catch (Exception e2) {
+            req.close();
+            SolrException.log(log,"REQUEST FAILED: " + req.getParamString(), e2);
+            throw new RuntimeException("Exception during query", e2);
+        }
+    }
+
+
 }

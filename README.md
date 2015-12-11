@@ -307,7 +307,9 @@ nosetests test/
 
 Changelog
 ------------
-
+* v1.4
+  * Updated to support Solr 5.3.1.
+  * Note that as of Solr 5.2.0 when synonyms are parsed, orginial terms are now correctly marked as type `word` instead of type `synonym`.
 * v1.3.5
   * Added ```synonyms.ignoreMM``` option
 * v1.3.4
