@@ -72,8 +72,13 @@ solrdir = 'target/webapp/' + tgz_filename
 tar = tarfile.open(local_filename)
 tar.extractall(path='target/webapp/')
 os.mkdir(solrdir + '/example/myjar')
-if version_compare(solr_version, '5.3.1') >= 0:
-  os.system('cp target/hon-lucene-synonyms-*.jar %s/server/solr-webapp/webapp/WEB-INF/lib' % solrdir)
+if version_compare(solr_version, '5.0.0') >= 0:
+  if version_compare(solr_version, '5.3.1') >= 0:
+    os.system('cp target/hon-lucene-synonyms-*.jar %s/server/solr-webapp/webapp/WEB-INF/lib' % solrdir)
+  else:
+    os.system('cd %s/example/myjar; jar -xf ../../server/webapps/solr.war; cd -' % solrdir)
+    os.system('cp target/hon-lucene-synonyms-*.jar %s/example/myjar/WEB-INF/lib' % solrdir)
+    os.system('cd %s/example/myjar; jar -cf ../../server/webapps/solr.war *; cd -' % solrdir)
 else:
   os.system('cd %s/example/myjar; jar -xf ../webapps/solr.war; cd -' % solrdir)
   os.system('cp target/hon-lucene-synonyms-*.jar %s/example/myjar/WEB-INF/lib' % solrdir)
@@ -81,7 +86,7 @@ else:
 
 # they changed the location of the example conf dir in solr 4.0.0
 
-if version_compare(solr_version, '5.3.1') >= 0:
+if version_compare(solr_version, '5.0.0') >= 0:
   confdir = 'sample_techproducts_configs/conf'
   solrexamplepath = '/server/solr/configsets/'
   shutil.copy('examples/example_synonym_file.txt', solrdir + solrexamplepath + confdir)
@@ -106,11 +111,18 @@ fileout.write(filetext.replace('</config>', conf_to_add + '</config>'))
 fileout.close()
 
 debug = ('-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=%s' % args['--debug-port']) if '--debug' in args else ''
-if version_compare(solr_version, '5.3.1') >= 0:
-  cmd = 'cd %(solrdir)s; bin/solr -e techproducts -f' % {'solrdir': solrdir}
+if version_compare(solr_version, '5.0.0') >= 0:
+  if version_compare(solr_version, '5.3.1') >= 0:
+    cmd = 'cd %(solrdir)s; bin/solr -e techproducts -f' % {'solrdir': solrdir}
+  else:
+    cmd = 'cd %(solrdir)s; bin/solr -e techproducts' % {'solrdir': solrdir}
+    stop_cmd = '%(solrdir)s/bin/solr stop' % {'solrdir': solrdir}
 else:
   cmd = 'cd %(solrdir)s/example; java %(debug)s -Djetty.port=%(port)s -jar start.jar' % \
       {'debug' : debug, 'solrdir' : solrdir, 'port' : args['--port']}
 
 print "Running jetty with command: " + cmd
 os.system(cmd)
+if version_compare(solr_version, '5.3.1') < 0 >= version_compare(solr_version, '5.0.0'):
+  print "To stop: " + stop_cmd
+
