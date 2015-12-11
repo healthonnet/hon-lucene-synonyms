@@ -4,6 +4,7 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.util.SimpleOrderedMap;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.apache.solr.util.AbstractSolrTestCase;
 import org.junit.BeforeClass;
@@ -20,7 +21,7 @@ public class SynonymExpandingParserTest extends AbstractSolrTestCase {
         assertU(adoc("id", "4", "name", "I have a canis."));
         assertU(commit());
     }
-//https://issues.apache.org/jira/browse/LUCENE-6400
+
     public void tQuery(String query, int numFound) {
         SolrQueryRequest request = req("q", query,
                 "fl", "*,score",
@@ -37,14 +38,22 @@ public class SynonymExpandingParserTest extends AbstractSolrTestCase {
         /* We have the synonyms:
         dog, pooch, hound, canis familiaris, man's best friend
         */
-//        tQuery("\"dog\"", 10);
-//        tQuery("\"pooch\"", 10);
-//        tQuery("\"hound\"", 10);
-//        tQuery("\"canis familiaris\"", 10);
-//
-//        tQuery("dog",4);
-//        tQuery("pooch",4);
-//        tQuery("hound",4);
+        tQuery("\"dog\"", 10);
+        tQuery("\"pooch\"", 10);
+        tQuery("\"hound\"", 10);
+        tQuery("\"canis familiaris\"", 10);
+
+        tQuery("dog",4);
+        tQuery("pooch",4);
+        tQuery("hound",4);
+        tQuery("canis familiaris",2);
+    }
+
+    @Test
+    @Ignore
+    public void test_issue_51() {
+        /* https://github.com/healthonnet/hon-lucene-synonyms/issues/51
+        */
         tQuery("canis familiaris",4);
     }
 

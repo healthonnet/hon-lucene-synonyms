@@ -3,28 +3,28 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.healthonnet.lucene</groupId>
 	<artifactId>hon-lucene-synonyms</artifactId>
-	<version>1.3.5-solr-5.1.0</version>
+	<version>1.3.5-solr-5.3.1</version>
 	<dependencies>
     <dependency>
         <groupId>org.apache.solr</groupId>
         <artifactId>solr-core</artifactId>
-        <version>5.1.0</version>
+        <version>5.3.1</version>
     </dependency>
     <dependency>
         <groupId>org.apache.solr</groupId>
         <artifactId>solr-solrj</artifactId>
-        <version>5.1.0</version>
+        <version>5.3.1</version>
     </dependency>
     <dependency>
       <scope>test</scope>
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-test-framework</artifactId>
-      <version>5.1.0</version>
+      <version>5.3.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-test-framework</artifactId>
-      <version>5.1.0</version>
+      <version>5.3.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
