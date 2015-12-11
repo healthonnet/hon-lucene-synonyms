@@ -72,12 +72,12 @@ import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 /**
- * 
+ *
  * Main implementation of the synonym-expanding ExtendedDismaxQParser plugin for Solr.
- * 
+ *
  * This parser was originally derived from ExtendedDismaxQParser, which itself was derived from the 
  * DismaxQParser from Solr.
- * 
+ *
  * @see http://github.com/healthonnet/hon-lucene-synonyms
  */
 public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin implements
@@ -88,12 +88,12 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
      * Convenience class for parameters
      */
     public static class Params {
-        
+
         /**
          * @see org.apache.solr.search.ExtendedDismaxQParser.DMP#MULT_BOOST
          */
         public static String MULT_BOOST = "boost";
-        
+
         public static final String SYNONYMS = "synonyms";
         public static final String SYNONYMS_ANALYZER = "synonyms.analyzer";
         public static final String SYNONYMS_ORIGINAL_BOOST = "synonyms.originalBoost";
@@ -101,7 +101,7 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
         public static final String SYNONYMS_DISABLE_PHRASE_QUERIES = "synonyms.disablePhraseQueries";
         public static final String SYNONYMS_CONSTRUCT_PHRASES = "synonyms.constructPhrases";
         public static final String SYNONYMS_IGNORE_QUERY_OPERATORS = "synonyms.ignoreQueryOperators";
-        /** 
+        /**
          * instead of splicing synonyms into the original query string, ie
          *    dog bite
          *    canine familiaris bite
@@ -117,7 +117,7 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
 
         /**
          * if true, ignore mm param for the synonym query and use it only for the main query
-         * 
+         *
          * @see org.apache.solr.common.params.DisMaxParams#MM
          */
         public static final String SYNONYMS_IGNORE_MM = "synonyms.ignoreMM";
@@ -135,10 +135,10 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
          * from it to any field in our schema.
          */
         static final String IMPOSSIBLE_FIELD_NAME = "\uFFFC\uFFFC\uFFFC";
-        
-        static final Pattern COMPLEX_QUERY_OPERATORS_PATTERN = Pattern.compile("(?:\\*|\\s-\\b|\\b(?:OR|AND|\\+)\\b)"); 
-    }    
-    
+
+        static final Pattern COMPLEX_QUERY_OPERATORS_PATTERN = Pattern.compile("(?:\\*|\\s-\\b|\\b(?:OR|AND|\\+)\\b)");
+    }
+
     private NamedList<?> args;
     private Map<String, Analyzer> synonymAnalyzers;
     private Version luceneMatchVersion = null;
@@ -159,16 +159,16 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
         }
         return new SynonymExpandingExtendedDismaxQParser(qstr, localParams, params, req, synonymAnalyzers);
     }
-    
+
     private Map<String, String> convertNamedListToMap(NamedList<?> namedList) {
         Map<String, String> result = new HashMap<String, String>();
-        
+
         for (Entry<String, ?> entry : namedList) {
             if (entry.getValue() instanceof String) {
                 result.put(entry.getKey(), (String)entry.getValue());
             }
         }
-        
+
         return result;
     }
 
@@ -272,18 +272,18 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
 
     private Map<String, Analyzer> synonymAnalyzers;
     private Query queryToHighlight;
-    
+
     /**
      * variables used purely for debugging
      */
     private List<String> expandedSynonyms;
     private ReasonForNotExpandingSynonyms reasonForNotExpandingSynonyms;
-    
+
     public SynonymExpandingExtendedDismaxQParser(String qstr, SolrParams localParams, SolrParams params,
-            SolrQueryRequest req, Map<String, Analyzer> synonymAnalyzers) {
+                                                 SolrQueryRequest req, Map<String, Analyzer> synonymAnalyzers) {
         super(qstr, localParams, params, req);
         mainQueryParser = new ExtendedDismaxQParser(qstr, localParams, params, req);
-        
+
         // ensure the synonyms aren't artificially boosted
         synonymQueryParser = new ExtendedDismaxQParser(qstr, NoBoostSolrParams.wrap(localParams),
                 NoBoostSolrParams.wrap(params), req);
@@ -292,14 +292,14 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
 
     @Override
     public String[] getDefaultHighlightFields() {
-      return mainQueryParser.getDefaultHighlightFields();
+        return mainQueryParser.getDefaultHighlightFields();
     }
-    
+
     @Override
     public Query getHighlightQuery() throws SyntaxError {
         return queryToHighlight != null ? queryToHighlight : mainQueryParser.getHighlightQuery();
     }
-    
+
     @Override
     public void addDebugInfo(NamedList<Object> debugInfo) {
         if (queryToHighlight != null) {
@@ -314,7 +314,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         debugInfo.add("mainQueryParser", createDebugInfo(mainQueryParser));
         debugInfo.add("synonymQueryParser", createDebugInfo(synonymQueryParser));
     }
-    
+
 
     @Override
     public Query parse() throws SyntaxError {
@@ -329,7 +329,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
             reasonForNotExpandingSynonyms = PluginDisabled;
             return query;
         }
-        
+
         // check to make sure the analyzer exists
         String analyzerName = solrParams.get(Params.SYNONYMS_ANALYZER, null);
         if (analyzerName == null) { // no synonym analyzer specified
@@ -341,14 +341,14 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                 return query;
             }
         }
-        
+
         Analyzer synonymAnalyzer = synonymAnalyzers.get(analyzerName);
-        
+
         if (synonymAnalyzer == null) { // couldn't find analyzer
             reasonForNotExpandingSynonyms = AnalyzerNotFound;
             return query;
         }
-        
+
         if (solrParams.getBool(Params.SYNONYMS_DISABLE_PHRASE_QUERIES, false)
                 && getQueryStringFromParser().indexOf('"') != -1) {
             // disable if a phrase query is detected, i.e. there's a '"'
@@ -368,12 +368,12 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
     }
 
     private void attemptToApplySynonymsToQuery(Query query, SolrParams solrParams, Analyzer synonymAnalyzer) throws IOException {
-        
+
         List<Query> synonymQueries = generateSynonymQueries(synonymAnalyzer, solrParams);
-        
+
         boolean ignoreQueryOperators = solrParams.getBool(Params.SYNONYMS_IGNORE_QUERY_OPERATORS, false);
         boolean hasComplexQueryOperators = ignoreQueryOperators ? false : Const.COMPLEX_QUERY_OPERATORS_PATTERN.matcher(getQueryStringFromParser()).find();
-        
+
         if (hasComplexQueryOperators) { // TODO: support complex operators
             reasonForNotExpandingSynonyms = HasComplexQueryOperators;
             return;
@@ -381,17 +381,17 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
             reasonForNotExpandingSynonyms = DidntFindAnySynonyms;
             return;
         }
-        
+
         float originalBoost = solrParams.getFloat(Params.SYNONYMS_ORIGINAL_BOOST, 1.0F);
         float synonymBoost = solrParams.getFloat(Params.SYNONYMS_SYNONYM_BOOST, 1.0F);
-        
+
         applySynonymQueries(query, synonymQueries, originalBoost, synonymBoost);
     }
 
     /**
      * Find the main query and its surrounding clause, make it SHOULD instead of MUST and append a bunch
      * of other SHOULDs to it, then wrap it in a MUST
-     * 
+     *
      * E.g. +(text:dog) becomes
      * +((text:dog)^1.5 ((text:hound) (text:pooch))^1.2)
      * @param query
@@ -405,26 +405,26 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
             applySynonymQueries(((BoostedQuery) query).getQuery(), synonymQueries, originalBoost, synonymBoost);
         } else if (query instanceof BooleanQuery) {
             BooleanQuery booleanQuery =(BooleanQuery) query;
-            
+
             for (BooleanClause booleanClause : booleanQuery.getClauses()) {
                 if (Occur.MUST == booleanClause.getOccur()) {
                     // standard 'must occur' clause - i.e. the main user query    
-                    
+
                     Query mainUserQuery = booleanClause.getQuery();
                     mainUserQuery.setBoost(originalBoost);
-                    
+
                     // add all synonyms queries separately, each with the synonym boost
                     BooleanQuery combinedQuery = new BooleanQuery();
                     combinedQuery.add(mainUserQuery, Occur.SHOULD);
-                    
+
                     for (Query synonymQuery : synonymQueries) {
                         BooleanQuery booleanSynonymQuery = new BooleanQuery();
                         booleanSynonymQuery.add(synonymQuery, Occur.SHOULD);
                         booleanSynonymQuery.setBoost(synonymBoost);
-                        
+
                         combinedQuery.add(booleanSynonymQuery, Occur.SHOULD);
                     }
-                    
+
                     booleanClause.setQuery(combinedQuery);
                     queryToHighlight = combinedQuery;
                 }
@@ -440,60 +440,60 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
      */
     private List<Query> generateSynonymQueries(Analyzer synonymAnalyzer, SolrParams solrParams) throws IOException {
 
-	String origQuery = getQueryStringFromParser();
-	int queryLen = origQuery.length();
-	
+        String origQuery = getQueryStringFromParser();
+        int queryLen = origQuery.length();
+
         // TODO: make the token stream reusable?
         TokenStream tokenStream = synonymAnalyzer.tokenStream(Const.IMPOSSIBLE_FIELD_NAME,
                 new StringReader(origQuery));
-        
+
         SortedSetMultimap<Integer, TextInQuery> startPosToTextsInQuery = TreeMultimap.create();
-        
-        
+
+
         boolean constructPhraseQueries = solrParams.getBool(Params.SYNONYMS_CONSTRUCT_PHRASES, false);
-        
+
         boolean bag = solrParams.getBool(Params.SYNONYMS_BAG, false);
         List<String> synonymBag = new ArrayList<String>();
-        
+
         try {
             tokenStream.reset();
             while (tokenStream.incrementToken()) {
                 CharTermAttribute term = tokenStream.getAttribute(CharTermAttribute.class);
                 OffsetAttribute offsetAttribute = tokenStream.getAttribute(OffsetAttribute.class);
                 TypeAttribute typeAttribute = tokenStream.getAttribute(TypeAttribute.class);
-                
+
                 if (!typeAttribute.type().equals("shingle")) {
                     // ignore shingles; we only care about synonyms and the original text
                     // TODO: filter other types as well
-                    
+
                     String termToAdd = term.toString();
-                    
+
                     if (typeAttribute.type().equals("SYNONYM")) {
-                        synonymBag.add(termToAdd);                    	
+                        synonymBag.add(termToAdd);
                     }
-                    
-                    //Don't quote sibgle term term synonyms
-		    if (constructPhraseQueries && typeAttribute.type().equals("SYNONYM") &&
-			termToAdd.contains(" ")) 
-		    {
-		    	//Don't Quote when original is already surrounded by quotes
-		    	if( offsetAttribute.startOffset()==0 || 
-		    	    offsetAttribute.endOffset() == queryLen ||
-		    	    origQuery.charAt(offsetAttribute.startOffset()-1)!='"' || 
-		    	    origQuery.charAt(offsetAttribute.endOffset())!='"')
-		    	{
-		    	    // make a phrase out of the synonym
-		    	    termToAdd = new StringBuilder(termToAdd).insert(0,'"').append('"').toString();
-		    	}
-		    }
+
+                    //Don't quote single term term synonyms
+                    if (constructPhraseQueries && typeAttribute.type().equals("SYNONYM") &&
+                            termToAdd.contains(" "))
+                    {
+                        //Don't Quote when original is already surrounded by quotes
+                        if( offsetAttribute.startOffset()==0 ||
+                                offsetAttribute.endOffset() == queryLen ||
+                                origQuery.charAt(offsetAttribute.startOffset()-1)!='"' ||
+                                origQuery.charAt(offsetAttribute.endOffset())!='"')
+                        {
+                            // make a phrase out of the synonym
+                            termToAdd = new StringBuilder(termToAdd).insert(0,'"').append('"').toString();
+                        }
+                    }
                     if (!bag) {
                         // create a graph of all possible synonym combinations,
                         // e.g. dog bite, hound bite, dog nibble, hound nibble, etc.
-	                    TextInQuery textInQuery = new TextInQuery(termToAdd, 
-	                            offsetAttribute.startOffset(), 
-	                            offsetAttribute.endOffset());
-	                    
-	                    startPosToTextsInQuery.put(offsetAttribute.startOffset(), textInQuery);
+                        TextInQuery textInQuery = new TextInQuery(termToAdd,
+                                offsetAttribute.startOffset(),
+                                offsetAttribute.endOffset());
+
+                        startPosToTextsInQuery.put(offsetAttribute.startOffset(), textInQuery);
                     }
                 }
             }
@@ -507,53 +507,53 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                 throw new RuntimeException("uncaught exception in synonym processing", e);
             }
         }
-               
+
         List<String> alternateQueries = synonymBag;
-        
+
         if (!bag) {
             // use a graph rather than a bag
-	        List<List<TextInQuery>> sortedTextsInQuery = new ArrayList<List<TextInQuery>>(
-	                startPosToTextsInQuery.values().size());
-	        for (Collection<TextInQuery> sortedSet : startPosToTextsInQuery.asMap().values()) {
-	            sortedTextsInQuery.add(new ArrayList<TextInQuery>(sortedSet));
-	        }
-	        
-	        // have to use the start positions and end positions to figure out all possible combinations
-	        alternateQueries = buildUpAlternateQueries(solrParams, sortedTextsInQuery);
+            List<List<TextInQuery>> sortedTextsInQuery = new ArrayList<List<TextInQuery>>(
+                    startPosToTextsInQuery.values().size());
+            for (Collection<TextInQuery> sortedSet : startPosToTextsInQuery.asMap().values()) {
+                sortedTextsInQuery.add(new ArrayList<TextInQuery>(sortedSet));
+            }
+
+            // have to use the start positions and end positions to figure out all possible combinations
+            alternateQueries = buildUpAlternateQueries(solrParams, sortedTextsInQuery);
         }
-        
+
         // save for debugging purposes
         expandedSynonyms = alternateQueries;
-        
+
         return createSynonymQueries(solrParams, alternateQueries);
     }
 
     /**
      * From a list of texts in the original query that were deemed to be interested (i.e. synonyms or the original text
      * itself), build up all possible alternate queries as strings.
-     * 
+     *
      * For instance, if the query is "dog bite" and the synonyms are dog -> [dog,hound,pooch] and bite -> [bite,nibble],
      * then the result will be:
-     * 
+     *
      * dog bite
      * hound bite
      * pooch bite
      * dog nibble
      * hound nibble
      * pooch nibble
-     * 
+     *
      * @param solrParams
      * @param textsInQueryLists
      * @return
      */
     private List<String> buildUpAlternateQueries(SolrParams solrParams, List<List<TextInQuery>> textsInQueryLists) {
-        
+
         String originalUserQuery = getQueryStringFromParser();
-        
+
         if (textsInQueryLists.isEmpty()) {
             return Collections.emptyList();
         }
-        
+
         // initialize results
         List<AlternateQuery> alternateQueries = new ArrayList<AlternateQuery>();
         for (TextInQuery textInQuery : textsInQueryLists.get(0)) {
@@ -563,39 +563,39 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                     .append(textInQuery.getText());
             alternateQueries.add(new AlternateQuery(stringBuilder, textInQuery.getEndPosition()));
         }
-        
+
         for (int i = 1; i < textsInQueryLists.size(); i++) {
             List<TextInQuery> textsInQuery = textsInQueryLists.get(i);
-            
+
             // compute the length in advance, because we'll be adding new ones as we go
             int alternateQueriesLength = alternateQueries.size();
-            
+
             for (int j = 0; j < alternateQueriesLength; j++) {
-                
+
                 // When we're working with a lattice, assuming there's only one path to take in the next column,
                 // we can (and MUST) use all the original objects in the current column.
                 // It's only when we have >1 paths in the next column that we need to start taking copies.
                 // So if a lot of this logic seems tortured, it's only because I'm trying to minimize object
                 // creation.
                 AlternateQuery originalAlternateQuery = alternateQueries.get(j);
-                
+
                 boolean usedFirst = false;
-                
+
                 for (int k = 0; k < textsInQuery.size(); k++) {
-                    
+
                     TextInQuery textInQuery =  textsInQuery.get(k);
                     if (originalAlternateQuery.getEndPosition() > textInQuery.getStartPosition()) {
                         // cannot be appended, e.g. "canis" token in "canis familiaris"
                         continue;
                     }
-                    
+
                     AlternateQuery currentAlternateQuery;
-                    
+
                     if (!usedFirst) {
                         // re-use the existing object
                         usedFirst = true;
                         currentAlternateQuery = originalAlternateQuery;
-                        
+
                         if (k < textsInQuery.size() - 1) {
                             // make a defensive clone for future usage
                             originalAlternateQuery = (AlternateQuery) currentAlternateQuery.clone();
@@ -617,41 +617,41 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                 }
             }
         }
-        
+
         //Make sure result is unique
         HashSet<String> result = new LinkedHashSet<String>();
-        
+
         for (AlternateQuery alternateQuery : alternateQueries) {
-            
+
             StringBuilder sb = alternateQuery.getStringBuilder();
-            
+
             // append whatever text followed the last token, e.g. '"'
             sb.append(originalUserQuery.subSequence(alternateQuery.getEndPosition(), originalUserQuery.length()));
-            
+
             result.add(sb.toString());
         }
         return new ArrayList<String>(result);
     }
-    
+
     /**
      * From a list of alternate queries in text format, parse them using the default
      * ExtendedSolrQueryParser and return the queries.
-     * 
+     *
      * @param solrParams
      * @param alternateQueryTexts
      * @return
      */
     private List<Query> createSynonymQueries(SolrParams solrParams, List<String> alternateQueryTexts) {
-        
+
         String nullsafeOriginalString = getQueryStringFromParser();
-        
+
         List<Query> result = new ArrayList<Query>();
         for (String alternateQueryText : alternateQueryTexts) {
-            if (alternateQueryText.equalsIgnoreCase(nullsafeOriginalString)) { 
+            if (alternateQueryText.equalsIgnoreCase(nullsafeOriginalString)) {
                 // alternate query is the same as what the user entered
                 continue;
             }
-            
+
             synonymQueryParser.setString(alternateQueryText);
             try {
                 result.add(synonymQueryParser.parse());
@@ -660,7 +660,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                 e.printStackTrace(System.err);
             }
         }
-        
+
         return result;
     }
 
@@ -669,9 +669,9 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
      * @return the entered query string fetched from QParser.getString()
      */
     private String getQueryStringFromParser() {
-      return (getString() == null) ? "" : getString();
+        return (getString() == null) ? "" : getString();
     }
-    
+
     /**
      * Convenience method to simplify code
      * @param qparser
