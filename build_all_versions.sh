@@ -7,7 +7,7 @@
 # Writes to directory target/s3
 #
 
-SOLR_VERSIONS='3.x 4.0.0 4.1.0 4.3.0';
+SOLR_VERSIONS='3.x 4.0.0 4.1.0 4.3.0 5.3.1';
 PLUGIN_VERSION=`cat pom.xml | grep version | head -1 | python -c "import re, sys; print re.search('>(.*?)-solr',sys.stdin.read()).group(1)"`
 
 echo -e "\nPlugin version is ${PLUGIN_VERSION}, building for Solr versions ${SOLR_VERSIONS}...\n"

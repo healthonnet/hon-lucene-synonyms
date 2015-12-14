@@ -72,19 +72,37 @@ solrdir = 'target/webapp/' + tgz_filename
 tar = tarfile.open(local_filename)
 tar.extractall(path='target/webapp/')
 os.mkdir(solrdir + '/example/myjar')
-os.system('cd %s/example/myjar; jar -xf ../webapps/solr.war; cd -' % solrdir)
-os.system('cp target/hon-lucene-synonyms-*.jar %s/example/myjar/WEB-INF/lib' % solrdir)
-os.system('cd %s/example/myjar; jar -cf ../webapps/solr.war *; cd -' % solrdir)
+if version_compare(solr_version, '5.0.0') >= 0:
+  if version_compare(solr_version, '5.3.1') >= 0:
+    os.system('cp target/hon-lucene-synonyms-*.jar %s/server/solr-webapp/webapp/WEB-INF/lib' % solrdir)
+  else:
+    os.system('cd %s/example/myjar; jar -xf ../../server/webapps/solr.war; cd -' % solrdir)
+    os.system('cp target/hon-lucene-synonyms-*.jar %s/example/myjar/WEB-INF/lib' % solrdir)
+    os.system('cd %s/example/myjar; jar -cf ../../server/webapps/solr.war *; cd -' % solrdir)
+else:
+  os.system('cd %s/example/myjar; jar -xf ../webapps/solr.war; cd -' % solrdir)
+  os.system('cp target/hon-lucene-synonyms-*.jar %s/example/myjar/WEB-INF/lib' % solrdir)
+  os.system('cd %s/example/myjar; jar -cf ../webapps/solr.war *; cd -' % solrdir)
 
 # they changed the location of the example conf dir in solr 4.0.0
-confdir = 'collection1/conf' if version_compare(solr_version, '4.0.0') >= 0 else 'conf'
-shutil.copy('examples/example_synonym_file.txt', solrdir + '/example/solr/' + confdir)
+
+if version_compare(solr_version, '5.0.0') >= 0:
+  confdir = 'sample_techproducts_configs/conf'
+  solrexamplepath = '/server/solr/configsets/'
+  shutil.copy('examples/example_synonym_file.txt', solrdir + solrexamplepath + confdir)
+else:
+  if version_compare(solr_version, '4.0.0') >= 0:
+    confdir = 'collection1/conf'
+  else:
+    confdir = 'conf'
+  solrexamplepath = '/example/solr/'
+  shutil.copy('examples/example_synonym_file.txt', solrdir + solrexamplepath + confdir)
 
 # add the config to the config file
 conf_to_add = open('examples/example_config.xml', 'r').read()
 
 
-conf_filename = solrdir + '/example/solr/' + confdir + '/solrconfig.xml'
+conf_filename = solrdir + solrexamplepath + confdir + '/solrconfig.xml'
 filein = open(conf_filename,'r')
 filetext = filein.read()
 filein.close()
@@ -92,9 +110,12 @@ fileout = open(conf_filename,'w')
 fileout.write(filetext.replace('</config>', conf_to_add + '</config>'))
 fileout.close()
 
-debug = ('-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=%s' % args['--debug-port']) if '--debug' in args else '' 
-cmd = 'cd %(solrdir)s/example; java %(debug)s -Djetty.port=%(port)s -jar start.jar' % \
-    {'debug' : debug, 'solrdir' : solrdir, 'port' : args['--port']}
+debug = ('-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=%s' % args['--debug-port']) if '--debug' in args else ''
+if version_compare(solr_version, '5.0.0') >= 0:
+    cmd = 'cd %(solrdir)s; bin/solr -e techproducts; bin/solr stop; bin/solr start -f -p 8983 -s "example/techproducts/solr"' % {'solrdir': solrdir}
+else:
+  cmd = 'cd %(solrdir)s/example; java %(debug)s -Djetty.port=%(port)s -jar start.jar' % \
+      {'debug' : debug, 'solrdir' : solrdir, 'port' : args['--port']}
 
 print "Running jetty with command: " + cmd
 os.system(cmd)

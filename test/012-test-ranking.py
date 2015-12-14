@@ -8,6 +8,8 @@
 
 import unittest, solr, urllib, time
 
+from lib import connection_with_core
+
 class TestBasic(unittest.TestCase):
     
     url = 'http://localhost:8983/solr'
@@ -21,7 +23,7 @@ class TestBasic(unittest.TestCase):
     solr_connection = None
     
     def setUp(self):
-        self.solr_connection = solr.SolrConnection(self.url)
+        self.solr_connection = connection_with_core(solr.SolrConnection(self.url))
         self.solr_connection.delete_query('*:*')
         self.solr_connection.add_many(self.test_data)
         self.solr_connection.commit()
