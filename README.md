@@ -307,7 +307,9 @@ nosetests test/
 
 Changelog
 ------------
-
+* v
+  * Updated to support Solr 5.3.1.
+  * Note that as of Lucene 5.2.0 when synonyms are parsed, original terms are now correctly marked as type `word` instead of type `synonym` [LUCENE-6400](https://issues.apache.org/jira/browse/LUCENE-6400).
 * v1.3.5
   * Added ```synonyms.ignoreMM``` option
 * v1.3.4

@@ -1,0 +1,15 @@
+dog,hound,pooch,canis familiaris,man's best friend
+back pack=>backpack
+
+# issue 32
+e-commerce,electronic commerce
+
+# issues 9 and 26
+bfo, brystforstørrende operation
+血と骨,Blood and Bones
+
+# issue 29
+Swedish turnips, rutabagas
+
+# issue 31 - need two and only two single-word synonyms
+jigglypuff, purin

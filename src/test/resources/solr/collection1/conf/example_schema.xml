@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<schema name="hon-lucene-synonyms" version="1.5">
+  <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
+  <field name="name" type="text_general" indexed="true" stored="true"/>
+  <field name="cat" type="string" indexed="true" stored="true" multiValued="true"/>
+  <field name="last_modified" type="date" indexed="true" stored="true"/>
+  <uniqueKey>id</uniqueKey>
+  <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
+  <fieldType name="date" class="solr.TrieDateField" precisionStep="0" positionIncrementGap="0"/>
+  <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100">
+    <analyzer type="index">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+    </analyzer>
+    <analyzer type="query">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+    </analyzer>
+  </fieldType>
+</schema>

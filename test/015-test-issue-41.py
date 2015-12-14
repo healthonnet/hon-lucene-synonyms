@@ -7,6 +7,9 @@
 
 from urllib2 import *
 import unittest, solr, urllib, time
+
+from lib import connection_with_core, first_core_of_connection
+
 class TestBasic(unittest.TestCase):
     
   #
@@ -25,7 +28,7 @@ class TestBasic(unittest.TestCase):
     solr_connection = None
     
     def setUp(self):
-        self.solr_connection = solr.SolrConnection(self.url)
+        self.solr_connection = connection_with_core(solr.SolrConnection(self.url))
         self.solr_connection.delete_query('*:*')
         self.solr_connection.add_many(self.test_data)
         self.solr_connection.commit()
@@ -44,27 +47,28 @@ class TestBasic(unittest.TestCase):
         self.tst_query('dog', 4)
         self.tst_query('pooch', 4)
         self.tst_query('hound', 4)
-        self.tst_query('canis familiaris', 4)
-        
+        self.tst_query('canis familiaris', 2)
+
 
     def tst_query(self, query, quote_cnt):
-	#Properly format spaces in the query
-	query = urllib.quote_plus(query)
-	connstr = self.url +'/select?q='+query+'&fl=*,score&qf=name&defType=synonym_edismax&synonyms=true&synonyms.constructPhrases=true&debugQuery=on'
-	#Add wt=python so response is formatted as python readable
-	conn = urlopen(connstr+'&wt=python')
-	rsp = eval( conn.read() )
-     #print "number of matches=", rsp['response']['numFound']
-	print rsp['debug']['expandedSynonyms']
-	
-	#Count the number of quotes in our expandedSynonyms Debug element
-	cnt = 0
-	for str in rsp['debug']['expandedSynonyms']:
-	   #print str
-	   cnt += str.count('"')
-	print 'Quotes found count = ', cnt
+        #Properly format spaces in the query
+        #
+        query = urllib.quote_plus(query)
+        connstr = self.url + '/' + first_core_of_connection(solr.SolrConnection(self.url)) +'/select?q='+query+'&fl=*,score&qf=name&defType=synonym_edismax&synonyms=true&synonyms.constructPhrases=true&debugQuery=on'
+        #Add wt=python so response is formatted as python readable
+        conn = urlopen(connstr+'&wt=python')
+        rsp = eval( conn.read() )
+        #print "number of matches=", rsp['response']['numFound']
+        print rsp['debug']['expandedSynonyms']
 
-	self.assertEqual(cnt, quote_cnt)
+        #Count the number of quotes in our expandedSynonyms Debug element
+        cnt = 0
+        for str in rsp['debug']['expandedSynonyms']:
+            #print str
+            cnt += str.count('"')
+        print 'Quotes found count = ', cnt
+
+        self.assertEqual(cnt, quote_cnt)
 
 if __name__ == '__main__':
     unittest.main()
