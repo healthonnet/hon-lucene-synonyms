@@ -93,8 +93,9 @@ fileout.write(filetext.replace('</config>', conf_to_add + '</config>'))
 fileout.close()
 
 debug = ('-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=%s' % args['--debug-port']) if '--debug' in args else '' 
-cmd = 'cd %(solrdir)s/example; java %(debug)s -Djetty.port=%(port)s -jar start.jar' % \
+cmd = 'cd %(solrdir)s/example; java %(debug)s -Dwhatever=unique_process_id -Djetty.port=%(port)s -jar start.jar' % \
     {'debug' : debug, 'solrdir' : solrdir, 'port' : args['--port']}
 
 print "Running jetty with command: " + cmd
+
 os.system(cmd)

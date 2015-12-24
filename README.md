@@ -1,4 +1,4 @@
-Lucene/Solr Synonym-Expanding EDisMax Parser
+Lucene/Solr Synonym-Expanding EDisMax Parser [![Build Status](https://travis-ci.org/healthonnet/hon-lucene-synonyms.svg)](https://travis-ci.org/healthonnet/hon-lucene-synonyms)
 =========================
 
 Current version : 1.3.5 ([changelog][15])
@@ -291,19 +291,30 @@ So to build this library, you have to manually rebase all the branches and then 
 Testing
 ---------
 
-Python-based unit tests are in the ```test/``` directory. You can run them using these commands: 
+Python-based unit tests are in the ```test/``` directory. To run them, follow these steps.
 
-```
-# install the solrpy and nose packages
-sudo easy_install nose
-sudo easy_install solrpy
+First, install dependencies:
 
-# downloads, builds, and launches Solr on localhost:8983
-./run_solr_for_unit_tests.py
+    sudo pip install nose
+    sudo pip install solrpy
 
-# run some Python unit tests against the local Solr
-nosetests test/
-```
+Then run the tests:
+
+    ./test.sh
+
+Alternatively, you can run two separate processes - one to run Solr, and the other to run the Python tests. This is better for debuggging.
+
+In one tab, run:
+
+    ./run_solr_for_unit_tests.py
+
+(This downloads, builds, and launches Solr on localhost:8983.)
+
+Then in another tab, do:
+
+    nosetests test/
+
+(This runs the Python tests against the live Solr.)
 
 Changelog
 ------------
