@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser [![Build Status](https://travis-ci.org/healthonnet/hon-lucene-synonyms.svg)](https://travis-ci.org/healthonnet/hon-lucene-synonyms)
 =========================
 
-Current version : 1.3.5 ([changelog][15])
+Current version : 2.0.0 ([changelog][15])
 
 **Note:** This project is not actively maintained anymore, but pull requests are welcome. :)
 
@@ -36,13 +36,17 @@ running in Jetty.
 
 ### Step 1
 
-Download the latest JAR file depending on your Solr version:
+Download the latest JAR file, if you have Solr 5.3.1:
+
+* [hon-lucene-synonyms-2.0.0.jar](https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/2.0.0/hon-lucene-synonyms-2.0.0.jar)
+
+Or if you are using an older version of Solr, then you can use the last version of this plugin to support older Solr versions (1.3.5):
 
 <table border="0" style="border-width:1px;border-color:#999999;border-collapse:collapse;border-style:solid;">
 <tr style="background:gray;color:white;">
 <td style="padding:0 1em;" align="center"><strong>JAR</strong></td>
 <td style="padding:0 1em;" align="center"><strong>Solr</strong></td>
-</tr>1.3.4
+</tr>
 <tr>
 <td style="padding:0 1em;">
 <a href='https://nolanlawson.s3.amazonaws.com/dist/org.healthonnet.lucene.synonyms/release/1.3.5-solr-3.x/hon-lucene-synonyms-1.3.5-solr-3.x.jar'>
@@ -277,17 +281,6 @@ Download the code and run:
 mvn install
 ```
 
-Since there are several branches depending on the Solr version, there's also a build script that will ```git checkout```
-each branch, build it, and put the compiled jar files into the ```target/s3``` directory:
-
-```
-./build_all_versions.sh
-```
-
-Basically, my strategy is to maintain a main ```master```/```solr-4.3.x``` branch, with offshoot branches ```solr-3.x```, ```solr-4.0.0```, and ```solr-4.1.0```.  When I need to backport changes to older versions of Solr, I just ```git rebase```  each of the offshoots.
-
-So to build this library, you have to manually rebase all the branches and then make sure the versions are all correct. Yeah, it's a pain. I haven't figured out a better system yet.
-
 Testing
 ---------
 
@@ -318,9 +311,9 @@ Then in another tab, do:
 
 Changelog
 ------------
-* v
-  * Updated to support Solr 5.3.1.
-  * Note that as of Lucene 5.2.0 when synonyms are parsed, original terms are now correctly marked as type `word` instead of type `synonym` [LUCENE-6400](https://issues.apache.org/jira/browse/LUCENE-6400).
+* 2.0.0
+  * **BREAKING CHANGE:** Updated to support Solr 5.3.1. Removed support for older versions of Solr.
+  * Note that as of Lucene 5.2.0, when synonyms are parsed, original terms are now correctly marked as type `word` instead of type `synonym` [LUCENE-6400](https://issues.apache.org/jira/browse/LUCENE-6400).
 * v1.3.5
   * Added ```synonyms.ignoreMM``` option
 * v1.3.4
