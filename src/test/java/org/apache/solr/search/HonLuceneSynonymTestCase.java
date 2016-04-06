@@ -55,7 +55,7 @@ public abstract class HonLuceneSynonymTestCase extends AbstractSolrTestCase {
         }
     }
     void assertQuery(String[] tests, String query, int expectedNumDocs, String... params) {
-        String[] defaultTests = new String[] {String.format("//result[@numFound=%1$d]", expectedNumDocs)};
+        String[] defaultTests = new String[] {"//result[@numFound=" + expectedNumDocs + "]"};
         if (tests == null) {
             tests = defaultTests;
         } else {
@@ -89,7 +89,7 @@ public abstract class HonLuceneSynonymTestCase extends AbstractSolrTestCase {
     SolrQueryRequest constructRequest(String query, String... params) {
         String[] queryStr;
         if (params.length  > 0) {
-            queryStr = Stream.concat(Arrays.stream(defaultRequest), Arrays.stream(params)).toArray(String[]::new);
+            queryStr = Stream.concat(Arrays.stream(params), Arrays.stream(defaultRequest)).toArray(String[]::new);
         } else {
             queryStr = defaultRequest;
         }
@@ -104,20 +104,20 @@ public abstract class HonLuceneSynonymTestCase extends AbstractSolrTestCase {
     }
 
     void allScoresEqual(String query, int expectedNumDocs, String... params) {
-        String[] numFoundTest = new String[] {String.format("//result[@numFound=%1$d]", expectedNumDocs)};
+        String[] numFoundTest = new String[] {"//result[@numFound=" + expectedNumDocs + "]"};
         SolrCore core = h.getCore();
-        SolrQueryRequest req = constructRequest(query,params);
-        assertQ(req, numFoundTest);
+        try (SolrQueryRequest req = constructRequest(query, params)) {
+            assertQ(req, numFoundTest);
 
-        // verify that all returned docs have the same score
-        SolrQueryResponse rsp = new SolrQueryResponse();
-        core.execute(core.getRequestHandler(req.getParams().get(CommonParams.QT)), req, rsp);
-        float[] scores = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).docs).scores;
-        Set<Float> scoreSet = new HashSet<>();
-        for(float s: scores) {
-            scoreSet.add(s);
+            // verify that all returned docs have the same score
+            SolrQueryResponse rsp = new SolrQueryResponse();
+            core.execute(core.getRequestHandler(req.getParams().get(CommonParams.QT)), req, rsp);
+            float[] scores = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).docs).scores;
+            Set<Float> scoreSet = new HashSet<>();
+            for (float s : scores) {
+                scoreSet.add(s);
+            }
+            assertEquals(1, scoreSet.size());
         }
-        assertEquals(1, scoreSet.size());
-        req.close();
     }
 }

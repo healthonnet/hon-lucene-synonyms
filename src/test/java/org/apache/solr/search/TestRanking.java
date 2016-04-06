@@ -28,7 +28,7 @@ public class TestRanking extends HonLuceneSynonymTestCase {
     }
 
     private void assertQueryExpectedDocId(String query, int expectedNumDocs, String expectedDocId) {
-        String[] expectedDocIdTests = new String[] {String.format("//result/doc[1]/str[@name='id'][.='%1$s']", expectedDocId)};
+        String[] expectedDocIdTests = new String[] {"//result/doc[1]/str[@name='id'][.='" + expectedDocId + "']"};
         assertQuery(expectedDocIdTests, query, expectedNumDocs);
     }
 

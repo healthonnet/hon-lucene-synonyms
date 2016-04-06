@@ -4,16 +4,19 @@
 	<groupId>org.healthonnet.lucene</groupId>
 	<artifactId>hon-lucene-synonyms</artifactId>
 	<version>2.0.0</version>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 	<dependencies>
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
-            <version>5.3.1</version>
+            <version>5.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-            <version>5.3.1</version>
+            <version>5.5.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -24,13 +27,13 @@
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-test-framework</artifactId>
-            <version>5.3.1</version>
+            <version>5.5.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-test-framework</artifactId>
-            <version>5.3.1</version>
+            <version>5.5.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -61,7 +64,9 @@
 	<build>
 	    <plugins>
 	      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
 	        <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.5.1</version>
 	        <configuration>
 	          <source>8</source>
 	          <target>8</target>

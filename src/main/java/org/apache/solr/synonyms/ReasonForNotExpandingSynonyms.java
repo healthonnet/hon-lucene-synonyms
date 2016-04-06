@@ -46,7 +46,7 @@ public enum ReasonForNotExpandingSynonyms {
     }
     
     public NamedList<Object> toNamedList() {
-        NamedList<Object> result = new NamedList<Object>();
+        NamedList<Object> result = new NamedList<>();
         result.add("name", name());
         result.add("explanation", explanation);
         return result;

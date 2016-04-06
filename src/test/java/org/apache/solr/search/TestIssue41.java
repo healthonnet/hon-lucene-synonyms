@@ -1,11 +1,9 @@
 package org.apache.solr.search;
 
-import org.apache.solr.common.SolrException;
 import org.apache.solr.common.util.SimpleOrderedMap;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.junit.Test;
-import org.apache.solr.util.AbstractSolrTestCase;
 
 import java.util.ArrayList;
 
@@ -49,22 +47,16 @@ public class TestIssue41 extends HonLuceneSynonymTestCase {
      * Validates a query matches some XPath test expressions and closes the query.
      */
     private void assertQuoteCount(String query, int quoteCount) {
-        SolrQueryRequest req = constructRequest(query);
-        try {
-            SolrQueryResponse rsp = h.queryAndResponse("/search",req);
-            SimpleOrderedMap debug = (SimpleOrderedMap)rsp.getValues().get("debug");
+        try (SolrQueryRequest req = constructRequest(query)) {
+            SolrQueryResponse rsp = h.queryAndResponse("/search", req);
+            SimpleOrderedMap debug = (SimpleOrderedMap) rsp.getValues().get("debug");
             ArrayList<String> expandedSynonyms = (ArrayList<String>) debug.get("expandedSynonyms");
-            AbstractSolrTestCase.log.info(expandedSynonyms.toString());
             int count = 0;
             for (String synonym : expandedSynonyms) {
                 count += synonym.length() - synonym.replace("\"", "").length();
             }
-            AbstractSolrTestCase.log.info("Quotes found count = " + count);
-            req.close();
             assertEquals(quoteCount, count);
         } catch (Exception e2) {
-            req.close();
-            SolrException.log(log,"REQUEST FAILED: " + req.getParamString(), e2);
             throw new RuntimeException("Exception during query", e2);
         }
     }

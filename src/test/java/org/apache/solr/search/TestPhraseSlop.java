@@ -12,14 +12,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.stream.Stream;
 
 public class TestPhraseSlop extends HonLuceneSynonymTestCase {
 
     public TestPhraseSlop() {
         defaultRequest = new String[] {
                 "qf", "name",
-                "fl", "id,score"
+                "fl", "id,score",
+                "defType", "edismax"
         };
         defaultDocs = new String[][] {
                 {"id", "1", "name", "man's best friend blah blah blah"},
@@ -34,63 +34,50 @@ public class TestPhraseSlop extends HonLuceneSynonymTestCase {
         return Arrays.asList(expectedDocs).iterator();
     }
 
-    private void verifyExpectedResults(Boolean synonymEDisMax, String query, Boolean inequalResults, String... params) throws IOException {
+    private void verifyExpectedResults(String query, Boolean inequalResults, String... params) {
         SolrCore core = h.getCore();
-        SolrQueryRequest req;
-        String[] queryStr;
-        if (params.length  > 0) {
-            queryStr = Stream.concat(Arrays.stream(defaultRequest), Arrays.stream(params)).toArray(String[]::new);
-        } else {
-            queryStr = defaultRequest;
-        }
-        if (synonymEDisMax) {
-            req = req(queryStr,
-                    "q",        query,
-                    "defType", "synonym_edismax");
-        } else {
-            req = req(queryStr,
-                    "defType",  "edismax",
-                    "q",        query);
-        }
-        SolrQueryResponse rsp = new SolrQueryResponse();
-        core.execute(core.getRequestHandler(req.getParams().get(CommonParams.QT)), req, rsp);
-        DocSlice docs = (DocSlice) ((ResultContext) rsp.getValues().get("response")).docs;
-        ArrayList<Document> dl = docList(docs, req);
-        Iterator<Document> di = dl.iterator();
-        Iterator<String> ei = expectedDocIterator();
-        assertEquals(dl.size(),expectedDocs.length);
-        float[] scores = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).docs).scores;
-        if (inequalResults) {
-            while(ei.hasNext() && di.hasNext()) {
-                assertEquals(ei.next(), di.next().get("id"));
+        try (SolrQueryRequest req = constructRequest(query, params)){
+            SolrQueryResponse rsp = new SolrQueryResponse();
+            core.execute(core.getRequestHandler(req.getParams().get(CommonParams.QT)), req, rsp);
+            DocSlice docs = (DocSlice) ((ResultContext) rsp.getValues().get("response")).docs;
+            ArrayList<Document> dl = docList(docs, req);
+            Iterator<Document> di = dl.iterator();
+            Iterator<String> ei = expectedDocIterator();
+            assertEquals(dl.size(), expectedDocs.length);
+            float[] scores = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).docs).scores;
+            if (inequalResults) {
+                while (ei.hasNext() && di.hasNext()) {
+                    assertEquals(ei.next(), di.next().get("id"));
+                }
+                assertTrue(String.format("%1$f > %2$f", scores[0], scores[1]), scores[0] > scores[1]);
+            } else {
+                assertArrayEquals(expectedDocs, idArray(dl));
+                assertEquals(scores[0], scores[1], 0.001);
             }
-            assertTrue(scores[0] > scores[1]);
-        } else {
-            assertArrayEquals(expectedDocs, idArray(dl));
-            assertEquals(scores[0], scores[1], 0.001);
+        } catch (IOException e2) {
+            throw new RuntimeException("Exception during query", e2);
         }
-        req.close();
     }
     
     @Test
     public void phraseSlop() throws IOException{
         // without phrase slop, the two should be equal
-        verifyExpectedResults(false, "man's best friend", false);
+        verifyExpectedResults("man's best friend", false);
 
         // with phrase slop, the first should have a higher score
-        verifyExpectedResults(false, "man's best friend", true, "ps", "3", "pf", "name");
+        verifyExpectedResults("man's best friend", true, "ps", "3", "pf", "name");
 
         // ditto for synonym_edismax
-        verifyExpectedResults(true, "man's best friend", false);
-        verifyExpectedResults(true, "man's best friend", true, "ps", "3", "pf", "name");
+        verifyExpectedResults("man's best friend", false, "defType", "synonym_edismax");
+        verifyExpectedResults("man's best friend", true, "defType", "synonym_edismax", "ps", "3", "pf", "name");
 
         // but what about with... SYNONYMS?   dun dun dun!
         // (hint: it should be the same)
-        verifyExpectedResults(true, "man's best friend", false, "synonyms", "true");
-        verifyExpectedResults(true, "man's best friend", true, "synonyms", "true", "ps", "3", "pf", "name");
+        verifyExpectedResults("man's best friend", false, "defType", "synonym_edismax", "synonyms", "true");
+        verifyExpectedResults("man's best friend", true, "defType", "synonym_edismax", "synonyms", "true", "ps", "3", "pf", "name");
 
         // and what about with a synonym as input?  oh now you're just getting crazy
-        verifyExpectedResults(true, "dog", false, "synonyms", "true");
-        verifyExpectedResults(true, "dog", true, "synonyms", "true", "ps", "3", "pf", "name");
+        verifyExpectedResults("dog", false, "defType", "synonym_edismax", "synonyms", "true");
+        verifyExpectedResults("dog", true, "defType", "synonym_edismax", "synonyms", "true", "ps", "3", "pf", "name");
     }
 }

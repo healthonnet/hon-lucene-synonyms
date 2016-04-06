@@ -23,8 +23,8 @@
   <luceneMatchVersion>${tests.luceneMatchVersion:LATEST}</luceneMatchVersion>
   <dataDir>${solr.data.dir:}</dataDir>
   <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>
-  <requestHandler name="/search" class="solr.StandardRequestHandler" default="true"></requestHandler>
-  <requestHandler name="/update" class="solr.UpdateRequestHandler"></requestHandler>
+  <requestHandler name="/search" class="solr.StandardRequestHandler" default="true"/>
+  <requestHandler name="/update" class="solr.UpdateRequestHandler"/>
 
   <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
     <!-- You can define more than one synonym analyzer in the following list.
