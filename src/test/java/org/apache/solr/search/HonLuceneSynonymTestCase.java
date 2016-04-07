@@ -112,7 +112,7 @@ public abstract class HonLuceneSynonymTestCase extends AbstractSolrTestCase {
             // verify that all returned docs have the same score
             SolrQueryResponse rsp = new SolrQueryResponse();
             core.execute(core.getRequestHandler(req.getParams().get(CommonParams.QT)), req, rsp);
-            float[] scores = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).docs).scores;
+            float[] scores = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).getDocList()).scores;
             Set<Float> scoreSet = new HashSet<>();
             for (float s : scores) {
                 scoreSet.add(s);

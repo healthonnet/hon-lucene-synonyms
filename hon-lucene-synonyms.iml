@@ -11,31 +11,31 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.apache.solr:solr-core:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-common:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-kuromoji:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-phonetic:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-backward-codecs:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-codecs:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-expressions:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-grouping:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-highlighter:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-join:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-memory:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-misc:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queries:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queryparser:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-sandbox:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-spatial:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-suggest:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.solr:solr-core:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-common:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-kuromoji:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-phonetic:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-backward-codecs:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-codecs:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-expressions:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-grouping:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-highlighter:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-join:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-memory:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-misc:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queries:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queryparser:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-sandbox:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-spatial-extras:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-suggest:6.0.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.carrotsearch:hppc:0.7.1" level="project" />
+    <orderEntry type="library" name="Maven: com.facebook.presto:presto-parser:0.122" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.5.4" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.5.4" level="project" />
+    <orderEntry type="library" name="Maven: com.github.ben-manes.caffeine:caffeine:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:14.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.google.protobuf:protobuf-java:2.5.0" level="project" />
-    <orderEntry type="library" name="Maven: com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.2" level="project" />
-    <orderEntry type="library" name="Maven: com.spatial4j:spatial4j:0.5" level="project" />
     <orderEntry type="library" name="Maven: com.tdunning:t-digest:3.1" level="project" />
     <orderEntry type="library" name="Maven: commons-cli:commons-cli:1.2" level="project" />
     <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.10" level="project" />
@@ -45,6 +45,7 @@
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.4" level="project" />
     <orderEntry type="library" name="Maven: commons-lang:commons-lang:2.6" level="project" />
     <orderEntry type="library" name="Maven: dom4j:dom4j:1.6.1" level="project" />
+    <orderEntry type="library" name="Maven: io.airlift:slice:0.10" level="project" />
     <orderEntry type="library" name="Maven: javax.servlet:javax.servlet-api:3.1.0" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.2" level="project" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
@@ -69,36 +70,37 @@
     <orderEntry type="library" name="Maven: org.apache.zookeeper:zookeeper:3.4.6" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.woodstox:stax2-api:3.1.4" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.woodstox:woodstox-core-asl:4.4.1" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-continuation:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-deploy:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-http:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-io:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-jmx:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-rewrite:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-security:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-server:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-servlet:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-servlets:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-util:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-webapp:9.2.13.v20150730" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-xml:9.2.13.v20150730" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-continuation:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-deploy:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-http:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-io:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-jmx:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-rewrite:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-security:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-server:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-servlet:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-servlets:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-util:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-webapp:9.3.8.v20160314" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-xml:9.3.8.v20160314" level="project" />
     <orderEntry type="library" name="Maven: org.htrace:htrace-core:3.0.4" level="project" />
+    <orderEntry type="library" name="Maven: org.locationtech.spatial4j:spatial4j:0.6" level="project" />
     <orderEntry type="library" name="Maven: org.noggit:noggit:0.6" level="project" />
     <orderEntry type="library" name="Maven: org.ow2.asm:asm:5.0.4" level="project" />
     <orderEntry type="library" name="Maven: org.ow2.asm:asm-commons:5.0.4" level="project" />
     <orderEntry type="library" name="Maven: org.restlet.jee:org.restlet:2.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.restlet.jee:org.restlet.ext.servlet:2.3.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.solr:solr-solrj:5.5.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.10" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.apache.solr:solr-test-framework:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.solr:solr-solrj:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.apache.solr:solr-test-framework:6.0.0-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.carrotsearch.randomizedtesting:junit4-ant:2.3.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.carrotsearch.randomizedtesting:randomizedtesting-runner:2.3.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apache.ant:ant:1.8.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.apache.lucene:lucene-test-framework:5.5.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:jcl-over-slf4j:1.7.12" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:jul-to-slf4j:1.7.12" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:slf4j-log4j12:1.7.12" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.apache.lucene:lucene-test-framework:6.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:slf4j-api:1.7.13" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:jcl-over-slf4j:1.7.13" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:jul-to-slf4j:1.7.13" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:slf4j-log4j12:1.7.13" level="project" />
   </component>
 </module>

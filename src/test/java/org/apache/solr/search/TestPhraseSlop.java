@@ -39,12 +39,12 @@ public class TestPhraseSlop extends HonLuceneSynonymTestCase {
         try (SolrQueryRequest req = constructRequest(query, params)){
             SolrQueryResponse rsp = new SolrQueryResponse();
             core.execute(core.getRequestHandler(req.getParams().get(CommonParams.QT)), req, rsp);
-            DocSlice docs = (DocSlice) ((ResultContext) rsp.getValues().get("response")).docs;
+            DocSlice docs = (DocSlice) ((ResultContext) rsp.getValues().get("response")).getDocList();
             ArrayList<Document> dl = docList(docs, req);
             Iterator<Document> di = dl.iterator();
             Iterator<String> ei = expectedDocIterator();
             assertEquals(dl.size(), expectedDocs.length);
-            float[] scores = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).docs).scores;
+            float[] scores = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).getDocList()).scores;
             if (inequalResults) {
                 while (ei.hasNext() && di.hasNext()) {
                     assertEquals(ei.next(), di.next().get("id"));
