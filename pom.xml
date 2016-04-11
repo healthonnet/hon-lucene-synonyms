@@ -3,30 +3,20 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.healthonnet.lucene</groupId>
 	<artifactId>hon-lucene-synonyms</artifactId>
-	<version>2.0.0</version>
+	<version>2.0.1</version>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-  <repositories>
-    <repository>
-      <id>apache.snapshots</id>
-      <name>Apache Snapshot Repository</name>
-      <url>http://repository.apache.org/snapshots</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </repository>
-  </repositories>
 	<dependencies>
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
-            <version>6.0.0-SNAPSHOT</version>
+            <version>6.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-            <version>6.0.0-SNAPSHOT</version>
+            <version>6.0.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -37,13 +27,13 @@
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-test-framework</artifactId>
-            <version>6.0.0-SNAPSHOT</version>
+            <version>6.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-test-framework</artifactId>
-            <version>6.0.0-SNAPSHOT</version>
+            <version>6.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
