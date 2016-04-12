@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import static junit.framework.Assert.*;
 
-public class BasicSynonymExpandingParserTest {
+public class TestBasicSynonymExpandingParser {
 
     @Test
     public void test1() throws ClassNotFoundException {

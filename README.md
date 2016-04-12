@@ -284,30 +284,11 @@ mvn install
 Testing
 ---------
 
-Python-based unit tests are in the ```test/``` directory. To run them, follow these steps.
+Run the tests using maven:
 
-First, install dependencies:
-
-    sudo pip install nose
-    sudo pip install solrpy
-
-Then run the tests:
-
-    ./test.sh
-
-Alternatively, you can run two separate processes - one to run Solr, and the other to run the Python tests. This is better for debuggging.
-
-In one tab, run:
-
-    ./run_solr_for_unit_tests.py
-
-(This downloads, builds, and launches Solr on localhost:8983.)
-
-Then in another tab, do:
-
-    nosetests test/
-
-(This runs the Python tests against the live Solr.)
+```
+mvn test
+```
 
 Changelog
 ------------
