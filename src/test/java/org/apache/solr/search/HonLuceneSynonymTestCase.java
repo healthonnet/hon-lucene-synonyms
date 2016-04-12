@@ -1,6 +1,7 @@
 package org.apache.solr.search;
 
 import org.apache.lucene.document.Document;
+import org.apache.solr.SolrTestCaseJ4;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.core.SolrCore;
 import org.apache.solr.request.SolrQueryRequest;
@@ -17,6 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@SolrTestCaseJ4.SuppressSSL
 public abstract class HonLuceneSynonymTestCase extends AbstractSolrTestCase {
     String[] defaultRequest = {
             "qf", "name",
