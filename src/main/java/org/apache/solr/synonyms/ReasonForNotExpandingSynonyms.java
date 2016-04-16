@@ -30,8 +30,8 @@ public enum ReasonForNotExpandingSynonyms {
     AnalyzerNotFound("There's no analyzer with the name you specified in synonyms.analyzer."),
     IgnoringPhrases("synonyms.disablePhraseQueries is set to true, and this query contains a phrase (\"like this\")"),
     UnhandledException("Whoops, we ran into an exception we couldn't handle!  File a bug."),
-    HasComplexQueryOperators("synonyms.ignoreQueryOperators is set to true, and this query contains complex query "
-            + "operators (e.g. AND, OR, *, -, etc.)"),
+    HasComplexQueryOperators("synonyms.ignoreQueryOperators is set to false, and this query contains complex query "
+            + "operators (e.g. AND, OR, *, -, etc.). Complex queries aren't supported."),
     DidntFindAnySynonyms("No synonyms found for this query.  Check your synonyms file."),
     ;
     
