@@ -80,7 +80,7 @@ import com.google.common.collect.TreeMultimap;
  * This parser was originally derived from ExtendedDismaxQParser, which itself was derived from the 
  * DismaxQParser from Solr.
  * 
- * @see http://github.com/healthonnet/hon-lucene-synonyms
+ * see http://github.com/healthonnet/hon-lucene-synonyms
  */
 public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin implements
         ResourceLoaderAware {
