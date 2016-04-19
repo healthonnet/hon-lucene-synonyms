@@ -1,9 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.healthonnet.lucene</groupId>
 	<artifactId>hon-lucene-synonyms</artifactId>
-	<version>5.0.3-SNAPSHOT</version>
+	<version>5.0.4-SNAPSHOT</version>
   <name>HON Lucene Synonyms</name>
   <url>https://github.com/healthonnet/hon-lucene-synonyms</url>
   <issueManagement>
@@ -21,6 +20,7 @@
     <url>https://github.com/healthonnet/hon-lucene-synonyms</url>
     <connection>scm:git:https://github.com/healthonnet/hon-lucene-synonyms.git</connection>
     <developerConnection>scm:git:git@github.com:healthonnet/hon-lucene-synonyms.git</developerConnection>
+    <tag>HEAD</tag>
   </scm>
   <description>Enables proper query-time synonym expansion, with no reindexing required.</description>
   <properties>
