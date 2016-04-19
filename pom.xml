@@ -23,6 +23,20 @@
     <tag>HEAD</tag>
   </scm>
   <description>Enables proper query-time synonym expansion, with no reindexing required.</description>
+  <developers>
+    <developer>
+      <name>Nolan Lawson</name>
+      <email>nolan@nolanlawsom.com</email>
+      <organization>Squarespace</organization>
+      <organizationUrl>https://www.squarespace.com/</organizationUrl>
+    </developer>
+    <developer>
+      <name>Joseph Lawson</name>
+      <email>joe@joekiller.com</email>
+      <organization>OpenSource Connections</organization>
+      <organizationUrl>http://www.opensourceconnections.com</organizationUrl>
+    </developer>
+  </developers>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
