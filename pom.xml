@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.healthonnet</groupId>
 	<artifactId>hon-lucene-synonyms</artifactId>
-	<version>5.0.4</version>
+	<version>5.0.5-SNAPSHOT</version>
   <name>HON Lucene Synonyms</name>
   <url>https://github.com/healthonnet/hon-lucene-synonyms</url>
   <issueManagement>
