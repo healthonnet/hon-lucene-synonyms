@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.solr.synonyms;
+package com.github.healthonnet.synonyms;
 
 import java.util.Iterator;
 
+import com.github.healthonnet.search.SynonymExpandingExtendedDismaxQParserPlugin;
 import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.SolrParams;
-import org.apache.solr.search.SynonymExpandingExtendedDismaxQParserPlugin.Params;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableSet;
  * Extends a set of solr params, hiding the boost-related parameters (bq, bf, boost).  This is useful
  * for constructing the synonym queries using the superclass, because we don't want to boost them artificially
  * 
- * @see issue 31
+ * @see <a href="https://github.com/healthonnet/hon-lucene-synonyms/issues/31">issue 31</a>
  * @author nolan
  *
  */
@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableSet;
 public class NoBoostSolrParams extends SolrParams {
 
     private static final ImmutableSet<String> BOOST_PARAMS = ImmutableSet.of(
-            DisMaxParams.BQ, DisMaxParams.BF, Params.MULT_BOOST);
+            DisMaxParams.BQ, DisMaxParams.BF, SynonymExpandingExtendedDismaxQParserPlugin.Params.MULT_BOOST);
     
     private SolrParams delegateParams;
     
@@ -47,7 +47,7 @@ public class NoBoostSolrParams extends SolrParams {
     @Override
     public String get(String param) {
         if (param != null && param.equals(DisMaxParams.MM)) {
-            if (delegateParams.getBool(Params.SYNONYMS_IGNORE_MM, false)) {
+            if (delegateParams.getBool(SynonymExpandingExtendedDismaxQParserPlugin.Params.SYNONYMS_IGNORE_MM, false)) {
                 return null;
             }
         }

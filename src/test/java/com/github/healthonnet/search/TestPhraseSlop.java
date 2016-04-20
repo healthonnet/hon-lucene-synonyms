@@ -1,4 +1,4 @@
-package org.apache.solr.search;
+package com.github.healthonnet.search;
 
 import org.apache.lucene.document.Document;
 import org.apache.solr.common.params.CommonParams;
@@ -6,6 +6,8 @@ import org.apache.solr.core.SolrCore;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.ResultContext;
 import org.apache.solr.response.SolrQueryResponse;
+import org.apache.solr.search.DocIterator;
+import org.apache.solr.search.DocSlice;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -44,7 +46,13 @@ public class TestPhraseSlop extends HonLuceneSynonymTestCase {
             Iterator<Document> di = dl.iterator();
             Iterator<String> ei = expectedDocIterator();
             assertEquals(dl.size(), expectedDocs.length);
-            float[] scores = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).getDocList()).scores;
+            ArrayList<Float> scoreList = new ArrayList<>();
+            DocIterator docItr = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).getDocList()).iterator();
+            while(docItr.hasNext()) {
+                docItr.next();
+                scoreList.add(docItr.score());
+            }
+            Float [] scores = scoreList.toArray(new Float[scoreList.size()]);
             if (inequalResults) {
                 while (ei.hasNext() && di.hasNext()) {
                     assertEquals(ei.next(), di.next().get("id"));

@@ -1,4 +1,4 @@
-package org.apache.solr.search;
+package com.github.healthonnet.search;
 
 import org.apache.solr.common.util.SimpleOrderedMap;
 import org.apache.solr.request.SolrQueryRequest;

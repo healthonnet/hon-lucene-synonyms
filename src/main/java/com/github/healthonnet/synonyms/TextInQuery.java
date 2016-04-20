@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.solr.synonyms;
+package com.github.healthonnet.synonyms;
 
 /**
  * Simple POJO for representing a piece of text found in the original query or expanded using shingles/synonyms.

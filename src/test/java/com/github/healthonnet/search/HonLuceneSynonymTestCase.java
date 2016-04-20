@@ -1,4 +1,4 @@
-package org.apache.solr.search;
+package com.github.healthonnet.search;
 
 import org.apache.lucene.document.Document;
 import org.apache.solr.SolrTestCaseJ4;
@@ -7,6 +7,9 @@ import org.apache.solr.core.SolrCore;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.ResultContext;
 import org.apache.solr.response.SolrQueryResponse;
+import org.apache.solr.search.DocIterator;
+import org.apache.solr.search.DocList;
+import org.apache.solr.search.DocSlice;
 import org.apache.solr.util.AbstractSolrTestCase;
 import org.junit.BeforeClass;
 
@@ -114,7 +117,13 @@ public abstract class HonLuceneSynonymTestCase extends AbstractSolrTestCase {
             // verify that all returned docs have the same score
             SolrQueryResponse rsp = new SolrQueryResponse();
             core.execute(core.getRequestHandler(req.getParams().get(CommonParams.QT)), req, rsp);
-            float[] scores = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).getDocList()).scores;
+            DocIterator docItr = ((DocSlice) ((ResultContext) rsp.getValues().get("response")).getDocList()).iterator();
+            ArrayList<Float> scoreList = new ArrayList<>();
+            while(docItr.hasNext()){
+                docItr.next();
+                scoreList.add(docItr.score());
+            }
+            Float[] scores = scoreList.toArray(new Float[scoreList.size()]);
             Set<Float> scoreSet = new HashSet<>();
             for (float s : scores) {
                 scoreSet.add(s);

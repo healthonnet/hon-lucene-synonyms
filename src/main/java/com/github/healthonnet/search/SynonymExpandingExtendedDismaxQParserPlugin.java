@@ -14,20 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.solr.search;
-
-import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.AnalyzerNotFound;
-import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.DidntFindAnySynonyms;
-import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.HasComplexQueryOperators;
-import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.IgnoringPhrases;
-import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.NoAnalyzerSpecified;
-import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.PluginDisabled;
-import static org.apache.solr.synonyms.ReasonForNotExpandingSynonyms.UnhandledException;
+package com.github.healthonnet.search;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -39,6 +30,9 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.github.healthonnet.synonyms.AlternateQuery;
+import com.github.healthonnet.synonyms.ReasonForNotExpandingSynonyms;
+import com.github.healthonnet.synonyms.TextInQuery;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -62,12 +56,13 @@ import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
-import org.apache.solr.search.SynonymExpandingExtendedDismaxQParserPlugin.Const;
-import org.apache.solr.search.SynonymExpandingExtendedDismaxQParserPlugin.Params;
-import org.apache.solr.synonyms.AlternateQuery;
-import org.apache.solr.synonyms.NoBoostSolrParams;
-import org.apache.solr.synonyms.ReasonForNotExpandingSynonyms;
-import org.apache.solr.synonyms.TextInQuery;
+import org.apache.solr.search.ExtendedDismaxQParser;
+import org.apache.solr.search.QParser;
+import org.apache.solr.search.QParserPlugin;
+import com.github.healthonnet.search.SynonymExpandingExtendedDismaxQParserPlugin.Const;
+import com.github.healthonnet.search.SynonymExpandingExtendedDismaxQParserPlugin.Params;
+import org.apache.solr.search.SyntaxError;
+import com.github.healthonnet.synonyms.NoBoostSolrParams;
 
 import com.google.common.collect.Ordering;
 import com.google.common.collect.SortedSetMultimap;
@@ -80,7 +75,7 @@ import com.google.common.collect.TreeMultimap;
  * This parser was originally derived from ExtendedDismaxQParser, which itself was derived from the 
  * DismaxQParser from Solr.
  * 
- * see http://github.com/healthonnet/hon-lucene-synonyms
+ * @see <a href="https://github.com/healthonnet/hon-lucene-synonyms">https://github.com/healthonnet/hon-lucene-synonyms</a>
  */
 public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin implements
         ResourceLoaderAware {
@@ -92,7 +87,7 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
     public static class Params {
         
         /**
-         * @see org.apache.solr.search.ExtendedDismaxQParser.DMP#MULT_BOOST
+         * @see <a href="https://cwiki.apache.org/confluence/display/solr/The+Extended+DisMax+Query+Parser">The Extended DisMax Query Parser</a>
          */
         public static String MULT_BOOST = "boost";
         
@@ -328,7 +323,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
 
         // disable/enable synonym handling altogether
         if (!solrParams.getBool(Params.SYNONYMS, false)) {
-            reasonForNotExpandingSynonyms = PluginDisabled;
+            reasonForNotExpandingSynonyms = ReasonForNotExpandingSynonyms.PluginDisabled;
             return query;
         }
         
@@ -339,7 +334,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                 // only one analyzer defined; just use that one
                 analyzerName = synonymAnalyzers.keySet().iterator().next();
             } else {
-                reasonForNotExpandingSynonyms = NoAnalyzerSpecified;
+                reasonForNotExpandingSynonyms = ReasonForNotExpandingSynonyms.NoAnalyzerSpecified;
                 return query;
             }
         }
@@ -347,14 +342,14 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         Analyzer synonymAnalyzer = synonymAnalyzers.get(analyzerName);
         
         if (synonymAnalyzer == null) { // couldn't find analyzer
-            reasonForNotExpandingSynonyms = AnalyzerNotFound;
+            reasonForNotExpandingSynonyms = ReasonForNotExpandingSynonyms.AnalyzerNotFound;
             return query;
         }
         
         if (solrParams.getBool(Params.SYNONYMS_DISABLE_PHRASE_QUERIES, false)
                 && getQueryStringFromParser().indexOf('"') != -1) {
             // disable if a phrase query is detected, i.e. there's a '"'
-            reasonForNotExpandingSynonyms = IgnoringPhrases;
+            reasonForNotExpandingSynonyms = ReasonForNotExpandingSynonyms.IgnoringPhrases;
             return query;
         }
 
@@ -362,7 +357,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
             query = attemptToApplySynonymsToQuery(query, solrParams, synonymAnalyzer);
         } catch (IOException e) {
             // TODO: better error handling - for now just bail out
-            reasonForNotExpandingSynonyms = UnhandledException;
+            reasonForNotExpandingSynonyms = ReasonForNotExpandingSynonyms.UnhandledException;
             e.printStackTrace(System.err);
         }
 
@@ -377,10 +372,10 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         boolean hasComplexQueryOperators = ignoreQueryOperators ? false : Const.COMPLEX_QUERY_OPERATORS_PATTERN.matcher(getQueryStringFromParser()).find();
         
         if (hasComplexQueryOperators) { // TODO: support complex operators
-            reasonForNotExpandingSynonyms = HasComplexQueryOperators;
+            reasonForNotExpandingSynonyms = ReasonForNotExpandingSynonyms.HasComplexQueryOperators;
             return query;
         } else if (synonymQueries.isEmpty()) { // didn't find more than 0 synonyms, i.e. it's just the original phrase
-            reasonForNotExpandingSynonyms = DidntFindAnySynonyms;
+            reasonForNotExpandingSynonyms = ReasonForNotExpandingSynonyms.DidntFindAnySynonyms;
             return query;
         }
         

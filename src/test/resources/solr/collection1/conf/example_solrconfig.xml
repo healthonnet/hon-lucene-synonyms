@@ -26,7 +26,7 @@
   <requestHandler name="/search" class="solr.StandardRequestHandler" default="true"/>
   <requestHandler name="/update" class="solr.UpdateRequestHandler"/>
 
-  <queryParser name="synonym_edismax" class="solr.SynonymExpandingExtendedDismaxQParserPlugin">
+  <queryParser name="synonym_edismax" class="com.github.healthonnet.search.SynonymExpandingExtendedDismaxQParserPlugin">
     <!-- You can define more than one synonym analyzer in the following list.
          For example, you might have one set of synonyms for English, one for French,
          one for Spanish, etc.
