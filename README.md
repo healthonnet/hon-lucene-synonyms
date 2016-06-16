@@ -1,4 +1,4 @@
-Lucene/Solr Synonym-Expanding EDisMax Parser [![Build Status](https://travis-ci.org/healthonnet/hon-lucene-synonyms.svg)](https://travis-ci.org/healthonnet/hon-lucene-synonyms)
+Lucene/Solr Synonym-Expanding EDisMax Parser [![Build Status](https://travis-ci.org/healthonnet/hon-lucene-synonyms.svg?branch=master)](https://travis-ci.org/healthonnet/hon-lucene-synonyms)
 =========================
 
 Current version : 2.0.0 ([changelog][15])
@@ -337,14 +337,14 @@ Changelog
 [2]: http://nolanlawson.com/2012/10/31/better-synonym-handling-in-solr
 [3]: http://wiki.apache.org/solr/ExtendedDisMax
 [4]: http://wiki.apache.org/solr/AnalyzersTokenizersTokenFilters#solr.SynonymFilterFactory
-[5]: http://raw.github.com/healthonnet/hon-lucene-synonyms/master/examples/example_synonym_file.txt
+[5]: https://raw.githubusercontent.com/healthonnet/hon-lucene-synonyms/master/src/test/resources/solr/collection1/conf/example_synonym_file.txt
 [6]: http://www.healthonnet.org
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
 [9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/3.6.2
 [15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
 [16]: http://wiki.apache.org/solr/DisMaxQParserPlugin#mm_.28Minimum_.27Should.27_Match.29
-[18]: http://raw.github.com/healthonnet/hon-lucene-synonyms/master/examples/example_config.xml
+[18]: https://raw.githubusercontent.com/healthonnet/hon-lucene-synonyms/master/src/test/resources/solr/collection1/conf/example_solrconfig.xml
 [101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
 [102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
 [103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3
