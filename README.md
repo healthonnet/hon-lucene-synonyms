@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser [![Build Status](https://travis-ci.org/healthonnet/hon-lucene-synonyms.svg?branch=master)](https://travis-ci.org/healthonnet/hon-lucene-synonyms)
 =========================
 
-Current version : 2.0.0 ([changelog][15])
+Current version : 5.0.4 ([changelog][15])
 
 **Note:** This project is not actively maintained anymore, but pull requests are welcome. :)
 
@@ -209,9 +209,13 @@ Apply a [minimum "should" match][16] of 75% by adding `mm=75%25`:
 
 Observe how phrase queries are properly handled by using `q="dog"` instead of `q=dog`:
 
-<pre style="white-space:normal;">
-(((text:dog))^1.0 ((+(text:"canis familiaris"))^1.0) ((+(text:hound))^1.0) ((+(text:"man's best friend"))^1.0) ((+(text:pooch))^1.0))
-</pre>
+```
+(((text:dog))^1.0 
+((+(text:"canis familiaris"))^1.0) 
+((+(text:hound))^1.0) 
+((+(text:"man's best friend"))^1.0) 
+((+(text:pooch))^1.0))
+```
 
 
 Gotchas
