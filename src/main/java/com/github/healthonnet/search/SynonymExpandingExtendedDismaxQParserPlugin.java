@@ -413,7 +413,7 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
                         booleanSynonymQueryBuilder.add(new BoostQuery(synonymQuery, synonymBoost), Occur.SHOULD);
                         combinedQueryBuilder.add(booleanSynonymQueryBuilder.build(), Occur.SHOULD);
                     }
-                    booleanQueryBuilder.add(combinedQueryBuilder.build(), Occur.SHOULD);
+                    booleanQueryBuilder.add(combinedQueryBuilder.build(), Occur.MUST);
                 } else {
                     booleanQueryBuilder.add(booleanClause);
                 }
