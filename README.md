@@ -1,4 +1,4 @@
-Lucene/Solr Synonym-Expanding EDisMax Parser [![Build Status](https://travis-ci.org/healthonnet/hon-lucene-synonyms.svg?branch=master)](https://travis-ci.org/healthonnet/hon-lucene-synonyms)
+﻿Lucene/Solr Synonym-Expanding EDisMax Parser [![Build Status](https://travis-ci.org/healthonnet/hon-lucene-synonyms.svg?branch=master)](https://travis-ci.org/healthonnet/hon-lucene-synonyms)
 =========================
 
 Current version : 5.0.5 ([changelog][15])
@@ -27,6 +27,11 @@ Extension of the [ExtendedDisMaxQueryParserPlugin][3] that splits queries into a
 This also fixes lots of bugs with how Solr typically handles synonyms using the [SynonymFilterFactory][4].
 
 For more details, read [my blog post on the subject][2].
+
+Downloads
+-----------
+
+The latest version of this plugin can be found in [releases][24] or at [maven central][25]. 
 
 Getting Started
 ----------------
@@ -386,6 +391,8 @@ Changelog
 [21]: https://cwiki.apache.org/confluence/display/solr/Solr+Plugins
 [22]: https://cwiki.apache.org/confluence/display/solr/Adding+Custom+Plugins+in+SolrCloud+Mode
 [23]: http://www.cominvent.com/
+[24]: https://github.com/healthonnet/hon-lucene-synonyms/releases
+[25]: http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.github.healthonnet%22%20AND%20a%3A%22hon-lucene-synonyms%22 
 [101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
 [102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
 [103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3
