@@ -102,7 +102,7 @@ hon-lucene-synonyms-2.0.0.jar
 
 ### Step 2
 
-Download Solr from [the Solr home page][8].  For this tutorial, we'll use [Solr 6.0.0][9].  You do not need
+Download Solr from [the Solr home page][8].  For this tutorial, we'll use [Solr 6.2.0][9].  You do not need
 the sources; the `tgz` or `zip` file will work fine.
 
 ### Step 3
@@ -111,9 +111,9 @@ Extract the compressed file.
 
 ### Step 4
 
-Copy `hon-lucene-synonyms-*.jar` file into `solr-6.0.0/server/solr-webapp/webapp/WEB-INF/lib/`.
+Copy `hon-lucene-synonyms-*.jar` file into `solr-6.2.0/server/solr-webapp/webapp/WEB-INF/lib/`.
 
-    cp hon-lucene-synonyms-*.jar solr-6.0.0/server/solr-webapp/webapp/WEB-INF/lib/
+    cp hon-lucene-synonyms-*.jar solr-6.2.0/server/solr-webapp/webapp/WEB-INF/lib/
 
 Note that the jar may be placed in other locations if Solr is configured properly. The following tips are primarily valid only in Solr stand-alone and Solr Master/Slave configurations. The [Solr Plugins][21] section of the Solr CWIKI has more details about running plugins on Solr.
 
@@ -124,11 +124,11 @@ If you want to configure the plugin for SolrCloud check out [Adding Custom Plugi
 
 ### Step 5
 
-Download [example_synonym_file.txt][5] and copy it to the `solr-6.0.0/server/solr/configsets/sample_techproducts_configs/conf/` directory.
+Download [example_synonym_file.txt][5] and copy it to the `solr-6.2.0/server/solr/configsets/sample_techproducts_configs/conf/` directory.
 
 ### Step 6
 
-Download [example_config.xml][18] and copy the `<queryParser>...</queryParser>` section into `solr-6.0.0/server/solr/configsets/sample_techproducts_configs/conf/solrconfig.xml` just before the ```</config>``` tag at the end.
+Download [example_config.xml][18] and copy the `<queryParser>...</queryParser>` section into `solr-6.2.0/server/solr/configsets/sample_techproducts_configs/conf/solrconfig.xml` just before the ```</config>``` tag at the end.
 
 This defines the analyzer that will be used to generate synonyms.
 
@@ -136,7 +136,7 @@ This defines the analyzer that will be used to generate synonyms.
 
 ### Step 7
 
-Start up the app by running `solr-6.0.0/bin/solr -e techproducts`.
+Start up the app by running `solr-6.2.0/bin/solr -e techproducts`.
 
 ### Step 8
 
@@ -323,7 +323,7 @@ mvn test
 Changelog
 ------------
 * 5.0.5
-  * Tested with Solr 6.1.0
+  * Tested with Solr 6.2.0
   * Fixed [#65][165]  Matches all docs if bf (Boost Function) present @janhoy
 * 5.0.4
   * Solr 6.0.0 support.
@@ -377,7 +377,7 @@ Changelog
 [6]: http://www.healthonnet.org
 [7]: http://nolanlawson.com
 [8]: http://lucene.apache.org/solr/
-[9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/6.0.0
+[9]: http://www.apache.org/dyn/closer.cgi/lucene/solr/6.2.0
 [15]: https://github.com/healthonnet/hon-lucene-synonyms#changelog
 [16]: https://cwiki.apache.org/confluence/display/solr/The+DisMax+Query+Parser#TheDisMaxQueryParser-Themm(MinimumShouldMatch)Parameter
 [18]: https://github.com/healthonnet/hon-lucene-synonyms/raw/master/src/test/resources/solr/collection1/conf/example_solrconfig.xml
