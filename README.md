@@ -3,8 +3,6 @@ Lucene/Solr Synonym-Expanding EDisMax Parser [![Build Status](https://travis-ci.
 
 Current version : 5.0.5 ([changelog][15])
 
-**Note:** This project is not actively maintained anymore, but pull requests are welcome. :)
-
 Maintainer
 -----------
 
