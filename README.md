@@ -1,7 +1,7 @@
 Lucene/Solr Synonym-Expanding EDisMax Parser [![Build Status](https://travis-ci.org/healthonnet/hon-lucene-synonyms.svg?branch=master)](https://travis-ci.org/healthonnet/hon-lucene-synonyms)
 =========================
 
-Current version : 5.0.4 ([changelog][15])
+Current version : 5.0.5 ([changelog][15])
 
 **Note:** This project is not actively maintained anymore, but pull requests are welcome. :)
 
@@ -11,6 +11,8 @@ Maintainer
 [Nolan Lawson][7]
 
 [Health On the Net Foundation][6]
+
+[Jan Høydahl][23]
 
 License
 -----------
@@ -35,17 +37,17 @@ The following tutorial will set up a working synonym-enabled Solr app using the 
 
 Download the latest JAR file:
 
-  * [hon-lucene-synonyms-5.0.4.jar](http://central.maven.org/maven2/com/github/healthonnet/hon-lucene-synonyms/5.0.4/hon-lucene-synonyms-5.0.4.jar)
+  * [hon-lucene-synonyms-5.0.5.jar](http://central.maven.org/maven2/com/github/healthonnet/hon-lucene-synonyms/5.0.5/hon-lucene-synonyms-5.0.5.jar)
 
 Or use Maven:
 
-    mvn dependency:copy -Dartifact=com.github.healthonnet:hon-lucene-synonyms:5.0.4 -DoutputDirectory=.
+    mvn dependency:copy -Dartifact=com.github.healthonnet:hon-lucene-synonyms:5.0.5 -DoutputDirectory=.
 
 ```
 <dependency>
     <groupId>com.github.healthonnet</groupId>
     <artifactId>hon-lucene-synonyms</artifactId>
-    <version>5.0.4</version>
+    <version>5.0.5</version>
 </dependency>
 ```
 
@@ -320,6 +322,9 @@ mvn test
 
 Changelog
 ------------
+* 5.0.5
+  * Tested with Solr 6.1.0
+  * Fixed [#65][165]  Matches all docs if bf (Boost Function) present @janhoy
 * 5.0.4
   * Solr 6.0.0 support.
   * Distributed on Maven central now.
@@ -380,6 +385,7 @@ Changelog
 [20]: https://cwiki.apache.org/confluence/display/solr/Format+of+solr.xml
 [21]: https://cwiki.apache.org/confluence/display/solr/Solr+Plugins
 [22]: https://cwiki.apache.org/confluence/display/solr/Adding+Custom+Plugins+in+SolrCloud+Mode
+[23]: http://www.cominvent.com/
 [101]: http://github.com/healthonnet/hon-lucene-synonyms/issues/1
 [102]: http://github.com/healthonnet/hon-lucene-synonyms/issues/2
 [103]: http://github.com/healthonnet/hon-lucene-synonyms/issues/3
@@ -397,3 +403,4 @@ Changelog
 [133]: http://github.com/healthonnet/hon-lucene-synonyms/issues/33
 [134]: http://github.com/healthonnet/hon-lucene-synonyms/issues/34
 [141]: https://github.com/healthonnet/hon-lucene-synonyms/issues/41
+[165]: https://github.com/healthonnet/hon-lucene-synonyms/issues/65
