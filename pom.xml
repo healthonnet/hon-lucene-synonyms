@@ -42,6 +42,12 @@
       <organization>OpenSource Connections</organization>
       <organizationUrl>http://www.opensourceconnections.com</organizationUrl>
     </developer>
+    <developer>
+      <name>Jan Høydahl</name>
+      <email>jh@cominvent.com></email>
+      <organization>Cominvent AS</organization>
+      <organizationUrl>http://www.cominvent.com/</organizationUrl>
+    </developer>
   </developers>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
