@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.healthonnet</groupId>
 	<artifactId>hon-lucene-synonyms</artifactId>
-	<version>5.0.6-SNAPSHOT</version>
+	<version>5.0.7-SNAPSHOT</version>
   <name>HON Lucene Synonyms</name>
   <url>https://github.com/healthonnet/hon-lucene-synonyms</url>
   <issueManagement>
@@ -22,12 +22,6 @@
     <developerConnection>scm:git:git@github.com:healthonnet/hon-lucene-synonyms.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
-  <distributionManagement>
-    <snapshotRepository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
   <description>Enables proper query-time synonym expansion, with no reindexing required.</description>
   <developers>
     <developer>
@@ -51,7 +45,7 @@
   </developers>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <solr.version>6.2.0</solr.version>
+    <solr.version>6.4.1</solr.version>
     <slf4j.version>1.7.7</slf4j.version>
   </properties>
 	<dependencies>
@@ -172,4 +166,33 @@
         </plugin>
 	    </plugins>
 	  </build>
+	  
+	  <profiles>
+	  
+        <profile>
+            <id>jouve</id>
+            <distributionManagement>
+                <!-- use the following if you're not using a snapshot version. -->
+                <repository>
+                    <id>jouve-releases</id>
+                    <url>http://nexus-master-si.jouve.local/nexus/content/repositories/releases</url>
+                </repository>
+                <!-- use the following if you ARE using a snapshot version. -->
+                <snapshotRepository>
+                    <id>jouve-snapshots</id>
+                    <url>http://nexus-master-si.jouve.local/nexus/content/repositories/snapshots</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+        <profile>
+ 		  <id>ossrh</id>
+          <distributionManagement>
+			    <snapshotRepository>
+			      <id>ossrh</id>
+			      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			    </snapshotRepository>
+  		   </distributionManagement>
+          </profile>
+ 
+	  </profiles>	  
 </project>
