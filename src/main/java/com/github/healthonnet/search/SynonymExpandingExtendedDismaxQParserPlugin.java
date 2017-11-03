@@ -290,8 +290,6 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
         res.put(k, Integer.toString((Integer) v));
       } else if (v instanceof Boolean) {
         res.put(k, Boolean.toString((Boolean) v));
-      } else {
-        LOG.error("Type of parameter {} with value {} not handle", k, v);
       }
     });
 	  
