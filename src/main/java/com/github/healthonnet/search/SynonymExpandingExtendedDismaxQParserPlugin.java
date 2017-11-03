@@ -189,10 +189,15 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
                 NamedList<?> synonymAnalyzersList = (NamedList<?>) xmlSynonymAnalyzers;
                 for (Entry<String, ?> entry : synonymAnalyzersList) {
                     String analyzerName = entry.getKey();
-                    if (!(entry.getValue() instanceof NamedList)) {
-                        continue;
-                    }
-                    NamedList<?> analyzerAsNamedList = (NamedList<?>) entry.getValue();
+                    if (!(entry.getValue() instanceof NamedList) && !(entry.getValue() instanceof Map)) {
+            	      continue;
+           	    }
+          	    NamedList<?> analyzerAsNamedList;
+          	    if (entry.getValue() instanceof Map) {
+            	      analyzerAsNamedList = new NamedList((Map) entry.getValue());
+          	    } else {
+            	      analyzerAsNamedList = (NamedList<?>) entry.getValue();
+          	    }
 
                     TokenizerFactory tokenizerFactory = null;
                     TokenFilterFactory filterFactory;
@@ -200,10 +205,15 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
 
                     for (Entry<String, ?> analyzerEntry : analyzerAsNamedList) {
                         String key = analyzerEntry.getKey();
-                        if (!(entry.getValue() instanceof NamedList)) {
-                            continue;
-                        }
-                        Map<String, String> params = convertNamedListToMap((NamedList<?>)analyzerEntry.getValue());
+                        if (!(analyzerEntry.getValue() instanceof NamedList) && !(analyzerEntry.getValue() instanceof Map)) {
+              		  continue;
+            		}
+            		Map<String, String> params;
+            		if (analyzerEntry.getValue() instanceof Map) {
+              		  params = convertTypesToString((Map<String, ?>) analyzerEntry.getValue());
+            		} else {
+              		  params = convertNamedListToMap((NamedList<?>) analyzerEntry.getValue());
+            		}
 
                         String className = params.get("class");
                         if (className == null) {
@@ -225,7 +235,7 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
                             if (tokenizerFactory instanceof ResourceLoaderAware) {
                                 ((ResourceLoaderAware)tokenizerFactory).inform(loader);
                             }
-                        } else if (key.equals("filter")) {
+                        } else if (key.startsWith("filter")) {
                             try {
                                 filterFactory = TokenFilterFactory.forName(className, params);
                             } catch (IllegalArgumentException iae) {
@@ -259,6 +269,32 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
             throw new SolrException(ErrorCode.SERVER_ERROR, "Failed to create parser. Check your config.", e);
         }
     }
+  /**
+   * Converts a Map<String, ?> into a Map<String, String> (used to prevent deep CastException caused by configoverlay.json file)
+   * Handled types are String, Long, Integer & Boolean
+   * @param map the map to convert
+   * @return an empty map if the provided map is null, else apply a toString() on each value
+   */
+  private Map<String, String> convertTypesToString(Map<String, ?> map) {
+    if (map == null) {
+      return Collections.emptyMap();
+    }
+
+    Map<String, String> res = new HashMap<>(map.size());
+    map.forEach((k, v) -> {
+      if (v instanceof String) {
+        res.put(k, (String) v);
+      } else if (v instanceof Long) {
+        res.put(k, Long.toString((Long) v));
+      } else if (v instanceof Integer) {
+        res.put(k, Integer.toString((Integer) v));
+      } else if (v instanceof Boolean) {
+        res.put(k, Boolean.toString((Boolean) v));
+      }
+    });
+	  
+    return res;
+  }
 }
 
 class SynonymExpandingExtendedDismaxQParser extends QParser {
