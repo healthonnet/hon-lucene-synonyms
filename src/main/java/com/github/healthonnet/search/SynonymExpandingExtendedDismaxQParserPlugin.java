@@ -200,7 +200,7 @@ public class SynonymExpandingExtendedDismaxQParserPlugin extends QParserPlugin i
 
                     for (Entry<String, ?> analyzerEntry : analyzerAsNamedList) {
                         String key = analyzerEntry.getKey();
-                        if (!(entry.getValue() instanceof NamedList)) {
+                        if (!(analyzerEntry.getValue() instanceof NamedList)) {
                             continue;
                         }
                         Map<String, String> params = convertNamedListToMap((NamedList<?>)analyzerEntry.getValue());
