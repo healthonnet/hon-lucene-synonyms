@@ -10,7 +10,6 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.search.DocIterator;
 import org.apache.solr.search.DocList;
 import org.apache.solr.search.DocSlice;
-import org.apache.solr.util.AbstractSolrTestCase;
 import org.junit.BeforeClass;
 
 import java.io.IOException;
@@ -22,7 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SolrTestCaseJ4.SuppressSSL
-public abstract class HonLuceneSynonymTestCase extends AbstractSolrTestCase {
+public abstract class HonLuceneSynonymTestCase extends SolrTestCaseJ4 {
     String[] defaultRequest = {
             "qf", "name",
             "mm", "100%",
