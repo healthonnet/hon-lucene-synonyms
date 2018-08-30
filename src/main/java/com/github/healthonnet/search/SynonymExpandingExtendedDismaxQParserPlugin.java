@@ -18,6 +18,7 @@ package com.github.healthonnet.search;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -43,11 +44,9 @@ import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.lucene.queries.function.BoostedQuery;
-import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.queries.function.FunctionScoreQuery;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.BoostQuery;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.util.Version;
 import org.apache.solr.analysis.TokenizerChain;
 import org.apache.solr.common.SolrException;
@@ -275,7 +274,8 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
      */
     private List<String> expandedSynonyms;
     private ReasonForNotExpandingSynonyms reasonForNotExpandingSynonyms;
-    
+    private  Field doubleValuesSourceField;
+
     public SynonymExpandingExtendedDismaxQParser(String qstr, SolrParams localParams, SolrParams params,
             SolrQueryRequest req, Map<String, Analyzer> synonymAnalyzers) {
         super(qstr, localParams, params, req);
@@ -285,6 +285,14 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
         synonymQueryParser = new ExtendedDismaxQParser(qstr, NoBoostSolrParams.wrap(localParams),
                 NoBoostSolrParams.wrap(params), req);
         this.synonymAnalyzers = synonymAnalyzers;
+
+        try {
+            doubleValuesSourceField = FunctionScoreQuery.class.getDeclaredField("source");
+            doubleValuesSourceField.setAccessible(true);
+        } catch(NoSuchFieldException e){
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
@@ -400,6 +408,15 @@ class SynonymExpandingExtendedDismaxQParser extends QParser {
     private Query applySynonymQueries(Query query, List<Query> synonymQueries, float originalBoost, float synonymBoost) {
         if (query instanceof BoostedQuery) {
             return applySynonymQueries(((BoostedQuery) query).getQuery(), synonymQueries, originalBoost, synonymBoost);
+        } else if (query instanceof FunctionScoreQuery) {
+            FunctionScoreQuery functionScoreQuery = (FunctionScoreQuery) query;
+            Query q = applySynonymQueries(functionScoreQuery.getWrappedQuery(), synonymQueries, originalBoost, synonymBoost);
+            try {
+                DoubleValuesSource source = (DoubleValuesSource) doubleValuesSourceField.get(functionScoreQuery);
+                return new FunctionScoreQuery(q, source);
+            } catch(IllegalAccessException e){
+                throw new RuntimeException("Failed to get DoubleValuesSource", e);
+            }
         } else if (query instanceof BooleanQuery) {
             BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
             for (BooleanClause booleanClause : ((BooleanQuery) query).clauses()) {
